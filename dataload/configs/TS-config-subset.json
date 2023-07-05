@@ -1,0 +1,103 @@
+{
+  "ontologies": [
+     {
+      "title": "The Data Use Ontology",
+      "preferredPrefix": "DUO",
+      "description": "DUO is an ontology which represent data use conditions.",
+      "homepage": "https://github.com/EBISPOT/DUO",
+      "tracker": null,
+      "logo": null,
+      "annotations": null,
+      "oboSlims": false,
+      "preferredRootTerms": [],
+      "allowDownload": false,
+      "classifications": null,
+      "license": null,
+      "repoUrl": null,
+      "uri": "http://purl.obolibrary.org/obo/duo.owl",
+      "id": "duo",
+      "mailing_list": null,
+      "ontology_purl": "http://purl.obolibrary.org/obo/duo.owl",
+      "reasoner": "NONE",
+      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.obolibrary.org/obo/IAO_0000115"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym"
+      ],
+      "hierarchical_property": [
+        "http://purl.obolibrary.org/obo/BFO_0000050"
+      ],
+      "base_uri": [
+        "http://purl.obolibrary.org/obo/DUO_"
+      ]
+    },
+    {
+      "title": "The Environment Ontology",
+      "preferredPrefix": "ENVO",
+      "description": "ENVO is an ontology which represents knowledge about environments,environmental processes, ecosystems, habitats, and related entities",
+      "homepage": "http://environmentontology.org/",
+      "tracker": null,
+      "logo": null,
+      "annotations": null,
+      "oboSlims": false,
+      "preferredRootTerms": [],
+      "allowDownload": false,
+      "classifications": null,
+      "license": null,
+      "repoUrl": null,
+      "uri": "http://purl.obolibrary.org/obo/envo.owl",
+      "id": "envo",
+      "mailing_list": null,
+      "ontology_purl": "http://purl.obolibrary.org/obo/envo.owl",
+      "reasoner": "NONE",
+      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.obolibrary.org/obo/IAO_0000115"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym"
+      ],
+      "hierarchical_property": [
+        "http://purl.obolibrary.org/obo/BFO_0000050"
+      ],
+      "base_uri": [
+        "http://purl.obolibrary.org/obo/ENVO_"
+      ]
+    },
+    {
+      "title": "Physico-chemical methods and properties",
+      "preferredPrefix": "FIX",
+      "description": "An ontology of physico-chemical methods and properties.",
+      "homepage": null,
+      "tracker": null,
+      "logo": null,
+      "annotations": null,
+      "oboSlims": false,
+      "preferredRootTerms": [],
+      "allowDownload": false,
+      "classifications": null,
+      "license": null,
+      "repoUrl": null,
+      "uri": "http://purl.obolibrary.org/obo/fix.owl",
+      "id": "fix",
+      "mailing_list": null,
+      "ontology_purl": "http://purl.obolibrary.org/obo/fix.owl",
+      "reasoner": "NONE",
+      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.obolibrary.org/obo/IAO_0000115"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym"
+      ],
+      "hierarchical_property": [
+        "http://purl.obolibrary.org/obo/BFO_0000050"
+      ],
+      "base_uri": [
+        "http://purl.obolibrary.org/obo/FIX_"
+      ]
+    },
+]
+}

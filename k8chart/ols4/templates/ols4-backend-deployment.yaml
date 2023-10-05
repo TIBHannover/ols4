@@ -14,12 +14,29 @@ spec:
       labels:
         app: {{ .Release.Name }}-backend
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - hh-rke-wp-webadmin-47-worker-3.caas.ebi.ac.uk
+                    - hx-rke-wp-webadmin-40-worker-3.caas.ebi.ac.uk
       containers:
         - name: web
           image: ghcr.io/ebispot/ols4-backend:{{.Values.imageTag}}
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          resources:
+            requests:
+              memory: 20Gi
+              cpu: 0.5
+            limits:
+              memory: 20Gi
+              cpu: 2
           env:
             - name: OLS_SOLR_HOST
               value: http://{{ .Release.Name }}-solr:8983

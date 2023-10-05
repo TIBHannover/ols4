@@ -16,6 +16,10 @@ export default function EntityAnnotationsSection({
   linkedEntities: LinkedEntities;
 }) {
   let annotationPredicates = entity.getAnnotationPredicates();
+  console.log("annotationPredicates.length = " + annotationPredicates.length)
+
+  if (annotationPredicates.length > 0)
+      console.log("annotationPredicates[0]=" + annotationPredicates[0])
 
   return (
     <Fragment>
@@ -54,7 +58,7 @@ export default function EntityAnnotationsSection({
                       return (
                         <li
                           key={
-                            annotation.value.substring(0, 10) + randomString()
+                            annotation.value.toString().substring(0, 10) + randomString()
                           }
                         >
                           <span>{renderAnnotation(annotation)}</span>

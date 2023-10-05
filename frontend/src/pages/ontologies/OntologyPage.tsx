@@ -3,9 +3,9 @@ import {
   BugReport,
   Download,
   Email,
+  FormatListBulleted,
   Home,
 } from "@mui/icons-material";
-import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import { Fragment, useEffect, useState } from "react";
 import {
   Link,
@@ -95,11 +95,11 @@ export default function OntologyPage() {
   return (
     <div>
       <Header section="ontologies" />
-      <main className="container mx-auto" style={{ position: "relative" }}>
+      <main className="container mx-auto px-4">
         {ontology ? (
-          <div className="my-8 mx-2">
-            <div className="flex flex-row justify-between items-center px-2 mb-4">
-              <div>
+          <div className="my-8">
+            <div className="flex flex-wrap justify-between items-center gap-y-2 px-1 mb-4">
+              <div className="flex flex-wrap items-center gap-y-2">
                 <Link
                   className="link-default"
                   to={"/ontologies"}
@@ -130,25 +130,29 @@ export default function OntologyPage() {
               </div>
             </div>
             <div className="bg-gradient-to-r from-neutral-light to-white rounded-lg p-8 mb-4 text-neutral-black">
-              <div className="text-2xl font-bold mb-4">
-                {ontology.getName() || ontology.getOntologyId()}
-              </div>
-              {version && (
-                <div className="mb-4">
-                  <span className="font-bold">Version {version}</span>
+              <div className="overflow-x-auto mb-4">
+                <div className="text-2xl font-bold mb-4">
+                  {ontology.getName() || ontology.getOntologyId()}
                 </div>
-              )}
-              <div>
-                <p>
-                  {ontology.getDescription() ? ontology.getDescription() : ""}
-                </p>
+                {version && (
+                  <div className="mb-4">
+                    <span className="font-bold">Version {version}</span>
+                  </div>
+                )}
+                <div>
+                  <p>
+                    {ontology.getDescription() ? ontology.getDescription() : ""}
+                  </p>
+                </div>
               </div>
-
               <OntologyImportsSection ontology={ontology} />
               <OntologyImportedBySection ontology={ontology} />
-
-              <div className="flex gap-2 mt-6 mb-6">
-                {ontology.getOntologyPurl() && (
+              <SearchBox
+                ontologyId={ontologyId}
+                placeholder={`Search ${ontologyId.toUpperCase()}...`}
+              />
+              <div className="flex flex-wrap gap-2 mt-4">
+                {ontology.getOntologyPurl() && ontology.getAllowDownload() && (
                   <Link
                     to={ontology.getOntologyPurl()}
                     target="_blank"
@@ -202,15 +206,9 @@ export default function OntologyPage() {
                   </Link>
                 )}
               </div>
-              <div className="flex flex-nowrap gap-4">
-                <SearchBox
-                  ontologyId={ontologyId}
-                  placeholder={`Search ${ontologyId.toUpperCase()}...`}
-                />
-              </div>
             </div>
-            <div className="grid grid-cols-3 gap-8">
-              <div className="col-span-2">
+            <div className="flex flex-col-reverse lg:grid lg:grid-cols-3 lg:gap-4">
+              <div className="lg:col-span-2 flex flex-col">
                 <Tabs
                   value={tab}
                   onChange={(value: any) => {
@@ -243,46 +241,44 @@ export default function OntologyPage() {
                   />
                 </Tabs>
                 {tab !== "classes" || ontology.getNumClasses() > 0 ? (
-                  <div className="py-2 mb-2 flex justify-between">
-                    <div>
-                      <button
-                        disabled={tab === "individuals"}
-                        className={`font-bold mr-3 ${
-                          viewMode === "tree"
-                            ? "button-primary-active"
-                            : "button-primary"
-                        }`}
-                        onClick={() =>
-                          setSearchParams((params) => {
-                            params.set("viewMode", "tree");
-                            return params;
-                          })
-                        }
-                      >
-                        <div className="flex gap-2">
-                          <AccountTree />
-                          <div>Tree</div>
-                        </div>
-                      </button>
-                      <button
-                        className={`font-bold ${
-                          viewMode === "list"
-                            ? "button-primary-active"
-                            : "button-primary"
-                        }`}
-                        onClick={() =>
-                          setSearchParams((params) => {
-                            params.set("viewMode", "list");
-                            return params;
-                          })
-                        }
-                      >
-                        <div className="flex gap-2">
-                          <FormatListBulletedIcon />
-                          <div>List</div>
-                        </div>
-                      </button>
-                    </div>
+                  <div className="py-2">
+                    <button
+                      disabled={tab === "individuals"}
+                      className={`font-bold mr-3 ${
+                        viewMode === "tree"
+                          ? "button-primary-active"
+                          : "button-primary"
+                      }`}
+                      onClick={() =>
+                        setSearchParams((params) => {
+                          params.set("viewMode", "tree");
+                          return params;
+                        })
+                      }
+                    >
+                      <div className="flex gap-2">
+                        <AccountTree />
+                        <div>Tree</div>
+                      </div>
+                    </button>
+                    <button
+                      className={`font-bold ${
+                        viewMode === "list"
+                          ? "button-primary-active"
+                          : "button-primary"
+                      }`}
+                      onClick={() =>
+                        setSearchParams((params) => {
+                          params.set("viewMode", "list");
+                          return params;
+                        })
+                      }
+                    >
+                      <div className="flex gap-2">
+                        <FormatListBulleted />
+                        <div>List</div>
+                      </div>
+                    </button>
                   </div>
                 ) : null}
                 {viewMode === "list" ? (
@@ -292,10 +288,24 @@ export default function OntologyPage() {
                     ontology={ontology}
                     entityType={tab}
                     lang={lang}
+                    onNavigateToEntity={(ontology, entity) =>
+                      navigate(
+                        `/ontologies/${ontology.getOntologyId()}/${entity.getTypePlural()}/${encodeURIComponent(
+                          encodeURIComponent(entity.getIri())
+                        )}?lang=${lang}`
+                      )
+                    }
+                    onNavigateToOntology={(ontologyId, entity) =>
+                      navigate(
+                        `/ontologies/${ontologyId}/${entity.getTypePlural()}/${encodeURIComponent(
+                          encodeURIComponent(entity.getIri())
+                        )}?lang=${lang}`
+                      )
+                    }
                   />
                 )}
               </div>
-              <div className="col-span-1">
+              <div className="lg:col-span-1">
                 <details open className="p-2">
                   <summary className="p-2 mb-2 border-b-2 border-grey-default text-lg link-default">
                     Ontology Information
@@ -455,7 +465,7 @@ function OntologyImportsSection({ ontology }: { ontology: Ontology }) {
   return (
     <Fragment>
       {imports && imports.length > 0 && (
-        <div className="mt-2" style={{ maxWidth: "100%", inlineSize: "100%" }}>
+        <div className="mb-2" style={{ maxWidth: "100%", inlineSize: "100%" }}>
           <span className="font-bold mr-2">Imports from</span>
           {imports.length <= MAX_UNEXPANDED || expanded ? (
             imports.map(renderOntId)
@@ -480,7 +490,7 @@ function OntologyImportsSection({ ontology }: { ontology: Ontology }) {
     return (
       <Link
         key={ontId}
-        className="my-2"
+        className="my-1"
         style={{ display: "inline-block" }}
         to={"/ontologies/" + ontId}
       >
@@ -506,7 +516,7 @@ function OntologyImportedBySection({ ontology }: { ontology: Ontology }) {
   return (
     <Fragment>
       {imports && imports.length > 0 && (
-        <div className="mt-2" style={{ maxWidth: "100%", inlineSize: "100%" }}>
+        <div className="mb-2" style={{ maxWidth: "100%", inlineSize: "100%" }}>
           <span className="font-bold mr-2">Exports to</span>
           {imports.length <= MAX_UNEXPANDED || expanded ? (
             imports.map(renderOntId)
@@ -531,7 +541,7 @@ function OntologyImportedBySection({ ontology }: { ontology: Ontology }) {
     return (
       <Link
         key={ontId}
-        className="my-2"
+        className="my-1"
         style={{ display: "inline-block" }}
         to={"/ontologies/" + ontId}
       >

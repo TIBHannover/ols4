@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { useLocation } from "react-router-dom";
+import urlJoin from "url-join";
 import Header from "../components/Header";
 
 export default function Error() {
@@ -10,10 +11,10 @@ export default function Error() {
   return (
     <Fragment>
       <Header />
-      <main className="container mx-auto">
+      <main className="container mx-auto px-4">
         <img
-          src={process.env.PUBLIC_URL + "/not-found.jpg"}
-          className="max-w-lg rounded-lg mx-auto mb-4"
+          src={urlJoin(process.env.PUBLIC_URL!, "/not-found.jpg")}
+          className="md:max-w-lg mx-auto rounded-lg mb-4"
           alt="person using microscope by rawpixel.com on freepik.com"
         />
         <div className="text-center font-bold text-5xl mx-3 mb-4">
@@ -22,7 +23,7 @@ export default function Error() {
         <div className="text-center text-2xl mx-3 mb-8">
           <a
             className="link-default text-center text-3xl"
-            href={process.env.PUBLIC_URL}
+            href={urlJoin(process.env.PUBLIC_URL!, "/")}
           >
             Return to home
           </a>

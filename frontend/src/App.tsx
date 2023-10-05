@@ -12,7 +12,7 @@ import Footer from "./components/Footer";
 import About from "./pages/About";
 import Downloads from "./pages/Downloads";
 import Error from "./pages/Error";
-import Help from "./pages/help/HelpPage";
+import Help from "./pages/Help";
 import Home from "./pages/home/Home";
 import OntologiesPage from "./pages/ontologies/OntologiesPage";
 import OntologyPage from "./pages/ontologies/OntologyPage";
@@ -23,7 +23,7 @@ import Search from "./pages/search/Search";
 class App extends React.Component {
   render() {
     return (
-      <BrowserRouter basename={process.env.PUBLIC_URL}>
+      <BrowserRouter basename={process.env.PUBLIC_URL!}>
         <Routes>
           <Route path={`*`} element={<Error />} />
           <Route path={`/error`} element={<Error />} />

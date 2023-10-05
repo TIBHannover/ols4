@@ -65,7 +65,7 @@ public class RDF2JSON {
         List<String> configFilePaths = Arrays.asList(cmd.getOptionValue("config").split(","));
         String outputFilePath = cmd.getOptionValue("output");
 
-	String downloadedPath = cmd.getOptionValue("downloadedPath");
+	    String downloadedPath = cmd.getOptionValue("downloadedPath");
         boolean bLoadLocalFiles = cmd.hasOption("loadLocalFiles");
         boolean bNoDates = cmd.hasOption("noDates");
         String mergeOutputWith = cmd.getOptionValue("mergeOutputWith");
@@ -90,8 +90,7 @@ public class RDF2JSON {
                 throw new RuntimeException("Error loading config file: " + configPath);
             }
 
-            JsonReader reader = new JsonReader(
-                    new InputStreamReader(inputStream));
+            JsonReader reader = new JsonReader(new InputStreamReader(inputStream));
 
             return (InputJson) gson.fromJson(reader, InputJson.class);
 

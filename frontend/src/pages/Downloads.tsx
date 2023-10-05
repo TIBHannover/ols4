@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { Banner } from "../components/Banner";
 import DataTable, { Column } from "../components/DataTable";
 import Header from "../components/Header";
 
@@ -7,15 +8,12 @@ export default function Downloads() {
   return (
     <Fragment>
       <Header section="downloads" />
-      <main className="container mx-auto my-8">
+      <main className="container mx-auto px-4 my-8">
         <div className="text-2xl font-bold my-6">
           Downloading OLS Data Releases
         </div>
         <div>
-          <p className="bg-yellow-200 px-6 pt-3 pb-4 rounded-md mb-4 text-justify">
-            <span>
-              <i className="icon icon-common icon-exclamation-triangle text-2xl text-yellow-800 mr-2 mb-1"></i>
-            </span>
+          <Banner type="warning">
             The OLS internal database format is&thinsp;
             <b>undocumented and subject to change at any time</b>. We therefore
             strongly recommend that the&thinsp;
@@ -23,7 +21,7 @@ export default function Downloads() {
             used to access ontology information rather than the OLS data dump,
             with the exception of the SSSOM mappings file which is provided with
             a standardised representation.
-          </p>
+          </Banner>
           <p className="px-1 mb-2 text-justify">
             We recognise that the EBI OLS dataset can be useful in some cases to
             e.g. set up a local instance of OLS for development purposes, or to
@@ -47,7 +45,7 @@ export default function Downloads() {
               https://ftp.ebi.ac.uk/pub/databases/spot/ols/latest
             </a>
           </p>
-          <DataTable columns={columns} data={data} dataCount={data.length} />
+          <DataTable columns={columns} data={data} />
         </div>
       </main>
     </Fragment>

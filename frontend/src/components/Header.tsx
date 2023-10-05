@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import urlJoin from "url-join";
 
 export default function Header({ section }: { section?: string }) {
   return (
@@ -6,22 +7,24 @@ export default function Header({ section }: { section?: string }) {
       className="bg-black bg-right bg-cover"
       style={{
         backgroundImage:
-          "url('" + process.env.PUBLIC_URL + "/embl-ebi-background-4.jpg')",
+          "url('" +
+          urlJoin(process.env.PUBLIC_URL!, "/embl-ebi-background-4.jpg") +
+          "')",
       }}
     >
-      <div className="container mx-auto flex flex-row gap-10">
-        <div className="py-6">
-          <a href={process.env.PUBLIC_URL + "/"}>
+      <div className="container mx-auto px-4 flex flex-col md:flex-row md:gap-10">
+        <div className="py-6 self-center">
+          <a href={urlJoin(process.env.PUBLIC_URL!, "/")}>
             <img
-              alt="OxO logo"
+              alt="OLS logo"
               className="h-24 inline-block"
-              src={process.env.PUBLIC_URL + "/logo.png"}
+              src={urlJoin(process.env.PUBLIC_URL!, "/logo.png")}
             />
           </a>
         </div>
         <nav className="self-center">
           <ul
-            className="bg-transparent text-white flex divide-white divide-x"
+            className="bg-transparent text-white flex flex-wrap divide-white divide-x"
             data-description="navigational"
             role="menubar"
             data-dropdown-menu="6mg2ht-dropdown-menu"

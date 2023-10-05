@@ -85,7 +85,7 @@ public class V1SearchController {
                 solrQuery.set("defType", "edismax");
                 solrQuery.setQuery(query);
 
-                String[] fields = {"label^5", "synonym^3", "definition", "short_form^2", "obo_id^2", /*"annotations", "logical_description",*/ "iri"};
+                String[] fields = {"label^5", "synonym^3", "definition", "short_form^2", "obo_id^2", "iri", "_json"};
 
                 solrQuery.set("qf", String.join(" ", SolrFieldMapper.mapFieldsList(List.of(fields))));
 
@@ -96,8 +96,8 @@ public class V1SearchController {
             }
         } else {
             if (exact) {
-                String[] fields = SolrFieldMapper.mapFieldsList(queryFields).toArray(new String[0]);
-                solrQuery.setQuery(createUnionQuery(query, fields, true));
+                String[] fields = SolrFieldMapper.mapFieldsList(queryFields.stream().map(queryField -> queryField + "_s").collect(Collectors.toList())).toArray(new String[0]);
+                solrQuery.setQuery(createUnionQuery(query.toLowerCase(), fields, true));
             } else {
 
                 solrQuery.set("defType", "edismax");
@@ -200,6 +200,7 @@ public class V1SearchController {
             if (fieldList == null) {
                 fieldList = new HashSet<>();
             }
+            // default fields
             if (fieldList.isEmpty()) {
                 fieldList.add("id");
                 fieldList.add("iri");
@@ -208,23 +209,28 @@ public class V1SearchController {
                 fieldList.add("description");
                 fieldList.add("short_form");
                 fieldList.add("obo_id");
-                fieldList.add("is_defining_ontology");
                 fieldList.add("type");
-                fieldList.add("synonym");
+                fieldList.add("ontology_prefix");
             }
 
             if (fieldList.contains("id")) outDoc.put("id", JsonHelper.getString(json, "id"));
             if (fieldList.contains("iri")) outDoc.put("iri", JsonHelper.getString(json, "iri"));
             if (fieldList.contains("ontology_name")) outDoc.put("ontology_name", JsonHelper.getString(json, "ontologyId"));
-            if (fieldList.contains("label")) outDoc.put("label", JsonHelper.getStrings(json, "label"));
+            if (fieldList.contains("label")) {
+                var label = outDoc.put("label", JsonHelper.getString(json, "label"));
+                if(label!=null) {
+                    outDoc.put("label", label);
+                }
+            }
             if (fieldList.contains("description")) outDoc.put("description", JsonHelper.getStrings(json, "definition"));
-            if (fieldList.contains("short_form")) outDoc.put("short_form", JsonHelper.getStrings(json, "shortForm"));
-            if (fieldList.contains("obo_id")) outDoc.put("obo_id", JsonHelper.getStrings(json, "curie"));
-            if (fieldList.contains("is_defining_ontology")) outDoc.put("is_defining_ontology", JsonHelper.getString(json, "isDefiningOntology").equals("true"));
+            if (fieldList.contains("short_form")) outDoc.put("short_form", JsonHelper.getString(json, "shortForm"));
+            if (fieldList.contains("obo_id")) outDoc.put("obo_id", JsonHelper.getString(json, "curie"));
+            if (fieldList.contains("is_defining_ontology")) outDoc.put("is_defining_ontology",
+                    JsonHelper.getString(json, "isDefiningOntology") != null && JsonHelper.getString(json, "isDefiningOntology").equals("true"));
             if (fieldList.contains("type")) outDoc.put("type", "class");
             if (fieldList.contains("synonym")) outDoc.put("synonym", JsonHelper.getStrings(json, "synonym"));
-
-            // TODO: ontology_prefix
+            if (fieldList.contains("ontology_prefix")) outDoc.put("ontology_prefix", JsonHelper.getString(json, "ontologyPreferredPrefix"));
+            if (fieldList.contains("subset")) outDoc.put("subset", JsonHelper.getStrings(json, "http://www.geneontology.org/formats/oboInOwl#inSubset"));
 
             docs.add(outDoc);
         }
@@ -243,6 +249,8 @@ public class V1SearchController {
         responseObj.put("responseHeader", responseHeader);
         responseObj.put("response", responseBody);
 
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getOutputStream().write(gson.toJson(responseObj).getBytes(StandardCharsets.UTF_8));
         response.flushBuffer();
     }

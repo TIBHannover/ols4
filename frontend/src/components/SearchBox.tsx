@@ -45,6 +45,7 @@ export default function SearchBox({
   const setExact = useCallback(
     (exact: boolean) => {
       let newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set("q", query);
       if (exact.toString() === "true") {
         newSearchParams.set("exactMatch", exact.toString());
       } else {
@@ -58,6 +59,7 @@ export default function SearchBox({
   const setObsolete = useCallback(
     (obsolete: boolean) => {
       let newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set("q", query);
       if (obsolete.toString() === "true") {
         newSearchParams.set("includeObsoleteEntities", obsolete.toString());
       } else {
@@ -71,6 +73,7 @@ export default function SearchBox({
   const setCanonical = useCallback(
     (canonical: boolean) => {
       let newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set("q", query);
       if (canonical.toString() === "true") {
         newSearchParams.set("isDefiningOntology", canonical.toString());
       } else {
@@ -157,6 +160,7 @@ export default function SearchBox({
   let autocompleteElements = autocompleteToShow.map(
     (autocomplete, i): SearchBoxEntry => {
       searchParams.set("q", autocomplete.autosuggest);
+      if (ontologyId) searchParams.set("ontology", ontologyId);
       const linkUrl = `/search?${new URLSearchParams(searchParams)}`;
       return {
         linkUrl,
@@ -326,6 +330,7 @@ export default function SearchBox({
                     navigate(allDropdownElements[arrowKeySelectedN].linkUrl);
                   } else if (query) {
                     searchParams.set("q", query);
+                    if (ontologyId) searchParams.set("ontology", ontologyId);
                     navigate(`/search?${new URLSearchParams(searchParams)}`);
                   }
                 } else if (ev.key === "ArrowDown") {
@@ -379,6 +384,8 @@ export default function SearchBox({
                   onClick={() => {
                     if (query) {
                       searchParams.set("q", query);
+                      if (ontologyId)
+                        searchParams.set("ontology", ontologyId);
                       navigate(`/search?${new URLSearchParams(searchParams)}`);
                     }
                   }}
@@ -395,6 +402,7 @@ export default function SearchBox({
               onClick={() => {
                 if (query) {
                   searchParams.set("q", query);
+                  if (ontologyId) searchParams.set("ontology", ontologyId);
                   navigate(`/search?${new URLSearchParams(searchParams)}`);
                 }
               }}

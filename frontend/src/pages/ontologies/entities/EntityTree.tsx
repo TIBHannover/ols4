@@ -6,8 +6,8 @@ import {
   Radio,
   RadioGroup,
 } from "@mui/material";
-import { Fragment, useCallback, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect } from "react";
+import urlJoin from "url-join";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { theme } from "../../../app/mui";
 import { randomString } from "../../../app/util";
@@ -38,11 +38,17 @@ export default function EntityTree({
   entityType,
   selectedEntity,
   lang,
+  onNavigateToEntity,
+  onNavigateToOntology,
+  apiUrl,
 }: {
   ontology: Ontology;
   selectedEntity?: Entity;
   entityType: "entities" | "classes" | "properties" | "individuals";
   lang: string;
+  onNavigateToEntity: (ontology: Ontology, entity: Entity) => void;
+  onNavigateToOntology: (ontologyId: string, entity: Entity) => void;
+  apiUrl?: string;
 }) {
   const dispatch = useAppDispatch();
   const nodesWithChildrenLoaded = useAppSelector(
@@ -63,14 +69,14 @@ export default function EntityTree({
     (state) => state.ontologies.manuallyExpandedNodes
   );
 
-  const showObsoleteEnabled = useAppSelector(
-    (state) => state.ontologies.showObsolete
-  );
+  const showObsoleteEnabled = selectedEntity
+    ? selectedEntity.isDeprecated()
+    : useAppSelector((state) => state.ontologies.displayObsolete);
   const showSiblingsEnabled = useAppSelector(
-    (state) => state.ontologies.showSiblings
+    (state) => state.ontologies.displaySiblings
   );
   const showCountsEnabled = useAppSelector(
-    (state) => state.ontologies.showCounts
+    (state) => state.ontologies.displayCounts
   );
 
   const toggleNode = useCallback(
@@ -126,6 +132,7 @@ export default function EntityTree({
           lang,
           showObsoleteEnabled,
           showSiblingsEnabled,
+          apiUrl,
         })
       );
       return () => promise.abort(); // component was unmounted
@@ -137,6 +144,7 @@ export default function EntityTree({
           preferredRoots,
           lang,
           showObsoleteEnabled,
+          apiUrl,
         })
       );
       return () => promise.abort(); // component was unmounted
@@ -182,6 +190,7 @@ export default function EntityTree({
             absoluteIdentity: absId,
             lang,
             showObsoleteEnabled,
+            apiUrl,
           })
         )
       );
@@ -260,19 +269,29 @@ export default function EntityTree({
               }}
               key={randomString()}
             >
-	      {
-		childNode.childRelationToParent === 'http://purl.obolibrary.org/obo/BFO_0000050' &&
-			<img className="mr-1" src={process.env.PUBLIC_URL + "/part.svg"} style={{height:'1em',display:'inline'}}/>
-	      }
-	      {
-		childNode.childRelationToParent === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' &&
-			<img className="mr-1" src={process.env.PUBLIC_URL + "/instance.svg"} style={{height:'1em',display:'inline'}}/>
-	      }
+              {childNode.childRelationToParent ===
+                "http://purl.obolibrary.org/obo/BFO_0000050" && (
+                <img
+                  className="mr-1"
+                  src={urlJoin(process.env.PUBLIC_URL!, "/part.svg")}
+                  style={{ height: "1em", display: "inline" }}
+                />
+              )}
+              {childNode.childRelationToParent ===
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" && (
+                <img
+                  className="mr-1"
+                  src={urlJoin(process.env.PUBLIC_URL!, "/instance.svg")}
+                  style={{ height: "1em", display: "inline" }}
+                />
+              )}
               <TreeLink
                 ontology={ontology}
                 entity={childNode.entity}
                 title={childNode.title}
                 lang={lang}
+                onNavigateToEntity={onNavigateToEntity}
+                onNavigateToOntology={onNavigateToOntology}
               />
               {!showObsoleteEnabled &&
                 showCountsEnabled &&
@@ -294,11 +313,21 @@ export default function EntityTree({
   }
   return (
     <ThemeProvider theme={theme}>
-      <div style={{ position: "relative" }}>
-        <div
-          style={{ position: "absolute", right: 0, top: 0 }}
-          className="flex flex-col bg-white px-2 m-1 rounded-lg"
-        >
+      <div className="flex flex-col-reverse lg:grid lg:grid-cols-3 lg:gap-4">
+        {rootNodes ? (
+          <div className="lg:col-span-2 relative">
+            <div
+              className="px-3 pb-3 jstree jstree-1 jstree-proton overflow-x-auto"
+              role="tree"
+            >
+              {renderNodeChildren(rootNodes, 0)}
+            </div>
+            {numPendingTreeRequests > 0 ? (
+              <div className="absolute spinner-default w-7 h-7 -top-1 -left-4 z-auto" />
+            ) : null}
+          </div>
+        ) : null}
+        <div className="lg:col-span-1 flex flex-col bg-white px-2 mb-2 rounded-lg">
           {entityType === "classes" &&
             ontology.getPreferredRoots().length > 0 && (
               <div className="mb-2">
@@ -354,14 +383,6 @@ export default function EntityTree({
             />
           )}
         </div>
-        {rootNodes ? (
-          <div className="px-3 pb-3 jstree jstree-1 jstree-proton overflow-x-auto" role="tree">
-            {renderNodeChildren(rootNodes, 0)}
-          </div>
-        ) : null}
-        {numPendingTreeRequests > 0 ? (
-          <div className="spinner-default w-7 h-7 absolute -top-2 -left-5" />
-        ) : null}
       </div>
     </ThemeProvider>
   );
@@ -372,43 +393,41 @@ function TreeLink({
   entity,
   title,
   lang,
+  onNavigateToEntity,
+  onNavigateToOntology,
 }: {
   ontology: Ontology;
   entity: Entity;
   title: string;
   lang: string;
+  onNavigateToEntity: (ontology: Ontology, entity: Entity) => void;
+  onNavigateToOntology: (ontologyId: string, entity: Entity) => void;
 }) {
-  let encodedIri = encodeURIComponent(encodeURIComponent(entity.getIri()));
-
   let definedBy: string[] = entity.getDefinedBy();
 
   if (definedBy.indexOf(ontology.getOntologyId()) !== -1) definedBy = []; // don't show definedBy links for terms in current ontology
 
   return (
     <span>
-      <Link
-        to={`/ontologies/${ontology.getOntologyId()}/${entity.getTypePlural()}/${encodedIri}?lang=${lang}`}
+      <a
+        title={`${title} [${entity.getIri()}]`}
+        className={"link-default"}
+        onClick={() => onNavigateToEntity(ontology, entity)}
       >
         {title}
-      </Link>
+      </a>
       {definedBy.length > 0 &&
         definedBy.map((definingOntology) => {
           return (
-            <Link
-              key={encodedIri}
-              to={`/ontologies/${definingOntology}/${entity.getTypePlural()}/${encodedIri}?lang=${lang}`}
-              style={{ borderBottom: 0 }}
+            <span
+              onClick={() => onNavigateToOntology(definingOntology, entity)}
+              title={definingOntology.toUpperCase()}
+              className="mx-1 link-ontology px-2 py-0.5 rounded-md text-sm text-white uppercase ml-1"
             >
-              <span
-                title={definingOntology.toUpperCase()}
-                className="mx-1 link-ontology px-2 py-0.5 rounded-md text-sm text-white uppercase ml-1"
-              >
-                {definingOntology}
-              </span>
-            </Link>
+              {definingOntology}
+            </span>
           );
         })}
     </span>
   );
 }
-

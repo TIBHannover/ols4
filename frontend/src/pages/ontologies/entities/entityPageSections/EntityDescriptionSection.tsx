@@ -14,11 +14,11 @@ export default function EntityDescriptionSection({
 }) {
   let desc = entity.getDescriptionAsArray();
   return (
-    <div>
+    <div className="mb-2">
       {desc.map((definition: Reified<any>, i: number) => {
         return (
           <p
-            key={definition.value.substring(0, 10) + randomString()}
+            key={definition.value.toString().substring(0, 10) + randomString()}
             className="pb-3"
           >
             <span>

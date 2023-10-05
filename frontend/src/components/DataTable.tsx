@@ -25,7 +25,7 @@ export default function DataTable({
 }: {
   columns: readonly Column[];
   data: any[];
-  dataCount: number;
+  dataCount?: number;
   placeholder?: string;
   onSelectRow?: (row: any) => void;
   page?: number;
@@ -39,11 +39,11 @@ export default function DataTable({
 
   return (
     <div>
-      <div className="grid grid-cols-2 mb-2">
+      <div className="grid grid-cols-2">
         {rowsPerPage !== undefined &&
         rowsPerPage > 0 &&
         onRowsPerPageChange !== undefined ? (
-          <div className="justify-self-start px-2">
+          <div className="justify-self-start px-2 mb-2">
             <div className="flex group relative text-md">
               <label className="self-center px-3">Show</label>
               <select
@@ -63,7 +63,7 @@ export default function DataTable({
           </div>
         ) : null}
         {onFilter !== undefined ? (
-          <div className="justify-self-end group relative w-3/4 px-2">
+          <div className="justify-self-end group relative w-3/4 px-2 mb-2">
             <input
               type="text"
               placeholder={placeholder ? placeholder : "Search table..."}
@@ -78,7 +78,7 @@ export default function DataTable({
           </div>
         ) : null}
       </div>
-      <div className="mx-2">
+      <div className="mx-2 overflow-x-auto">
         <table className="table-auto border-collapse border-spacing-1 w-full mb-2">
           <thead>
             <tr key={randomString()} className="border-b-2 border-grey-default">
@@ -122,19 +122,19 @@ export default function DataTable({
             })}
           </tbody>
         </table>
-        {page !== undefined &&
-        page >= 0 &&
-        onPageChange !== undefined &&
-        rowsPerPage !== undefined &&
-        rowsPerPage > 0 ? (
-          <Pagination
-            page={page}
-            onPageChange={onPageChange}
-            rowsPerPage={rowsPerPage}
-            dataCount={dataCount}
-          ></Pagination>
-        ) : null}
       </div>
+      {page !== undefined &&
+      page >= 0 &&
+      onPageChange !== undefined &&
+      rowsPerPage !== undefined &&
+      rowsPerPage > 0 ? (
+        <Pagination
+          page={page}
+          onPageChange={onPageChange}
+          rowsPerPage={rowsPerPage}
+          dataCount={dataCount || 0}
+        ></Pagination>
+      ) : null}
     </div>
   );
 }

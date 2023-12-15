@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -13,16 +13,23 @@ import About from "./pages/About";
 import Downloads from "./pages/Downloads";
 import Error from "./pages/Error";
 import Help from "./pages/Help";
+import OLS3Help from "./pages/OLS3Help";
 import Home from "./pages/home/Home";
 import OntologiesPage from "./pages/ontologies/OntologiesPage";
 import OntologyPage from "./pages/ontologies/OntologyPage";
 import EntityPage from "./pages/ontologies/entities/EntityPage";
 import { getEntity } from "./pages/ontologies/ontologiesSlice";
 import Search from "./pages/search/Search";
+import {Helmet} from "react-helmet";
 
 class App extends React.Component {
   render() {
     return (
+      <Fragment>
+        <Helmet>
+          <meta charSet="utf-8" />
+          <title>Ontology Lookup Service (OLS)</title>
+        </Helmet>
       <BrowserRouter basename={process.env.PUBLIC_URL!}>
         <Routes>
           <Route path={`*`} element={<Error />} />
@@ -30,6 +37,7 @@ class App extends React.Component {
 
           <Route path={`/`} element={<Home />} />
           <Route path={`/home`} element={<Home />} />
+          <Route path={`/index`} element={<Home />} />
           <Route path={`/search`} element={<Search />} />
 
           <Route path={`/ontologies`} element={<OntologiesPage />} />
@@ -76,11 +84,13 @@ class App extends React.Component {
           />
 
           <Route path={`/help`} element={<Help />} />
+          <Route path={`/ols3help`} element={<OLS3Help />} />
           <Route path={`/about`} element={<About />} />
           <Route path={`/downloads`} element={<Downloads />} />
         </Routes>
         <Footer />
       </BrowserRouter>
+      </Fragment>
     );
   }
 }

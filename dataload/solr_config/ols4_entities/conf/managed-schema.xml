@@ -116,6 +116,9 @@
     -->
 
     <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+    <field name="iri" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+    <copyField source="iri" dest="str_iri"/>
+    <copyField source="iri" dest="lowercase_iri"/>
 
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
     <field name="_version_" type="plong" indexed="false" stored="false"/>
@@ -132,7 +135,7 @@
     <!-- OLS4: we are using dynamic fields for everything so no need to specify much of a schema.
 	 however we do need to specify the fields we DON'T want to be indexed
     -->
-    <field name="_json" type="ols4json" indexed="true" stored="true" multiValued="false" />
+    <field name="_json" type="ols4json" indexed="false" stored="true" multiValued="false" />
 
     <!-- Type used for data-driven schema, to add a string copy for each text field -->
     <dynamicField name="str_*" type="strings" stored="false" docValues="true" indexed="false" useDocValuesAsStored="false"/>
@@ -280,13 +283,13 @@
         <filter name="synonymGraph" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
         <filter name="flattenGraph"/>
         -->
-            <!--<filter name="lowercase"/>-->
+            <filter name="lowercase"/>
         </analyzer>
         <analyzer type="query">
             <tokenizer name="standard"/>
             <filter name="stop" ignoreCase="true" words="stopwords.txt" />
             <filter name="synonymGraph" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
-            <!--<filter name="lowercase"/>-->
+            <filter name="lowercase"/>
         </analyzer>
     </fieldType>
     <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100" multiValued="true">
@@ -297,13 +300,13 @@
             <filter name="synonymGraph" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
             <filter name="flattenGraph"/>
             -->
-                <!--<filter name="lowercase"/>-->
+            <filter name="lowercase"/><!-- Todo #498 -->
         </analyzer>
         <analyzer type="query">
             <tokenizer name="standard"/>
             <filter name="stop" ignoreCase="true" words="stopwords.txt" />
             <filter name="synonymGraph" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
-                <!--<filter name="lowercase"/>-->
+            <filter name="lowercase"/><!-- Todo #498 -->
         </analyzer>
 	</fieldType>
 

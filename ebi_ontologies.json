@@ -1,5 +1,6 @@
 {
   "ontologies": [
+	  
 	  {
                   "id": "semapv",
 		  "title": "Semantic Mapping Vocabulary",
@@ -515,7 +516,7 @@
         "http://purl.obolibrary.org/obo/pride_cv.obo#part_of"
       ],
       "oboSlims": false,
-      "ontology_purl": "https://raw.githubusercontent.com/PRIDE-Utilities/pride-ontology/master/pride_cv.obo"
+      "ontology_purl": "https://raw.githubusercontent.com/PRIDE-Utilities/pride-ontology/master/pride_cv.owl"
     },
     {
       "id": "bao",
@@ -583,7 +584,7 @@
       ],
       "oboSlims": false,
       "reasoner": "NONE",
-      "ontology_purl": "http://www.unimod.org/obo/unimod.obo"
+      "ontology_purl": "https://raw.githubusercontent.com/PRIDE-Utilities/pride-ontology/master/unimod.owl"
     },
     {
       "id": "nmrCV",
@@ -704,7 +705,7 @@
       ],
       "reasoner": "OWL2",
       "oboSlims": false,
-      "ontology_purl": "https://github.com/FAIRsharing/subject-ontology/raw/master/releases/SRAO.owl"
+      "ontology_purl": "https://github.com/FAIRsharing/subject-ontology/raw/master/SRAO.owl"
     },
     {
       "id": "hcao",
@@ -820,7 +821,7 @@
         "http://purl.obolibrary.org/obo/BFO_0000050"
       ],
       "base_uri": [
-        "http://humanbehaviourchange.org/ontology"
+        "http://humanbehaviourchange.org/ontology/BCIO_"
       ],
       "oboSlims": false,
       "reasoner": "OWL2",
@@ -1120,11 +1121,13 @@
     },
     {
        "id":"mamo",
+       "preferredPrefix": "MAMO",
        "title":"Mathematical Modelling Ontology",
        "label_property":"http://www.w3.org/2004/02/skos/core#prefLabel",
        "synonym_property":[
           "http://www.w3.org/2004/02/skos/core#altLabel"
-       ]
+       ],
+      "ontology_purl": "https://raw.githubusercontent.com/EBISPOT/mamo/main/mamo.rdf"
     },
     {
        "id":"mfoem",

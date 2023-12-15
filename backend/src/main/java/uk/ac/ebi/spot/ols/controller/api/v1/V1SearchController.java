@@ -20,6 +20,7 @@ import uk.ac.ebi.spot.ols.repository.transforms.LocalizationTransform;
 import uk.ac.ebi.spot.ols.repository.transforms.RemoveLiteralDatatypesTransform;
 import uk.ac.ebi.spot.ols.repository.v1.JsonHelper;
 import uk.ac.ebi.spot.ols.repository.v1.V1OntologyRepository;
+import uk.ac.ebi.spot.ols.repository.v1.mappers.AnnotationExtractor;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Simon Jupp
@@ -85,7 +87,7 @@ public class V1SearchController {
                 solrQuery.set("defType", "edismax");
                 solrQuery.setQuery(query);
 
-                String[] fields = {"label^5", "synonym^3", "definition", "short_form^2", "obo_id^2", "iri", "_json"};
+                String[] fields = {"label^5", "synonym^3", "definition", "short_form^2", "obo_id^2", "iri", "annotations_trimmed"};
 
                 solrQuery.set("qf", String.join(" ", SolrFieldMapper.mapFieldsList(List.of(fields))));
 
@@ -101,12 +103,15 @@ public class V1SearchController {
             } else {
 
                 solrQuery.set("defType", "edismax");
-                solrQuery.setQuery(query);
+                solrQuery.setQuery(query.toLowerCase());
                 solrQuery.set("qf", String.join(" ", SolrFieldMapper.mapFieldsList(queryFields)));
             }
         }
 
-        solrQuery.setFields("_json");
+        if (fieldList != null && fieldList.contains("score"))
+           solrQuery.setFields("_json","score");
+        else
+            solrQuery.setFields("_json");
 
         if (ontologies != null && !ontologies.isEmpty()) {
 
@@ -181,7 +186,7 @@ public class V1SearchController {
 
         System.out.println(solrQuery.jsonStr());
 
-        QueryResponse qr = dispatchSearch(solrQuery, "ols4_entities");
+        QueryResponse qr = solrClient.dispatchSearch(solrQuery, "ols4_entities");
 
         List<Object> docs = new ArrayList<>();
         for(SolrDocument res : qr.getResults()) {
@@ -231,10 +236,25 @@ public class V1SearchController {
             if (fieldList.contains("synonym")) outDoc.put("synonym", JsonHelper.getStrings(json, "synonym"));
             if (fieldList.contains("ontology_prefix")) outDoc.put("ontology_prefix", JsonHelper.getString(json, "ontologyPreferredPrefix"));
             if (fieldList.contains("subset")) outDoc.put("subset", JsonHelper.getStrings(json, "http://www.geneontology.org/formats/oboInOwl#inSubset"));
+            if (fieldList.contains("ontology_iri")) outDoc.put("ontology_iri", JsonHelper.getStrings(json, "ontologyIri").get(0));
+            if (fieldList.contains("score")) outDoc.put("score", res.get("score"));
+
+            // Include annotations that were specified with <field>_annotation
+            boolean anyAnnotations = fieldList.stream()
+                    .anyMatch(s -> s.endsWith("_annotation"));
+            if (anyAnnotations) {
+                Stream<String> annotationFields = fieldList.stream().filter(s -> s.endsWith("_annotation"));
+                Map<String, Object> termAnnotations = AnnotationExtractor.extractAnnotations(json);
+
+                annotationFields.forEach(annotationName -> {
+                    // Remove _annotation suffix to get plain annotation name
+                    String fieldName = annotationName.replaceFirst("_annotation$", "");
+                    outDoc.put(annotationName, termAnnotations.get(fieldName));
+                });
+            }
 
             docs.add(outDoc);
         }
-
 
         Map<String, Object> responseHeader = new HashMap<>();
         responseHeader.put("status", 0);
@@ -242,7 +262,7 @@ public class V1SearchController {
 
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("numFound", qr.getResults().getNumFound());
-        responseBody.put("start", 0);
+        responseBody.put("start", start);
         responseBody.put("docs", docs);
 
         Map<String, Object> responseObj = new HashMap<>();
@@ -286,10 +306,6 @@ public class V1SearchController {
     }
 
 
-    private QueryResponse dispatchSearch(SolrQuery query, String core) throws IOException, SolrServerException {
-        org.apache.solr.client.solrj.SolrClient mySolrClient = new HttpSolrClient.Builder(solrClient.host + "/solr/" + core).build();
-        return mySolrClient.query(query);
-    }
 
 
 

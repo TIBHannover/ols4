@@ -247,6 +247,7 @@ public class OntologyGraph implements StreamRDF {
         long endTime = System.nanoTime();
         System.out.println("load ontology: " + ((endTime - startTime) / 1000 / 1000 / 1000));
 
+        SearchableAnnotationValuesAnnotator.annotateSearchableAnnotationValues(this);
         InverseOfAnnotator.annotateInverseOf(this);
         NegativePropertyAssertionAnnotator.annotateNegativePropertyAssertions(this);
         OboSynonymTypeNameAnnotator.annotateOboSynonymTypeNames(this); // n.b. this one labels axioms so must run before the ReifiedPropertyAnnotator
@@ -804,7 +805,9 @@ public class OntologyGraph implements StreamRDF {
 
 			if(valueA.getType() != PropertyValue.Type.BNODE) {
 				// non bnode value, simple case
-				return valueA.equals(valueB);
+				if(!valueA.equals(valueB)) {
+                    return false;
+                }
 			} 
 
 			// bnode value

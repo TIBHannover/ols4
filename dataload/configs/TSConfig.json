@@ -653,37 +653,6 @@
       ]
     },
     {
-      "title": "DCMI Metadata Terms",
-      "preferredPrefix": "dcterms",
-      "description": "This document is an up-to-date specification of all metadata terms maintained by the Dublin Core Metadata Initiative, including properties, vocabulary encoding schemes, syntax encoding schemes, and classes.",
-      "homepage": "http://dublincore.org/specifications/dublin-core/dcmi-terms/2020-01-20/",
-      "tracker": null,
-      "logo": null,
-      "annotations": null,
-      "oboSlims": false,
-      "preferredRootTerms": [],
-      "allowDownload": false,
-      "classifications": null,
-      "license": null,
-      "repoUrl": null,
-      "uri": "http://purl.org/dc/terms/",
-      "id": "dcterms",
-      "mailing_list": null,
-      "ontology_purl": "file:/opt/terminology/vocabularies/dcmi-metadata-terms-for-ts/dublin_core_terms_for_TS.ttl",
-      "reasoner": "NONE",
-      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
-      "definition_property": [
-        "http://www.w3.org/2000/01/rdf-schema#comment"
-      ],
-      "synonym_property": [],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/BFO_0000050"
-      ],
-      "base_uri": [
-        "http://purl.org/dc/terms"
-      ]
-    },
-    {
       "title": "DFG Classification of Subject Areas Ontology",
       "preferredPrefix": "DFGFO",
       "description": "DFG Fachsystematik Ontology / DFG Classification of Subject Areas Ontology (DFGFO) encodes the DFG Classification of Subject Areas into an ontology, where each subject number are is enconded into a Class with subclass statements following the DFG Classification of Subject Areas hierarchy. Labels are provide German and English.",
@@ -1089,37 +1058,6 @@
       ]
     },
     {
-      "title": "HPO - ORDO ONTOLOGICAL MODULE",
-      "preferredPrefix": "HOOM",
-      "description": "The HPO – ORDO Ontological Module (HOOM) qualifies the annotations between a clinical entity (from ORDO) and phenotypic abnormalities from HPO (Human Phenotype Ontology) according to frequency and by integrating the notion of diagnostic criterion.",
-      "homepage": "http://www.orphadata.org/cgi-bin/index.php#ontologies",
-      "tracker": null,
-      "logo": null,
-      "annotations": null,
-      "oboSlims": false,
-      "preferredRootTerms": [],
-      "allowDownload": false,
-      "classifications": null,
-      "license": null,
-      "repoUrl": null,
-      "uri": "http://www.semanticweb.org/ontology/HOOM",
-      "id": "hoom",
-      "mailing_list": null,
-      "ontology_purl": "file:/opt/terminology/vocabularies/hoom/HOOM_en_1.7.owl",
-      "reasoner": "NONE",
-      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
-      "definition_property": [
-        "http://purl.org/dc/elements/1.1/description"
-      ],
-      "synonym_property": [],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/BFO_0000050"
-      ],
-      "base_uri": [
-        "http://www.semanticweb.org/ontology/HOOM"
-      ]
-    },
-    {
       "title": "IIRDS CORE Ontology",
       "preferredPrefix": "ico",
       "description": null,
@@ -1403,37 +1341,6 @@
       ]
     },
     {
-      "title": "Orphanet Rare Disease Ontology 4.0",
-      "preferredPrefix": "ORDO40",
-      "description": "The Orphanet Rare Disease ontology (ORDO) is jointly developed by Orphanet and the EBI to provide a structured vocabulary for rare diseases capturing relationships between diseases, genes and other relevant features which will form a useful resource for the computational analysis of rare diseases. It derived from the Orphanet database (www.orpha.net ) , a multilingual database dedicated to rare diseases populated from literature and validated by international experts. It integrates a nosology (classification of rare diseases), relationships (gene-disease relations, epiemological data) and connections with other terminologies (MeSH, UMLS, MedDRA),databases (OMIM, UniProtKB, HGNC, ensembl, Reactome, IUPHAR, Geantlas) or classifications (ICD10).",
-      "homepage": "http://www.orphadata.org/cgi-bin/index.php#ontologies",
-      "tracker": null,
-      "logo": null,
-      "annotations": null,
-      "oboSlims": false,
-      "preferredRootTerms": [],
-      "allowDownload": false,
-      "classifications": null,
-      "license": null,
-      "repoUrl": null,
-      "uri": "http://www.orpha.net/ontology/ORDO_en_4.0.owl",
-      "id": "ordo40",
-      "mailing_list": "http://www.orphadata.org/cgi-bin/contact.html",
-      "ontology_purl": "file:/opt/terminology/vocabularies/ordo/ORDO_en_4.0.owl",
-      "reasoner": "NONE",
-      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
-      "definition_property": [
-        "http://www.ebi.ac.uk/efo/definition"
-      ],
-      "synonym_property": [],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/BFO_0000050"
-      ],
-      "base_uri": [
-        "http://www.orpha.net/ontology/ORDO_en_4.0.owl"
-      ]
-    },
-    {
       "title": "Ontology for simulation, modelling, and optimization",
       "preferredPrefix": "OSMO",
       "description": "OSMO is an Ontology for Simulation, Modelling, and Optimization",
@@ -1617,37 +1524,6 @@
       ],
       "base_uri": [
         "http://www.w3.org/ns/shacl"
-      ]
-    },
-    {
-      "title": "SNOMED CT (International Edition)",
-      "preferredPrefix": "SNOMEDCT",
-      "description": "SNOMED CT or SNOMED Clinical Terms is a systematically organized computer processable collection of medical terms providing codes, terms, synonyms and definitions used in clinical documentation and reporting.",
-      "homepage": null,
-      "tracker": null,
-      "logo": null,
-      "annotations": null,
-      "oboSlims": false,
-      "preferredRootTerms": [],
-      "allowDownload": false,
-      "classifications": null,
-      "license": null,
-      "repoUrl": null,
-      "uri": "http://snomed.info/sct/900000000000207008",
-      "id": "snomedct",
-      "mailing_list": null,
-      "ontology_purl": "file:/opt/terminology/vocabularies/snomed-ct-international-edition/SnomedCT_International.owl",
-      "reasoner": "NONE",
-      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
-      "definition_property": [
-        "http://purl.org/dc/elements/1.1/description"
-      ],
-      "synonym_property": [],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/BFO_0000050"
-      ],
-      "base_uri": [
-        "http://snomed.info/id/"
       ]
     },
     {
@@ -2543,70 +2419,6 @@
       ]
     },
     {
-      "title": "Basisklassifikation",
-      "preferredPrefix": "bk",
-      "description": "German decimal classification system based on the Dutch Basic Classification (NBC)",
-      "homepage": "http://bartoc.org/en/node/18785",
-      "tracker": null,
-      "logo": null,
-      "annotations": null,
-      "oboSlims": false,
-      "preferredRootTerms": [],
-      "allowDownload": false,
-      "classifications": null,
-      "license": null,
-      "repoUrl": null,
-      "uri": "file:/opt/terminology/vocabularies/basisklassifikation/bk.ttl",
-      "id": "bk",
-      "mailing_list": null,
-      "ontology_purl": "file:/opt/terminology/vocabularies/basisklassifikation/bk.ttl",
-      "reasoner": "NONE",
-      "label_property": "http://www.w3.org/2004/02/skos/core#prefLabel",
-      "definition_property": [
-        "http://www.w3.org/2004/02/skos/core#definition"
-      ],
-      "synonym_property": [
-        "http://www.w3.org/2004/02/skos/core#altLabel"
-      ],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/BFO_0000050"
-      ],
-      "base_uri": [
-        "http://uri.gbv.de/terminology/bk/"
-      ]
-    },
-    {
-      "title": "Describing Copyright in RDF - Creative Commons Rights Expression Language",
-      "preferredPrefix": "ccrel",
-      "description": "The Creative Commons Rights Expression Language (CC REL) lets you describe copyright licenses in RDF. For more information on describing licenses in RDF and attaching those descriptions to digital works, see CC REL (https://wiki.creativecommons.org/CC_REL) in the Creative Commons wiki (https://wiki.creativecommons.org/).",
-      "homepage": "https://creativecommons.org/ns",
-      "tracker": null,
-      "logo": null,
-      "annotations": null,
-      "oboSlims": false,
-      "preferredRootTerms": [],
-      "allowDownload": false,
-      "classifications": null,
-      "license": null,
-      "repoUrl": null,
-      "uri": "file:/opt/terminology/vocabularies/cc-rel/cc-schema-for-TS.rdf",
-      "id": "ccrel",
-      "mailing_list": null,
-      "ontology_purl": "file:/opt/terminology/vocabularies/cc-rel/cc-schema-for-TS.rdf",
-      "reasoner": "NONE",
-      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
-      "definition_property": [
-        "http://www.w3.org/2000/01/rdf-schema#comment"
-      ],
-      "synonym_property": [],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/BFO_0000050"
-      ],
-      "base_uri": [
-        "http://creativecommons.org/ns"
-      ]
-    },
-    {
       "title": "Building Topology Ontology",
       "preferredPrefix": "bot",
       "description": "The Building Topology Ontology (BOT) is a minimal ontology for describing the core topological concepts of a building.",
@@ -3349,37 +3161,6 @@
       ]
     },
     {
-      "title": "Orphanet Rare Disease Ontology 4.1",
-      "preferredPrefix": "ORDO41",
-      "description": "The Orphanet Rare Disease ontology (ORDO) is jointly developed by Orphanet and the EBI to provide a structured vocabulary for rare diseases capturing relationships between diseases, genes and other relevant features which will form a useful resource for the computational analysis of rare diseases. It derived from the Orphanet database (www.orpha.net ) , a multilingual database dedicated to rare diseases populated from literature and validated by international experts. It integrates a nosology (classification of rare diseases), relationships (gene-disease relations, epiemological data) and connections with other terminologies (MeSH, UMLS, MedDRA),databases (OMIM, UniProtKB, HGNC, ensembl, Reactome, IUPHAR, Geantlas) or classifications (ICD10).",
-      "homepage": "http://www.orphadata.org/cgi-bin/index.php#ontologies",
-      "tracker": null,
-      "logo": null,
-      "annotations": null,
-      "oboSlims": false,
-      "preferredRootTerms": [],
-      "allowDownload": false,
-      "classifications": null,
-      "license": null,
-      "repoUrl": null,
-      "uri": "file:/opt/terminology/vocabularies/ordo/ORDO_en_4.1.owl",
-      "id": "ordo41",
-      "mailing_list": "http://www.orphadata.org/cgi-bin/contact.html",
-      "ontology_purl": "file:/opt/terminology/vocabularies/ordo/ORDO_en_4.1.owl",
-      "reasoner": "NONE",
-      "label_property": "http://www.w3.org/2000/01/rdf-schema#label",
-      "definition_property": [
-        "http://www.ebi.ac.uk/efo/definition"
-      ],
-      "synonym_property": [],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/BFO_0000050"
-      ],
-      "base_uri": [
-        "http://www.orpha.net/ontology/ORDO_en_4.1.owl"
-      ]
-    },
-    {
       "title": "Repository for the Open Energy Ontology (OEO)",
       "preferredPrefix": "OEO",
       "description": "The Open Energy Ontology is an ontology for all aspects of the energy modelling domain.\n\nIt is developed in four main modules: 'oeo-model', a module for all entities related to models and modelling; 'oeo-physical', a module for all entities related to the world of energy and energy generation; 'oeo-social', a module for all relevant social and economic aspects of the energy domain; 'oeo-shared', a module to cover entities and relations needed in all of the modules above to prevent them getting implemented multiple times.\nA supplementary module is the oeo-physical-axioms module, which contains general class axioms.",
@@ -3577,39 +3358,6 @@
       ],
       "base_uri": [
         "http://astrothesaurus.org/uat"
-      ]
-    },
-    {
-      "title": "TEMA Thesaurus",
-      "preferredPrefix": "TEMA",
-      "description": "Thesaurus Technology and Management (TEMA)",
-      "homepage": null,
-      "tracker": null,
-      "logo": null,
-      "annotations": null,
-      "oboSlims": false,
-      "preferredRootTerms": [],
-      "allowDownload": false,
-      "classifications": null,
-      "license": null,
-      "repoUrl": null,
-      "uri": "https://purl.org/tema/",
-      "id": "tema",
-      "mailing_list": null,
-      "ontology_purl": "file:/opt/terminology/vocabularies/tema/TEMA20221213.ttl",
-      "reasoner": "NONE",
-      "label_property": "http://www.w3.org/2004/02/skos/core#prefLabel",
-      "definition_property": [
-        "http://purl.org/dc/elements/1.1/description"
-      ],
-      "synonym_property": [
-        "http://www.w3.org/2004/02/skos/core#altLabel"
-      ],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/BFO_0000050"
-      ],
-      "base_uri": [
-        "https://purl.org/tema"
       ]
     },
     {

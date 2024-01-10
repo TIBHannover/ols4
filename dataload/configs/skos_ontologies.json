@@ -12,6 +12,12 @@
       "preferredRootTerms": [],
       "allowDownload": false,
       "classifications": null,
+      "collection": [
+	    "NFDI4ING"
+	  ],
+	  "subject": [
+	    "Physics"
+	  ],
       "license": null,
       "repoUrl": null,
       "uri": "https://raw.githubusercontent.com/physh-org/PhySH/master/physh.ttl",
@@ -48,6 +54,13 @@
       "preferredRootTerms": [],
       "allowDownload": false,
       "classifications": null,
+      "collection": [
+	    "NFDI4ING",
+	    "ESS"
+	  ],
+	  "subject": [
+	    "Physics"
+	  ],
       "license": null,
       "repoUrl": null,
       "uri": "https://raw.githubusercontent.com/astrothesaurus/UAT/master/UAT.rdf",
@@ -69,10 +82,6 @@
         "http://astrothesaurus.org/uat"
       ]
     },
-
-
-
-
     {
       "title": "Simple Knowledge Organization System (SKOS) version of Materials Data Vocabulary",
       "preferredPrefix": "mdv",
@@ -85,6 +94,12 @@
       "preferredRootTerms": [],
       "allowDownload": true,
       "classifications": null,
+      "collection": [
+	    "NFDI4ING"
+	  ],
+	  "subject": [
+	    "Material science"
+	  ],
       "license": null,
       "repoUrl": null,
       "id": "mdv",

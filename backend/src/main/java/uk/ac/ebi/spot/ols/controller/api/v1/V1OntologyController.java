@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
 import uk.ac.ebi.spot.ols.model.v1.V1Ontology;
 import uk.ac.ebi.spot.ols.repository.v1.V1OntologyRepository;
-import java.lang.reflect.*;
 import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;

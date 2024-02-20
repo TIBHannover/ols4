@@ -32,8 +32,10 @@
     "https://doi.org/10.29172"
   ],
   "repo_url": "https://github.com/physh-org/PhySH",
-  "skos": true
-},
+  "isSkos": true,
+  "skosNarrower": false,
+  "skosRoot": "RELATIONSHIPS"
+    },
     {
   "ontology_purl": "https://raw.githubusercontent.com/astrothesaurus/UAT/master/UAT.rdf",
   "title": "Unified Astronomy Thesaurus (UAT)",
@@ -62,8 +64,10 @@
     "http://www.w3.org/2004/02/skos/core#definition"
   ],
   "repo_url": "https://github.com/astrothesaurus/UAT",
-  "skos": true
-},
+  "isSkos": true,
+  "skosNarrower": false,
+  "skosRoot": "TOPCONCEPTOF_PROPERTY"
+    },
 {
   "ontology_purl": "https://raw.githubusercontent.com/dini-ag-kim/hochschulfaechersystematik/master/hochschulfaechersystematik.ttl",
   "id": "hsfs",
@@ -77,7 +81,9 @@
     "https://w3id.org/kim/hochschulfaechersystematik/"
   ],
   "label_property": "http://www.w3.org/2004/02/skos/core#prefLabel",
-  "skos": true,
+  "isSkos": true,
+  "skosNarrower": false,
+  "skosRoot": "TOPCONCEPTOF_PROPERTY",
   "creator": [
     "Michael Menzel",
     "Adrian Pohl"
@@ -109,7 +115,9 @@
   "base_uri": [
     "https://purl.org/fidbaudigital/subjects"
   ],
-  "skos": true,
+  "isSkos": true,
+  "skosNarrower": false,
+  "skosRoot": "TOPCONCEPTOF_PROPERTY",
   "repo_url": "https://gitlab.com/fid-bau/terminologie/fid-baudigital-faecherklassifikation"
 },
 {
@@ -127,7 +135,9 @@
   ],
   "allow_download": true,
   "preferredPrefix": "oefos",
-  "skos": true,
+  "isSkos": true,
+  "skosNarrower": false,
+  "skosRoot": "SCHEMA",
   "label_property": "http://www.w3.org/2004/02/skos/core#prefLabel",
   "creator": [
     "Christoph Hoffmann"

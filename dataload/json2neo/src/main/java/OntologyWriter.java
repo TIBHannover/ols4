@@ -149,11 +149,7 @@ public class OntologyWriter {
         csvHeader.add(":LABEL");
         csvHeader.add("_json");
 
-        for (Map<String,Object> o : (Collection<Map<String,Object>>) classifications) {
-            for (Map.Entry e : o.entrySet()) {
-                csvHeader.add("classifications."+e.getKey().toString());
-            }
-        }
+        csvHeader.add("classifications");
 
         csvHeader.addAll(propertyHeaders(properties));
 
@@ -173,11 +169,7 @@ public class OntologyWriter {
             row[n++] = nodeLabels;
             row[n++] = gson.toJson(entity);
 
-            for (Map<String,Object> o : (Collection<Map<String,Object>>) classifications) {
-                for (Map.Entry e : o.entrySet()) {
-                    row[n++] = e.getValue().toString();
-                }
-            }
+            row[n++] = gson.toJson(classifications);
 
             for (String column : properties) {
                 row[n++] = serializeValue(entity, column);

@@ -70,29 +70,37 @@ public class OntologyWriter {
 
 	Map<String,Object> ontologyProperties = new LinkedHashMap<>();
 
+    Collection<Map<String,Object>>  classifications = null;
+
 	while(reader.peek() != JsonToken.END_OBJECT) {
 
 		String name = reader.nextName();
 
 		if(name.equals("classes")) {
 			writeEntities(outputFilePath + "/" + ontologyScannerResult.ontologyId + "_classes.csv", ontologyId,
-				"OntologyEntity|OntologyClass", "class", ontologyScannerResult.allClassProperties);
+				"OntologyEntity|OntologyClass", "class", classifications,ontologyScannerResult.allClassProperties);
 			continue;
 		}
 
 		if(name.equals("properties")) {
 			writeEntities(outputFilePath + "/" + ontologyScannerResult.ontologyId + "_properties.csv", ontologyId,
-				"OntologyEntity|OntologyProperty", "property", ontologyScannerResult.allPropertyProperties);
+				"OntologyEntity|OntologyProperty", "property", classifications,ontologyScannerResult.allPropertyProperties);
 			continue;
 		}
 
 		if(name.equals("individuals")) {
 			writeEntities(outputFilePath + "/" + ontologyScannerResult.ontologyId + "_individuals.csv", ontologyId,
-				"OntologyEntity|OntologyIndividual", "individual", ontologyScannerResult.allIndividualProperties);
+				"OntologyEntity|OntologyIndividual", "individual", classifications,ontologyScannerResult.allIndividualProperties);
 			continue;
 		}
 
-		ontologyProperties.put(name, gson.fromJson(reader, Object.class));
+        Object ontologyProperty = gson.fromJson(reader, Object.class);
+
+         if (name.equals("classifications")){
+            classifications = (Collection<Map<String,Object>>) ontologyProperty;
+        }
+
+		ontologyProperties.put(name, ontologyProperty);
 	}
 
 	reader.endObject(); // ontology
@@ -103,6 +111,8 @@ public class OntologyWriter {
     }
 
     public void writeOntology(Map<String,Object> ontologyProperties) throws IOException {
+
+        //Neo4j e yazacak yer burasi
 
         List<String> properties = new ArrayList<String>( ontologyScannerResult.allOntologyProperties);
 
@@ -132,7 +142,7 @@ public class OntologyWriter {
         printer.close(true);
     }
 
-    public void writeEntities(String outName, String ontologyId, String nodeLabels, String type, Set<String> allEntityProperties) throws IOException {
+    public void writeEntities(String outName, String ontologyId, String nodeLabels, String type, Collection<Map<String,Object>> classifications, Set<String> allEntityProperties) throws IOException {
 
         List<String> properties = new ArrayList<String>(allEntityProperties);
 
@@ -140,6 +150,13 @@ public class OntologyWriter {
         csvHeader.add("id:ID");
         csvHeader.add(":LABEL");
         csvHeader.add("_json");
+
+        for (Map<String,Object> o : (Collection<Map<String,Object>>) classifications) {
+            for (Map.Entry e : o.entrySet()) {
+                csvHeader.add(e.getKey().toString());
+            }
+        }
+
         csvHeader.addAll(propertyHeaders(properties));
 
         CSVPrinter printer = CSVFormat.POSTGRESQL_CSV.withHeader(csvHeader.toArray(new String[0])).print(
@@ -156,7 +173,12 @@ public class OntologyWriter {
 
             row[n++] = ontologyId + "+" + type + "+" + (String) entity.get("iri");
             row[n++] = nodeLabels;
-	    row[n++] = gson.toJson(entity);
+
+            for (Map<String,Object> o : (Collection<Map<String,Object>>) classifications) {
+                for (Map.Entry e : o.entrySet()) {
+                    row[n++] = e.getValue().toString();
+                }
+            }
 
             for (String column : properties) {
                 row[n++] = serializeValue(entity, column);
@@ -197,7 +219,7 @@ public class OntologyWriter {
 
 		if(types.contains("reification")) {
 
-                    // reification 
+                    // reification
                     Object reifiedValue = mapValue.get("value");
                     assert (reifiedValue instanceof String);
 
@@ -247,7 +269,7 @@ public class OntologyWriter {
         // it is ambiguous which of the types the edge points to/from. For example, if
         // a URI points to a node which is both a Class and an Individual, does it point
         // to the Class or the Individual?
-        // 
+        //
         // In the hacky approach below, we just make multiple edges: in the above example,
         // one edge would point to the Class and another would point to the Individual.
         //

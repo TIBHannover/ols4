@@ -112,8 +112,6 @@ public class OntologyWriter {
 
     public void writeOntology(Map<String,Object> ontologyProperties) throws IOException {
 
-        //Neo4j e yazacak yer burasi
-
         List<String> properties = new ArrayList<String>( ontologyScannerResult.allOntologyProperties);
 
         List<String> csvHeader = new ArrayList<>();
@@ -153,7 +151,7 @@ public class OntologyWriter {
 
         for (Map<String,Object> o : (Collection<Map<String,Object>>) classifications) {
             for (Map.Entry e : o.entrySet()) {
-                csvHeader.add(e.getKey().toString());
+                csvHeader.add("classifications."+e.getKey().toString());
             }
         }
 
@@ -173,6 +171,7 @@ public class OntologyWriter {
 
             row[n++] = ontologyId + "+" + type + "+" + (String) entity.get("iri");
             row[n++] = nodeLabels;
+            row[n++] = gson.toJson(entity);
 
             for (Map<String,Object> o : (Collection<Map<String,Object>>) classifications) {
                 for (Map.Entry e : o.entrySet()) {

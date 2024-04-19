@@ -42,7 +42,10 @@ public class JsonHelper {
         } else if(value.isJsonObject()) {
             return objectToString(value.getAsJsonObject().get("value"));
         } else {
-            return value.getAsString();
+            if (value.getAsString() == null)
+                return "";
+            else
+                return value.getAsString();
         }
     }
 

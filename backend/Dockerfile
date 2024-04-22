@@ -1,8 +1,8 @@
 
-FROM maven:3.6.3-adoptopenjdk-14
+FROM maven:3.9.6-eclipse-temurin-17
 
 RUN mkdir /opt/ols
-COPY . /opt/ols/ 
+COPY . /opt/ols/
 RUN cd /opt/ols && ls && mvn clean package -DskipTests
 
 EXPOSE 8080

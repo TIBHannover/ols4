@@ -8,7 +8,7 @@ fi
 rm -rf $1/data/databases/neo4j
 rm -rf $1/data/transactions/neo4j
 
-$1/bin/neo4j-admin import \
+$1/bin/neo4j-admin database import full \
         --ignore-empty-strings=true \
         --legacy-style-quoting=false \
         --multiline-fields=true \

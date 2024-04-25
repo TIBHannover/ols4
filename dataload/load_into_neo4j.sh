@@ -14,8 +14,10 @@ $1/bin/neo4j-admin database import full \
         --multiline-fields=true \
         --read-buffer-size=16777216 \
         --array-delimiter="|" \
-        --database=neo4j \
-        --processors=16 \
+        --threads=16 \
         $(./make_csv_import_cmd.sh $2)
+
+$1/bin/neo4j-admin database info neo4j
+
 
 

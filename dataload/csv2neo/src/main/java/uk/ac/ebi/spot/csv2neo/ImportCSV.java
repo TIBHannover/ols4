@@ -32,7 +32,7 @@ public class ImportCSV {
         return fileList;
     }
 
-    public static String generateOntologyCreationQuery(String[] titles, String[] values){
+    public static String generateNodeCreationQuery(String[] titles, String[] values){
 
         StringBuilder sb = new StringBuilder();
 
@@ -55,43 +55,16 @@ public class ImportCSV {
             sb.append("}")
                     .append(")")
                     .append(" ");
+        } else {
+            System.out.println("titles and values are not equal");
+            System.out.println("titles: "+titles.length + " - values: " +values.length);
+            for (String title : titles)
+                System.out.println("title: "+title);
         }
         return sb.toString();
     }
 
-    public static String generateClassCreationQuery(String[] titles, String[] values){
-
-        StringBuilder sb = new StringBuilder();
-
-
-        if (titles.length == values.length) {
-
-            sb.append("CREATE (")
-                    //         .append(values[0].substring(1, values[0].length() - 1))
-                    .append(":")
-                    .append(values[1].substring(1, values[1].length() - 1).replace('|',':'))
-                    .append(" {");
-            sb.append("id: ").append("\'"+values[0].substring(1, values[0].length() - 1)+"\'");
-
-            for (int i = 2; i < values.length; i++) {
-                sb.append(", ");
-
-                if (titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"").replace("\\","__").length() > 30)
-                    sb.append("`"+titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"").replace("\\","__")+"`");
-                else
-                    sb.append(titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"").replace("\\","__"));
-                sb.append(": ").append(convertToJSONArray("\'"+values[i].substring(1, values[i].length() - 1).replaceAll("\"\"","\"").replace("\\","__")+"\'"));
-
-            }
-
-            sb.append("}")
-                    .append(")")
-                    .append(" ");
-        }
-        return sb.toString();
-    }
-
-    public static String generateClassSetQuery(String[] titles, String[] values){
+    public static String generateNodeSetQuery(String[] titles, String[] values){
 
         StringBuilder sb = new StringBuilder();
 
@@ -101,19 +74,28 @@ public class ImportCSV {
             boolean first = true;
 
             for (int i = 2; i < values.length; i++){
-
-                if (titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"").replace("\\","__").length() <= 30)
-                    continue;
-
                 if(!first)
                     sb.append(" AND ");
                 first = false;
-
-                sb.append("n.").append(titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"").replace("\\","__"))
-                        .append(" = ").append(convertToJSONArray("\'"+values[i].substring(1, values[i].length() - 1).replaceAll("\"\"","\"").replace("\\","__")+"\'"));
-
+                String text = values[i].substring(1, values[i].length() - 1).replaceAll("\"\"","\"").replaceAll("\\\\", "\\\\\\\\").replaceAll("\'","\\\\'");
+                sb.append("n.").append("`"+titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"")+"`")
+                        .append(" = ").append(convertToJSONArray("\'"+text+"\'"));
             }
 
+        }
+
+        return sb.toString();
+    }
+
+    public static String generateRelationCreationQuery(String[] titles, String[] values){
+        StringBuilder sb = new StringBuilder();
+
+        if (titles.length == values.length){
+            sb.append("MATCH (n {id: "+"\'"+values[0].substring(1, values[0].length() - 1)+"\'"+"}),")
+                    .append("(m {id: "+"\'"+values[2].substring(1, values[2].length() - 1)+"\'"+"}) ")
+                    .append("CREATE (n)-[:")
+                    .append("`"+values[1].substring(1, values[1].length() - 1).replace("|","`:`")+"`")
+                    .append("]->(m)");
         }
 
         return sb.toString();
@@ -154,14 +136,68 @@ public class ImportCSV {
         return decodedString.toString();
     }
 
+    public static String[] split(String input){
+        String[] tokens = {};
+        char c = '{';
+        char d = '\"';
+        char e = '}';
+        String left = String.valueOf(d) + c;
+        String right = String.valueOf(e) + d;
+        int countLeftCurly = countOccurrences(input, left);
+        int countRightCurly = countOccurrences(input, right);
+
+        if(countLeftCurly == 0 && countRightCurly == 0){
+            tokens = input.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+        } else if(countLeftCurly == countRightCurly && countLeftCurly == 1){
+            String[] content = input.split("\"\\{");
+            String before = "";
+            String after = "";
+            String json = "";
+            before = content[0];
+            if (before.endsWith(","))
+                before = before.substring(0,before.length()-1);
+            String[] content2 = content[1].split("\\}\"");
+            json = String.valueOf(d)+String.valueOf(c)+content2[0]+String.valueOf(e)+String.valueOf(d);
+            after = content2[1];
+            if(after.startsWith(","))
+                after = after.substring(1,after.length());
+            String[] beforeArray = before.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            String[] afterArray = after.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            int length = beforeArray.length + 1 + afterArray.length;
+            tokens = new String[length];
+            for (int i =0;i<length;i++){
+                if(i<beforeArray.length)
+                    tokens[i] = beforeArray[i];
+                else if(i==beforeArray.length)
+                    tokens[i] = json;
+                else
+                    tokens[i] = afterArray[i-(beforeArray.length+1)];
+            }
+        }
+
+        return tokens;
+    }
+
+    public static int countOccurrences(String input, String pattern) {
+        int count = 0;
+        int index = 0;
+
+        while ((index = input.indexOf(pattern, index)) != -1) {
+            count++;
+            index += pattern.length();
+        }
+
+        return count;
+    }
+
     public static void main(String... args) throws IOException {
 
         // URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
         final String dbUri = "neo4j://localhost";
         final String dbUser = "neo4j";
-        final String dbPassword = "test";
+        final String dbPassword = "testtest";
 
-        File dir = new File("/home/giray/Downloads/neo4j-community-5.19.0/out");
+        File dir = new File("/home/giray/Downloads/neo4j-community-5.19.0/asd");
         List<File> files = showFiles(dir.listFiles());
 
         try (var driver = GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword))) {
@@ -171,42 +207,51 @@ public class ImportCSV {
 
             try (var session = driver.session(SessionConfig.builder().withDatabase("neo4j").build())) {
                 // session usage
+                try{
+                    session.run("CREATE CONSTRAINT FOR (n:Ontology) REQUIRE n.id IS UNIQUE");
+                    session.run("CREATE CONSTRAINT FOR (n:OntologyEntity) REQUIRE n.id IS UNIQUE");
+                    session.run("CREATE CONSTRAINT FOR (n:OntologyClass) REQUIRE n.id IS UNIQUE");
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
 
                 for (File file : files){
-                    if(file.getName().contains("_edges") || !file.getName().endsWith(".csv"))
+                    if((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
                         continue;
-                    // classes doesnt work ontologies work. {_json: '{
                     fr = new FileReader(file.getAbsolutePath());
                     br = new BufferedReader(fr);
                     String line = br.readLine();
                     String[] titles = {};
                     if (line != null)
                         titles = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-
+                    String[] pieces = null;
                     while((line = br.readLine())!=null){
-                        String[] pieces = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                        System.out.println(line);
+                        pieces = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                        System.out.println("2");
 
                         System.out.println("file: "+file.getName());
 
-                        String query = generateOntologyCreationQuery(titles,pieces);
-                        String query2 = generateClassSetQuery(titles,pieces);
+                        String query = generateRelationCreationQuery(titles,pieces);
+                        //String query2 = generateSetQuery(titles,pieces);
                         System.out.println("query: "+query);
                         //System.out.println("query2: "+query2);
 
                         try (Transaction tx = session.beginTransaction()) {
-                            // "CREATE (o:Organization {id: randomuuid(), createdDate: datetime()})"
                             tx.run(query);
-                            //tx.run(query2);
                             tx.commit();
+                            tx.close();
                             // use tx.run() to run queries
                             //     tx.commit() to commit the transaction
                             //     tx.rollback() to rollback the transaction
-                        } /*catch(Exception e){
+                        } catch(Exception e){
                             e.printStackTrace();
-                        }*/
+                        }
+                        System.gc();
                     }
                 }
             }
         }
+        System.out.println("kamil");
     }
 }

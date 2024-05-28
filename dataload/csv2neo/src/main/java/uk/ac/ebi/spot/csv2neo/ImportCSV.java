@@ -38,7 +38,8 @@ public class ImportCSV {
 
     public static void generateNEO(List<File> files, Session session) throws IOException {
         for (File file : files){
-            if((file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
+            if(!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
+                    || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
                 continue;
             fr = new FileReader(file.getAbsolutePath());
             br = new BufferedReader(fr);
@@ -177,7 +178,7 @@ public class ImportCSV {
                 } catch(Exception e){
                     e.printStackTrace();
                 }
-                System.out.println("kamil");
+                System.out.println("Start Neo4J Modification...");
                 if(cmd.hasOption("i"))
                     generateNEO(files,session);
                 else

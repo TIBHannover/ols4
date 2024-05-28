@@ -1,21 +1,25 @@
 package uk.ac.ebi.spot.csv2neo;
 
-import org.neo4j.driver.AuthTokens;
-import org.neo4j.driver.GraphDatabase;
-import org.neo4j.driver.SessionConfig;
-import org.neo4j.driver.Transaction;
-
+import org.neo4j.driver.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import static uk.ac.ebi.spot.csv2neo.QueryGeneration.*;
 
+/**
+ * @author Erhun Giray TUNCAY
+ * @email giray.tuncay@tib.eu
+ * TIB-Leibniz Information Center for Science and Technology
+ */
 public class ImportCSV {
 
     static FileReader fr;
     static BufferedReader br;
-
 
     public static List<File> showFiles(File[] files) throws IOException {
         List<File> fileList = new ArrayList<File>();
@@ -32,111 +36,57 @@ public class ImportCSV {
         return fileList;
     }
 
-    public static String generateNodeCreationQuery(String[] titles, String[] values){
-
-        StringBuilder sb = new StringBuilder();
-
-        if (titles.length == values.length) {
-
-            sb.append("CREATE (")
-                    .append(":")
-                    .append("`"+values[1].substring(1, values[1].length() - 1).replace("|","`:`")+"`")
-                    .append(" {");
-            sb.append("id: ").append("\'"+values[0].substring(1, values[0].length() - 1)+"\'");
-
-            for (int i = 2; i < values.length; i++) {
-                String text = values[i].substring(1, values[i].length() - 1).replaceAll("\"\"","\"").replaceAll("\\\\", "\\\\\\\\").replaceAll("\'","\\\\'");
-                sb.append(", ")
-                        .append("`"+titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"")+"`")
-                        .append(": ")
-                        .append(convertToJSONArray("\'"+text+"\'"));
+    public static void generateNEO(List<File> files, Session session) throws IOException {
+        for (File file : files){
+            if((file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
+                continue;
+            fr = new FileReader(file.getAbsolutePath());
+            br = new BufferedReader(fr);
+            String line = br.readLine();
+            String[] titles = {};
+            if (line != null)
+                titles = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            String[] pieces = null;
+            while((line = br.readLine())!=null){
+                System.out.println(line);
+                pieces = split(line,",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                String query = generateNodeCreationQuery(titles,pieces);
+                System.out.println("query: "+query);
+                try (Transaction tx = session.beginTransaction()) {
+                    tx.run(query);
+                    tx.commit();
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
-
-            sb.append("}")
-                    .append(")")
-                    .append(" ");
-        } else {
-            System.out.println("titles and values are not equal");
-            System.out.println("titles: "+titles.length + " - values: " +values.length);
-            for (String title : titles)
-                System.out.println("title: "+title);
         }
-        return sb.toString();
-    }
 
-    public static String generateNodeSetQuery(String[] titles, String[] values){
-
-        StringBuilder sb = new StringBuilder();
-
-        if (titles.length == values.length){
-            sb.append("MATCH (n) where n.id = ").append("\'"+values[0].substring(1, values[0].length() - 1)+"\'").append(" SET ");
-
-            boolean first = true;
-
-            for (int i = 2; i < values.length; i++){
-                if(!first)
-                    sb.append(" AND ");
-                first = false;
-                String text = values[i].substring(1, values[i].length() - 1).replaceAll("\"\"","\"").replaceAll("\\\\", "\\\\\\\\").replaceAll("\'","\\\\'");
-                sb.append("n.").append("`"+titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"")+"`")
-                        .append(" = ").append(convertToJSONArray("\'"+text+"\'"));
+        for (File file : files){
+            if((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
+                continue;
+            fr = new FileReader(file.getAbsolutePath());
+            br = new BufferedReader(fr);
+            String line = br.readLine();
+            String[] titles = {};
+            if (line != null)
+                titles = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            String[] pieces = null;
+            while((line = br.readLine())!=null){
+                System.out.println(line);
+                pieces = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                String query = generateRelationCreationQuery(titles,pieces);
+                System.out.println("query: "+query);
+                try (Transaction tx = session.beginTransaction()) {
+                    tx.run(query);
+                    tx.commit();
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
-
         }
-
-        return sb.toString();
     }
 
-    public static String generateRelationCreationQuery(String[] titles, String[] values){
-        StringBuilder sb = new StringBuilder();
-
-        if (titles.length == values.length){
-            sb.append("MATCH (n {id: "+"\'"+values[0].substring(1, values[0].length() - 1)+"\'"+"}),")
-                    .append("(m {id: "+"\'"+values[2].substring(1, values[2].length() - 1)+"\'"+"}) ")
-                    .append("CREATE (n)-[:")
-                    .append("`"+values[1].substring(1, values[1].length() - 1).replace("|","`:`")+"`")
-                    .append("]->(m)");
-        }
-
-        return sb.toString();
-    }
-
-    public static String convertToJSONArray(String input){
-        if (input.contains("|")){
-            input = input.substring(1,input.length()-1);
-            String[] sarray = input.split("\\|");
-            StringBuilder sb = new StringBuilder();
-            sb.append("[");
-            for (int i = 0;i<sarray.length;i++){
-                sb.append("\'").append(sarray[i]).append("\'");
-                if(i< sarray.length -1)
-                    sb.append(",");
-
-            }
-            sb.append("]");
-            input = sb.toString();
-        }
-
-        return input;
-    }
-
-    public static String decode(String input) {
-        Pattern pattern = Pattern.compile("\\\\u[0-9a-fA-F]{4}");
-        Matcher matcher = pattern.matcher(input);
-
-        StringBuilder decodedString = new StringBuilder();
-
-        while (matcher.find()) {
-            String unicodeSequence = matcher.group();
-            char unicodeChar = (char) Integer.parseInt(unicodeSequence.substring(2), 16);
-            matcher.appendReplacement(decodedString, Character.toString(unicodeChar));
-        }
-
-        matcher.appendTail(decodedString);
-        return decodedString.toString();
-    }
-
-    public static String[] split(String input){
+    public static String[] split(String input, String regex){
         String[] tokens = {};
         char c = '{';
         char d = '\"';
@@ -147,7 +97,7 @@ public class ImportCSV {
         int countRightCurly = countOccurrences(input, right);
 
         if(countLeftCurly == 0 && countRightCurly == 0){
-            tokens = input.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            tokens = input.split(regex);
         } else if(countLeftCurly == countRightCurly && countLeftCurly == 1){
             String[] content = input.split("\"\\{");
             String before = "";
@@ -161,8 +111,8 @@ public class ImportCSV {
             after = content2[1];
             if(after.startsWith(","))
                 after = after.substring(1,after.length());
-            String[] beforeArray = before.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-            String[] afterArray = after.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            String[] beforeArray = before.split(regex);
+            String[] afterArray = after.split(regex);
             int length = beforeArray.length + 1 + afterArray.length;
             tokens = new String[length];
             for (int i =0;i<length;i++){
@@ -190,23 +140,36 @@ public class ImportCSV {
         return count;
     }
 
-    public static void main(String... args) throws IOException {
+    private static Options getOptions() {
+        Options options = new Options();
+        options.addOption("i", "ingest",false, "ingest ontologies");
+        options.addOption("rm", "remove",true, "remove ontology by commas");
+        options.addOption("a", "authenticated",false, "use authentication");
+        options.addOption("u", "user",true, "neo4j user name");
+        options.addOption("pw", "password",true, "neo4j user password");
+        options.addOption("uri", "databaseuri",true, "neo4j database uri");
+        options.addOption("db", "database",true, "neo4j database name");
+        options.addOption("d", "directory",true, "neo4j csv import directory");
+        return options;
+    }
 
-        // URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
-        final String dbUri = "neo4j://localhost";
-        final String dbUser = "neo4j";
-        final String dbPassword = "testtest";
+    public static void main(String... args) throws IOException, ParseException {
+        Options options = getOptions();
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = parser.parse( options, args);
+        final String db = cmd.hasOption("db") ? cmd.getOptionValue("db") : "neo4j";
+        final String dbUri = cmd.hasOption("uri") ? cmd.getOptionValue("uri") : "neo4j://localhost";
+        final String dbUser = cmd.hasOption("u") ? cmd.getOptionValue("u") : "neo4j";
+        final String dbPassword = cmd.hasOption("pw") ? cmd.getOptionValue("pw") : "testtest";
+        final String directory = cmd.hasOption("d") ? cmd.getOptionValue("d") : "/tmp/out";
+        final String ontologiesToBeRemoved = cmd.hasOption("rm") ? cmd.getOptionValue("rm") : "";
 
-        File dir = new File("/home/giray/Downloads/neo4j-community-5.19.0/asd");
+        File dir = new File(directory);
         List<File> files = showFiles(dir.listFiles());
 
-        try (var driver = GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword))) {
+        try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
             driver.verifyConnectivity();
-
-            // import org.neo4j.driver.SessionConfig
-
-            try (var session = driver.session(SessionConfig.builder().withDatabase("neo4j").build())) {
-                // session usage
+            try (var session = driver.session(SessionConfig.builder().withDatabase(db).build())) {
                 try{
                     session.run("CREATE CONSTRAINT FOR (n:Ontology) REQUIRE n.id IS UNIQUE");
                     session.run("CREATE CONSTRAINT FOR (n:OntologyEntity) REQUIRE n.id IS UNIQUE");
@@ -214,44 +177,13 @@ public class ImportCSV {
                 } catch(Exception e){
                     e.printStackTrace();
                 }
-
-                for (File file : files){
-                    if((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
-                        continue;
-                    fr = new FileReader(file.getAbsolutePath());
-                    br = new BufferedReader(fr);
-                    String line = br.readLine();
-                    String[] titles = {};
-                    if (line != null)
-                        titles = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-                    String[] pieces = null;
-                    while((line = br.readLine())!=null){
-                        System.out.println(line);
-                        pieces = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-                        System.out.println("2");
-
-                        System.out.println("file: "+file.getName());
-
-                        String query = generateRelationCreationQuery(titles,pieces);
-                        //String query2 = generateSetQuery(titles,pieces);
-                        System.out.println("query: "+query);
-                        //System.out.println("query2: "+query2);
-
-                        try (Transaction tx = session.beginTransaction()) {
-                            tx.run(query);
-                            tx.commit();
-                            tx.close();
-                            // use tx.run() to run queries
-                            //     tx.commit() to commit the transaction
-                            //     tx.rollback() to rollback the transaction
-                        } catch(Exception e){
-                            e.printStackTrace();
-                        }
-                        System.gc();
-                    }
-                }
+                System.out.println("kamil");
+                if(cmd.hasOption("i"))
+                    generateNEO(files,session);
+                else
+                    for(String ontology : ontologiesToBeRemoved.split(","))
+                        session.run(generateOntologyDeleteQuery(ontology));
             }
         }
-        System.out.println("kamil");
     }
 }

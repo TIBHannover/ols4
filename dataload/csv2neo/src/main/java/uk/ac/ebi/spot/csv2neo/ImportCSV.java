@@ -36,7 +36,7 @@ public class ImportCSV {
         return fileList;
     }
 
-    public static void generateNEO(List<File> files, Session session) throws IOException {
+    public static void generateCreationQueries(List<File> files, Session session, boolean safe) throws IOException {
         for (File file : files){
             if(!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
                     || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
@@ -53,12 +53,19 @@ public class ImportCSV {
                 pieces = split(line,",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
                 String query = generateNodeCreationQuery(titles,pieces);
                 System.out.println("query: "+query);
-                try (Transaction tx = session.beginTransaction()) {
-                    tx.run(query);
-                    tx.commit();
-                } catch(Exception e){
-                    e.printStackTrace();
-                }
+                if(safe){
+                    try (Transaction tx = session.beginTransaction()) {
+                        tx.run(query);
+                        tx.commit();
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }
+                } else
+                    try{
+                        session.run(query);
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
             }
         }
 
@@ -77,12 +84,20 @@ public class ImportCSV {
                 pieces = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
                 String query = generateRelationCreationQuery(titles,pieces);
                 System.out.println("query: "+query);
-                try (Transaction tx = session.beginTransaction()) {
-                    tx.run(query);
-                    tx.commit();
-                } catch(Exception e){
-                    e.printStackTrace();
-                }
+                if(safe){
+                    try (Transaction tx = session.beginTransaction()) {
+                        tx.run(query);
+                        tx.commit();
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }
+                } else
+                    try{
+                        session.run(query);
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
+
             }
         }
     }
@@ -151,6 +166,7 @@ public class ImportCSV {
         options.addOption("uri", "databaseuri",true, "neo4j database uri");
         options.addOption("db", "database",true, "neo4j database name");
         options.addOption("d", "directory",true, "neo4j csv import directory");
+        options.addOption("s", "safe",false, "execute each neo4j query in transactions or the session");
         return options;
     }
 
@@ -165,9 +181,6 @@ public class ImportCSV {
         final String directory = cmd.hasOption("d") ? cmd.getOptionValue("d") : "/tmp/out";
         final String ontologiesToBeRemoved = cmd.hasOption("rm") ? cmd.getOptionValue("rm") : "";
 
-        File dir = new File(directory);
-        List<File> files = showFiles(dir.listFiles());
-
         try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
             driver.verifyConnectivity();
             try (var session = driver.session(SessionConfig.builder().withDatabase(db).build())) {
@@ -179,11 +192,21 @@ public class ImportCSV {
                     e.printStackTrace();
                 }
                 System.out.println("Start Neo4J Modification...");
-                if(cmd.hasOption("i"))
-                    generateNEO(files,session);
-                else
+                if(cmd.hasOption("i")){
+                    File dir = new File(directory);
+                    List<File> files = showFiles(dir.listFiles());
+                    if(cmd.hasOption("s"))
+                        generateCreationQueries(files,session,true);
+                    else
+                        generateCreationQueries(files,session,false);
+                } else
                     for(String ontology : ontologiesToBeRemoved.split(","))
-                        session.run(generateOntologyDeleteQuery(ontology));
+                        try {
+                            session.run(generateOntologyDeleteQuery(ontology));
+                        } catch (Exception e){
+                            e.printStackTrace();
+                        }
+
             }
         }
     }

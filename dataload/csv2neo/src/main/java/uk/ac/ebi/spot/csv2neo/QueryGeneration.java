@@ -36,8 +36,8 @@ public class QueryGeneration {
         } else {
             System.out.println("titles and values are not equal");
             System.out.println("titles: "+titles.length + " - values: " +values.length);
-            for (String title : titles)
-                System.out.println("title: "+title);
+            for (String value : values)
+                System.out.println("value: "+value);
         }
         return sb.toString();
     }
@@ -69,11 +69,23 @@ public class QueryGeneration {
         StringBuilder sb = new StringBuilder();
 
         if (titles.length == values.length){
-            sb.append("MATCH (n {id: "+"\'"+values[0].substring(1, values[0].length() - 1)+"\'"+"}),")
-                    .append("(m {id: "+"\'"+values[2].substring(1, values[2].length() - 1)+"\'"+"}) ")
+            sb.append("MATCH (n"+idToLabel(values[0])+" {id: "+"\'"+values[0].substring(1, values[0].length() - 1)+"\'"+"}),")
+                    .append("(m"+idToLabel(values[2])+" {id: "+"\'"+values[2].substring(1, values[2].length() - 1)+"\'"+"}) ")
+                    .append("WHERE n.id STARTS WITH '"+values[0].split("\\+")[0]+"' AND m.id STARTS WITH '"+values[2].split("\\+")[0]+"' ")
                     .append("CREATE (n)-[:")
                     .append("`"+values[1].substring(1, values[1].length() - 1).replace("|","`:`")+"`")
                     .append("]->(m)");
+        }
+
+        return sb.toString();
+    }
+
+    public static String generateRelationCreationQuery2(String[] titles, String[] values){
+        StringBuilder sb = new StringBuilder();
+        if (titles.length == values.length){
+            sb.append("MATCH (n {id: "+"\'"+values[0].substring(1, values[0].length() - 1)+"\'"+"})-[:")
+                    .append("`"+values[1].substring(1, values[1].length() - 1).replace("|","`:`")+"`")
+                    .append("]->(m {id: "+"\'"+values[2].substring(1, values[2].length() - 1)+"\'"+"})");
         }
 
         return sb.toString();
@@ -116,6 +128,18 @@ public class QueryGeneration {
 
         matcher.appendTail(decodedString);
         return decodedString.toString();
+    }
+
+    public static String idToLabel(String id){
+        String label = switch (id.split("\\+")[1]) {
+            case "class" -> ":OntologyClass";
+            case "entity" -> ":OntologyEntity";
+            case "ontology" -> ":Ontology";
+            case "property" -> ":OntologyProperty";
+            case "individual" -> ":OntologyIndividual";
+            default -> "";
+        };
+        return label;
     }
 
 }

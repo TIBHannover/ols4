@@ -75,6 +75,11 @@ public class QueryGeneration {
                     .append("CREATE (n)-[:")
                     .append("`"+values[1].substring(1, values[1].length() - 1).replace("|","`:`")+"`")
                     .append("]->(m)");
+        } else {
+            System.out.println("titles and values are not equal");
+            System.out.println("titles: "+titles.length + " - values: " +values.length);
+            for (String value : values)
+                System.out.println("value: "+value);
         }
 
         return sb.toString();

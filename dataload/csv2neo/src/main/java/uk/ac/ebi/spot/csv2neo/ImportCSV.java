@@ -21,14 +21,12 @@ public class ImportCSV {
     static FileReader fr;
     static BufferedReader br;
 
-    public static List<File> showFiles(File[] files) throws IOException {
+    public static List<File> listFiles(File[] files) throws IOException {
         List<File> fileList = new ArrayList<File>();
         for (File file : files) {
             if (file.isDirectory()) {
-                System.out.println("Directory: " + file.getAbsolutePath());
-                fileList.addAll(showFiles(file.listFiles()));
+                fileList.addAll(listFiles(file.listFiles()));
             } else {
-                System.out.println("File: " + file.getAbsolutePath());
                 fileList.add(file);
             }
         }
@@ -36,7 +34,7 @@ public class ImportCSV {
         return fileList;
     }
 
-    public static void generateCreationQueries(List<File> files, Session session, boolean safe) throws IOException {
+    public static void generateCreationQueries(List<File> files, Session session, boolean safe) throws IOException, java.text.ParseException {
         for (File file : files){
             if(!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
                     || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
@@ -48,11 +46,60 @@ public class ImportCSV {
             if (line != null)
                 titles = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
             String[] pieces = null;
+            StringBuilder sb = new StringBuilder();
+            boolean started = false;
             while((line = br.readLine())!=null){
-                System.out.println(line);
-                pieces = split(line,",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                String appendedLine = "";
+
+                if (line.startsWith("\"") && line.endsWith("\"")){
+                    if(started){
+                        if (line.startsWith("\",\"") && !sb.toString().isEmpty()) {
+                            sb.append(line);
+                            appendedLine = sb.toString();
+                            sb.setLength(0);
+                            started = false;
+                        }
+                        else
+                            throw new IOException("file: "+file+" - line: "+line);
+                    }
+                    else
+                        appendedLine = line;
+                } else if (line.startsWith("\"") && !line.endsWith("\"")){
+                    if(started){
+                        if (line.startsWith("\",\"")) {
+                            sb.append(line);
+                        }
+                        else
+                            throw new IOException("file: "+file+" - line: "+line);
+                    }
+                    else {
+                        sb.append(line);
+                        started = true;
+                    }
+                } else if (!line.startsWith("\"") && !line.endsWith("\"")){
+                    if(!started)
+                        throw new IOException("file: "+file+" - line: "+line);
+                    else
+                        sb.append(line);
+
+                } else if (!line.startsWith("\"") && line.endsWith("\"") && !sb.toString().isEmpty()){
+                    if(!started)
+                        throw new IOException("file: "+file+" - line: "+line);
+                    else {
+                        sb.append(line);
+                        appendedLine = sb.toString();
+                        sb.setLength(0);
+                        started = false;
+                    }
+                }
+
+                if (appendedLine.isEmpty())
+                    continue;
+
+                pieces = split(appendedLine, List.of(titles).indexOf("\"_json\""),titles.length,",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
                 String query = generateNodeCreationQuery(titles,pieces);
-                System.out.println("query: "+query);
+                if(query.isEmpty())
+                    System.out.println("empty query for appended line: "+appendedLine+" in file: "+file);
                 if(safe){
                     try (Transaction tx = session.beginTransaction()) {
                         tx.run(query);
@@ -79,11 +126,58 @@ public class ImportCSV {
             if (line != null)
                 titles = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
             String[] pieces = null;
+            StringBuilder sb = new StringBuilder();
+            boolean started = false;
             while((line = br.readLine())!=null){
-                System.out.println(line);
-                pieces = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                String appendedLine = "";
+                if (line.startsWith("\"") && line.endsWith("\"")){
+                    if(started){
+                        if (line.startsWith("\",\"") && !sb.toString().isEmpty()) {
+                            sb.append(line);
+                            appendedLine = sb.toString();
+                            sb.setLength(0);
+                            started = false;
+                        }
+                        else
+                            throw new IOException("file: "+file+" - line: "+line);
+                    }
+                    else
+                        appendedLine = line;
+                } else if (line.startsWith("\"") && !line.endsWith("\"")){
+                    if(started){
+                        if (line.startsWith("\",\"")) {
+                            sb.append(line);
+                        }
+                        else
+                            throw new IOException("file: "+file+" - line: "+line);
+                    }
+                    else {
+                        sb.append(line);
+                        started = true;
+                    }
+                } else if (!line.startsWith("\"") && !line.endsWith("\"")){
+                    if(!started)
+                        throw new IOException("file: "+file+" - line: "+line);
+                    else
+                        sb.append(line);
+                } else if (!line.startsWith("\"") && line.endsWith("\"") && !sb.toString().isEmpty()){
+                    if(!started)
+                        throw new IOException("file: "+file+" - line: "+line);
+                    else {
+                        sb.append(line);
+                        appendedLine = sb.toString();
+                        sb.setLength(0);
+                        started = false;
+                    }
+                }
+
+                if (appendedLine.isEmpty())
+                    continue;
+
+                pieces = appendedLine.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
                 String query = generateRelationCreationQuery(titles,pieces);
-                System.out.println("query: "+query);
+                if(query.isEmpty())
+                    System.out.println("empty query for appended line: "+appendedLine+" in file: "+file);
                 if(safe){
                     try (Transaction tx = session.beginTransaction()) {
                         tx.run(query);
@@ -102,7 +196,7 @@ public class ImportCSV {
         }
     }
 
-    public static String[] split(String input, String regex){
+    public static String[] split(String input, int jsonIndex,int titlesLength, String regex) throws java.text.ParseException {
         String[] tokens = {};
         char c = '{';
         char d = '\"';
@@ -139,6 +233,72 @@ public class ImportCSV {
                 else
                     tokens[i] = afterArray[i-(beforeArray.length+1)];
             }
+        } else if (countLeftCurly >= 1 && countRightCurly >= countLeftCurly){
+            String before = "";
+            String after = "";
+            String json = "";
+            int start = 0;
+            int end = 0;
+
+            int countDoubleQuotes = 0;
+            int countCommas = 0;
+            for (int i = 0; i < input.length(); i++){
+                if (input.charAt(i) == '"'){
+                    countDoubleQuotes++;
+                    if (countDoubleQuotes % 2 == 0)
+                        if(input.charAt(i+1) == ',')
+                            countCommas++;
+                }
+
+                if (countDoubleQuotes >= 2*jsonIndex && countCommas == jsonIndex){
+                    before = input.substring(0,i+1);
+                    start = i+1;
+                    break;
+                }
+
+            }
+
+            countDoubleQuotes = 0;
+            countCommas = 0;
+            for (int j = input.length()-1;j>-1;j--){
+                if (input.charAt(j) == '"'){
+                    countDoubleQuotes++;
+                    if (countDoubleQuotes % 2 == 0)
+                        if(input.charAt(j-1) == ',')
+                            countCommas++;
+                }
+
+                if (countDoubleQuotes >= 2*(titlesLength - jsonIndex -1) && countCommas == titlesLength - jsonIndex -1){
+                    after = input.substring(j);
+                    end = j;
+                    break;
+                }
+            }
+
+            json = input.substring(start,end);
+
+            String[] beforeArray = before.split(regex);
+            String[] afterArray = after.split(regex);
+            int length = beforeArray.length + 1 + afterArray.length;
+
+            if (length == titlesLength){
+                tokens = new String[length];
+                for (int i =0;i<length;i++){
+                    if(i<beforeArray.length)
+                        tokens[i] = beforeArray[i];
+                    else if(i==beforeArray.length)
+                        tokens[i] = json;
+                    else
+                        tokens[i] = afterArray[i-(beforeArray.length+1)];
+                }
+            } else
+                throw new java.text.ParseException("before: "+before+"\n"
+                        +"json: "+json+"\n"
+                        +"after: "+after+"\n"
+                        +"Resulted in "+length+" for "+titlesLength+" titles!!!",countRightCurly);
+
+        } else {
+            throw new java.text.ParseException(input+"\n Number of left curly braces: "+countLeftCurly+" - Number of right curly braces: "+countRightCurly+" - !!!",countRightCurly);
         }
 
         return tokens;
@@ -194,7 +354,7 @@ public class ImportCSV {
                 System.out.println("Start Neo4J Modification...");
                 if(cmd.hasOption("i")){
                     File dir = new File(directory);
-                    List<File> files = showFiles(dir.listFiles());
+                    List<File> files = listFiles(dir.listFiles());
                     if(cmd.hasOption("s"))
                         generateCreationQueries(files,session,true);
                     else
@@ -207,6 +367,8 @@ public class ImportCSV {
                             e.printStackTrace();
                         }
 
+            } catch (java.text.ParseException e) {
+                throw new RuntimeException(e);
             }
         }
     }

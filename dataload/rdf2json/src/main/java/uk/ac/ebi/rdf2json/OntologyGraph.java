@@ -15,7 +15,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
@@ -101,7 +100,7 @@ public class OntologyGraph implements StreamRDF {
 		}
 	}
 
-	private void parseRDF(String url) {
+	private void parseRDF(String url, boolean convertToRDF) {
 		
 		try {
 			if (loadLocalFiles && !url.contains("://")) {
@@ -135,21 +134,19 @@ public class OntologyGraph implements StreamRDF {
 				} else {
 					System.out.println("Downloading (no predownload path provided) " + url);
 					
-					
-					
-					/*
-					 * String outputFile = "/home/anbalagand/rdftoJSON/testRobot/result";
-					 * OWLOntology ont = downloadToLocal(url, outputFile); OWLDocumentFormat odf =
-					 * ont.getOWLOntologyManager().getOntologyFormat(ont); String lang1 =
-					 * odf.getKey(); String ext = ".owl"; if(lang1.contains("Turtle")) ext = ".ttl";
-					 * url = outputFile+ext;
-					 */
-					 
-					sourceFileTimestamp = System.currentTimeMillis();
-					
-					
-					createParser(null).source(url).parse(this);
+					if (convertToRDF) {
+						String outputFile = "./src/main/resources/result";
+						OWLOntology ont = convertOntologyToRDF(url, outputFile);
+						OWLDocumentFormat odf = ont.getOWLOntologyManager().getOntologyFormat(ont);
+						String lang1 = odf.getKey();
+						String ext = ".owl";
+						if (lang1.contains("Turtle"))
+							ext = ".ttl";
+						url = outputFile + ext;
+					}
 
+					createParser(null).source(url).parse(this);
+					sourceFileTimestamp = System.currentTimeMillis();
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -160,7 +157,7 @@ public class OntologyGraph implements StreamRDF {
 		}
 	}
 
-	private OWLOntology downloadToLocal(String url, String outputFile) throws IOException {
+	private OWLOntology convertOntologyToRDF(String url, String outputFile) throws IOException {
 		OWLOntologyManager ontManager = OWLManager.createOWLOntologyManager();
 		FileOutputStream fos = null;
 		OWLOntology ont = null;
@@ -177,14 +174,9 @@ public class OntologyGraph implements StreamRDF {
 				is = tempURL.openStream();
 			} catch (IOException e) {
 				isDefaultURLFailed = true;
-				if (con instanceof HttpsURLConnection) {
-					url = url.replace("https:", "http:");
-				} else if (con instanceof HttpURLConnection) {
-					url = url.replace("http:", "https:");
-				}
-
 			}
 			if (isDefaultURLFailed) {
+				url = replaceURLByProtocol(con, url);
 				try {
 					is = new URL(url).openStream();
 				} catch (IOException e) {
@@ -195,15 +187,10 @@ public class OntologyGraph implements StreamRDF {
 				ont = ontManager.loadOntologyFromOntologyDocument(is);
 			} catch (Exception e) {
 				isParserException = true;
-				if (con instanceof HttpsURLConnection) {
-					url = url.replace("https:", "http:");
-				} else if (con instanceof HttpURLConnection) {
-					url = url.replace("http:", "https:");
-				}
 			}
 
 			if (isParserException) {
-
+				url = replaceURLByProtocol(con, url);
 				try {
 					is = new URL(url).openStream();
 				} catch (IOException e) {
@@ -230,13 +217,10 @@ public class OntologyGraph implements StreamRDF {
 			}
 
 		} catch (OWLOntologyCreationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (OWLOntologyStorageException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			if (fos != null)
@@ -247,6 +231,16 @@ public class OntologyGraph implements StreamRDF {
 		}
 		return ont;
 	}
+	
+	private String replaceURLByProtocol(URLConnection con, String url) {
+		if (con instanceof HttpsURLConnection) {
+			url = url.replace("https:", "http:");
+		} else if (con instanceof HttpURLConnection) {
+			url = url.replace("http:", "https:");
+		}
+		return url;
+		
+	}
 
 	private String urlToFilename(String url) {
 		return url.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
@@ -256,7 +250,7 @@ public class OntologyGraph implements StreamRDF {
 
 	String downloadedPath;
 
-	OntologyGraph(Map<String, Object> config, boolean loadLocalFiles, boolean noDates, String downloadedPath) {
+	OntologyGraph(Map<String, Object> config, boolean loadLocalFiles, boolean noDates, String downloadedPath, boolean convertToRDF) {
 
 		this.loadLocalFiles = loadLocalFiles;
 		this.downloadedPath = downloadedPath;
@@ -294,7 +288,7 @@ public class OntologyGraph implements StreamRDF {
 		}
 
 		System.out.println("load ontology from: " + url);
-		parseRDF(url);
+		parseRDF(url, convertToRDF);
 
 		// Before we evaluate imports, mark all the nodes so far as not imported
 		for (String id : nodes.keySet()) {
@@ -309,7 +303,7 @@ public class OntologyGraph implements StreamRDF {
 			importUrls.remove(0);
 
 			System.out.println("import: " + importUrl);
-			parseRDF(importUrl);
+			parseRDF(importUrl, convertToRDF);
 		}
 
 		// Now the imports are done, mark everything else as imported

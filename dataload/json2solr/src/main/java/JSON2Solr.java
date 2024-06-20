@@ -96,6 +96,7 @@ public class JSON2Solr {
 
                                 flattenedClass.put("_json", gson.toJson(_class));
                                 flattenedClass.put("id", entityId);
+                                flattenedClass.put("classifications",ontology.get("classifications"));
 
                                 flattenProperties(_class, flattenedClass);
 
@@ -120,6 +121,7 @@ public class JSON2Solr {
                                 String entityId = ontologyId + "+property+" + (String) property.get("iri");
                                 flattenedProperty.put("_json", gson.toJson(property));
                                 flattenedProperty.put("id", entityId);
+                                flattenedProperty.put("classifications",ontology.get("classifications"));
 
                                 flattenProperties(property, flattenedProperty);
 
@@ -144,6 +146,7 @@ public class JSON2Solr {
                                 String entityId = ontologyId + "+individual+" + (String) individual.get("iri");
                                 flattenedIndividual.put("_json", gson.toJson(individual));
                                 flattenedIndividual.put("id", entityId);
+                                flattenedIndividual.put("classifications",ontology.get("classifications"));
 
                                 flattenProperties(individual, flattenedIndividual);
 
@@ -233,24 +236,24 @@ public class JSON2Solr {
     //  (4) It's reification { type: reification|related, ....,  value: ... }
     //
     //  (5) it's some random json object from the ontology config
-    // 
+    //
     // In the case of (1), we discard the datatype and keep the value
     //
     // In the case of (2), we don't store anything in solr fields. Class
     // expressions should already have been evaluated into separate "related"
     // fields by the RelatedAnnotator in rdf2json.
     //
-    // In the case of (3), we create a Solr document for each language (see 
+    // In the case of (3), we create a Solr document for each language (see
     // above), and the language is passed into this function so we know which
     // language's strings to keep.
     //
     // In the case of (4), we discard any metadata (in Neo4j the metadata is
     // preserved for edges, but in Solr we don't care about it).
-    // 
+    //
     // In the case of (5) we discard it in solr because json objects won't be
     // querable anyway.
     //
-    //  
+    //
     public static Object discardMetadata(Object obj) {
 
         if (obj instanceof Map) {
@@ -283,7 +286,7 @@ public class JSON2Solr {
 	    }
 
         } else {
-	
+
 		return obj;
 	    }
     }

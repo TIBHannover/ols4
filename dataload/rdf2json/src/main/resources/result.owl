@@ -1,0 +1,854 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology#"
+     xml:base="http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+     xmlns:terms="http://purl.org/dc/terms/"
+     xmlns:CommonCoreOntologies="http://www.ontologyrepository.com/CommonCoreOntologies/">
+    <owl:Ontology rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology">
+        <owl:versionIRI rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/Mid/2024-02-14/ExtendedRelationOntology"/>
+        <owl:imports rdf:resource="http://purl.obolibrary.org/obo/bfo/2020/bfo-core.ttl"/>
+        <terms:license rdf:resource="https://opensource.org/licenses/BSD-3-Clause"/>
+        <rdfs:comment xml:lang="en">This ontology is designed to represent many of the relations (i.e. object properties) that hold between entities at the level of the mid-level Common Core Ontologies.</rdfs:comment>
+        <rdfs:label xml:lang="en">Extended Relation Ontology</rdfs:label>
+        <owl:versionInfo xml:lang="en">Version 1.5</owl:versionInfo>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/dc/terms/created -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/created"/>
+    
+
+
+    <!-- http://purl.org/dc/terms/creator -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/creator"/>
+    
+
+
+    <!-- http://purl.org/dc/terms/license -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/license"/>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/acronym -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/acronym">
+        <CommonCoreOntologies:definition xml:lang="en">An Alternative Label that consists of a shortened or abbreviated form of the rdfs:label and is used to denote the entity.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">acronym</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/alternative_label"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/alternative_label -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/alternative_label">
+        <CommonCoreOntologies:definition xml:lang="en">A term or phrase that may be used in place of the stated rdfs:label to denote the entity in question.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">alternative label</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/code_license -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/code_license">
+        <CommonCoreOntologies:definition xml:lang="en">The name and description of the license under which the .owl file is released.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">code license</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/content_license -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/content_license">
+        <CommonCoreOntologies:definition xml:lang="en">The name and description of the license under which the ideas, concepts and other informational content expressed in the .owl file are released.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">content license</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/copyright -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/copyright">
+        <CommonCoreOntologies:definition xml:lang="en">An assertion of copyright</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">copyright</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/definition -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/definition">
+        <CommonCoreOntologies:definition xml:lang="en">A natural language explication of the meaning of the term.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">definition</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/definition_source -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/definition_source">
+        <CommonCoreOntologies:definition xml:lang="en">A citation of where all or some of the information used to create the term&apos;s Definition was acquired from.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">definition source</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/designator_annotation -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/designator_annotation">
+        <CommonCoreOntologies:definition xml:lang="en">A name or other identifier that is used to designate an individual.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">designator annotation</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/doctrinal_acronym -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/doctrinal_acronym">
+        <CommonCoreOntologies:definition xml:lang="en">An Acronym that is used by a Doctrinal Source to denote the entity.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">doctrinal acronym</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/acronym"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/doctrinal_definition -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/doctrinal_definition">
+        <CommonCoreOntologies:definition xml:lang="en">A Definition that is taken directly from a Doctrinal Source.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:elucidation xml:lang="en">There is only one definition for any given term in an ontology; however, a Doctrinal Definition may be provided in addition to the asserted Definition if the preservation of this information is important. When both a Definition and a Doctrinal Definition are provided for a term, the Definition takes precedence.</CommonCoreOntologies:elucidation>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">doctrinal definition</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/definition"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/doctrinal_label -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/doctrinal_label">
+        <CommonCoreOntologies:definition xml:lang="en">An Alternative Label that consists of the preferred term or phrase used by a Doctrinal Source to denote the entity.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:elucidation xml:lang="en">When the cco:doctrinal_label is identical to the rdfs:label, the cco:doctrinal_label annotation is superfluous. As a subclass of &apos;alternative label&apos;, &apos;doctrinal label&apos; is intended to be used to provide additional information about the entity when its preferred doctrinal designator is ambiguous or otherwise inappropriate for use as the rdfs:label.</CommonCoreOntologies:elucidation>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">doctrinal label</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/alternative_label"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/doctrinal_source -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/doctrinal_source">
+        <CommonCoreOntologies:definition xml:lang="en">A Definition Source that consists of a formalized doctrine in which the term is authoritatively defined.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">doctrinal source</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/definition_source"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/elucidation -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/elucidation">
+        <CommonCoreOntologies:definition xml:lang="en">A clarification or further explanation of a term beyond what is included in the Definition or which is used when the term is primitive such that no non-circular definition can be given for it.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">elucidation</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/example_of_usage -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/example_of_usage">
+        <CommonCoreOntologies:definition xml:lang="en">A phrase, sentence or set of terms intended to convey the conventional usage of the term.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">example of usage</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/has_token_unit -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/has_token_unit">
+        <CommonCoreOntologies:definition xml:lang="en">A relation between an information content entity and a widely used measurement unit of the token used to express it.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">has token unit</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/http_query_string -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/http_query_string">
+        <CommonCoreOntologies:definition xml:lang="en">The text of an HTTP request that can be sent to a SPARQL Protocol service.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">http query string</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/interval_measurement_annotation -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/interval_measurement_annotation">
+        <CommonCoreOntologies:definition xml:lang="en">A interval measurement value of an instance of a quality, realizable or process profile </CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">interval measurement annotation</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/measurement_annotation"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_curated_in_ontology -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_curated_in_ontology">
+        <CommonCoreOntologies:definition xml:lang="en">An annotation property that links a class, property, or named individual to the URI of the ontology where it is located.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is curated in ontology</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_tokenized_by -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_tokenized_by">
+        <CommonCoreOntologies:definition xml:lang="en">A relation between an information content entity and a widely used token used to express it.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is tokenized by</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/measurement_annotation -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/measurement_annotation">
+        <CommonCoreOntologies:definition xml:lang="en">A measurement value of an instance of a quality, reazlizable or process profile</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">measurement annotation</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/nominal_measurement_annotation -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/nominal_measurement_annotation">
+        <CommonCoreOntologies:definition xml:lang="en">A nominal measurement value of an instance of a quality, realizable or process profile</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">nominal measurement annotation</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/measurement_annotation"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/ordinal_measurement_annotation -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/ordinal_measurement_annotation">
+        <CommonCoreOntologies:definition xml:lang="en">An ordinal measurement value of an instance of a quality, realizable or process profile</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">ordinal measurement annotation</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/measurement_annotation"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/query_text -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/query_text">
+        <CommonCoreOntologies:definition xml:lang="en">The text of a query that is associated with a class</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">query text</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/ratio_measurement_annotation -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/ratio_measurement_annotation">
+        <CommonCoreOntologies:definition xml:lang="en">A ratio measurement value of an instance of a quality, realizable or process profile</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">ratio measurement annotation</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/measurement_annotation"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/term_creator -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/term_creator">
+        <CommonCoreOntologies:definition xml:lang="en">The name of the Term Editor who added the term to the ontology.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">term creator</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/term_editor"/>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/term_editor -->
+
+    <owl:AnnotationProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/term_editor">
+        <CommonCoreOntologies:definition xml:lang="en">The name of a person who contributed to the development or enhancement of the term.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">term editor</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#editorialNote -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#editorialNote"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000199 -->
+
+    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000199">
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_temporal_region_of"/>
+    </rdf:Description>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/accessory_in -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/accessory_in">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000056"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/has_accessory"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <CommonCoreOntologies:definition xml:lang="en">y is_accessory_in x iff x is an instance of Process and y is an instance of Agent, such that y assists another agent in the commission of x, and y was not located at the location of x when x occurred, and y was not an agent_in x.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:definition_source>http://en.wikipedia.org/wiki/Accessory_(legal_term)</CommonCoreOntologies:definition_source>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">accessory in</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/accomplice_in -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/accomplice_in">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000056"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/has_accomplice"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <CommonCoreOntologies:definition xml:lang="en">An agent a1 is accomplice_in some Processual Entity p1 iff a1 assists in the commission of p1, is located at the location of p1, but is not agent_in p1.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:definition_source rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://en.wikipedia.org/w/index.php?title=Accomplice&amp;oldid=1002047204</CommonCoreOntologies:definition_source>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">accomplice in</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/affects -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/affects">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000057"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_affected_by"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <CommonCoreOntologies:definition xml:lang="en">p affects c iff p is an instance of a Process and c is an instance of a Continuant, such that p influences c in some manner, most often by producing a change in c.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">affects</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_bearer_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_bearer_of">
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/inheres_in_aggregate"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <rdfs:range>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000020"/>
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000031"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:range>
+        <CommonCoreOntologies:definition xml:lang="en">x aggregate_bearer_of y iff x is an instance of Object Aggregate and y is an instance of Specifically Dependent Continuant and z is an instance of Object, such that z bearer of y, and all other members of x are bearers of a unique instance of the same type as y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">aggregate bearer of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_has_disposition -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_has_disposition">
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_bearer_of"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/disposition_of_aggregate"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000016"/>
+        <CommonCoreOntologies:definition xml:lang="en">x aggregate_has_disposition y iff x is an instance of Object Aggregate and y is an instance of Disposition, such that x aggregate_bearer_of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">aggregate has disposition</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_has_quality -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_has_quality">
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_bearer_of"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <CommonCoreOntologies:definition xml:lang="en">x aggregate_has_quality y iff x is an instance of Object Aggregate and y is an instance of Quality, such that x aggregate_bearer_of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">aggregate has quality</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_has_role -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_has_role">
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/aggregate_bearer_of"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000023"/>
+        <CommonCoreOntologies:definition xml:lang="en">x aggregate_has_role y iff x is an instance of Object Aggregate and y is an instance of Role, such that x aggregate_bearer_of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">aggregate has role</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/caused_by -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/caused_by">
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_cause_of"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <CommonCoreOntologies:definition xml:lang="en">x caused_by y iff x and y are instances of occurrents, and x is a consequence of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">caused by</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/disposition_of_aggregate -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/disposition_of_aggregate">
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/inheres_in_aggregate"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000016"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <CommonCoreOntologies:definition xml:lang="en">x disposition_of_aggregate y iff y is an instance of Object Aggregate and x is an instance of Disposition, such that x disposition_of_aggregate y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">disposition of aggregate</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/disrupts -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/disrupts">
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_disrupted_by"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <terms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2022-12-30T21:32:27-05:00</terms:created>
+        <terms:creator rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://cubrc.org</terms:creator>
+        <CommonCoreOntologies:definition xml:lang="en">A relation where one process disrupts another process from occurring as it would have.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:elucidation xml:lang="en">A process can disrupt another process from occurring as it would have by 1) preventing a disposition or role from being realized by that process, 2) lowering the grade of the process, or 3) stopping the process from continuing to occur.</CommonCoreOntologies:elucidation>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/AgentOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">disrupts</rdfs:label>
+        <skos:editorialNote xml:lang="en">To lower the grade of a process is to lower the quality of a process according to some standard, for example when realizing a capability or a function.</skos:editorialNote>
+        <skos:prefLabel xml:lang="en">disrupts</skos:prefLabel>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/has_accessory -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/has_accessory">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000057"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <CommonCoreOntologies:definition xml:lang="en">x has_accessory y iff x is an instance of Process and y is an instance of Agent, such that y assists another agent in the commission of x, and y was not located at the location of x when x occurred, and y was not an agent_in x.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:definition_source>http://en.wikipedia.org/wiki/Accessory_(legal_term)</CommonCoreOntologies:definition_source>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">has accessory</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/has_accomplice -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/has_accomplice">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000057"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <CommonCoreOntologies:definition xml:lang="en">A Processual Entity p1 has_accomplice some agent a1 iff a1 assists in the commission of p1, is located at the location of p1, but is not agent_in p1.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:definition_source rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://en.wikipedia.org/w/index.php?title=Accomplice&amp;oldid=1002047204</CommonCoreOntologies:definition_source>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">has accomplice</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/has_input -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/has_input">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000057"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_input_of"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <CommonCoreOntologies:definition xml:lang="en">y has_input x iff x is an instance of Continuant and y is an instance of Process, such that the presence of x at the beginning of y is a necessary condition for the start of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">has input</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/has_member_of_located_in -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/has_member_of_located_in">
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <CommonCoreOntologies:definition xml:lang="en">An instance of an Object Aggregate &apos;has member of located in&apos; an instance of some material entity if and only if every member of that Aggregate is located in the same instance of that material entity.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">has member of located in</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/has_object -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/has_object">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000057"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_object_of"/>
+        <CommonCoreOntologies:definition xml:lang="en">If p is a process and c is a continuant, then p has object c if and only if the c is part of the projected state that the agent intends to achieve by performing p.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">has object</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/has_output -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/has_output">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000057"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_output_of"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <CommonCoreOntologies:definition xml:lang="en">y has_output x iff x is an instance of Continuant and y is an instance of Process, such that the presence of x at the end of y is a necessary condition for the completion of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:definition_source rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://en.wikipedia.org/w/index.php?title=IPO_model&amp;oldid=1024398398</CommonCoreOntologies:definition_source>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">has output</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/has_process_part -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/has_process_part">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000117"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_part_of_process"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <CommonCoreOntologies:definition xml:lang="en">x has_process_part y iff x and y are instances of Process, such that y occurs during the temporal interval of x, and y either provides an input to x or receives an output of x, or both.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">has process part</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/inheres_in_aggregate -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/inheres_in_aggregate">
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000020"/>
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000031"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <CommonCoreOntologies:definition xml:lang="en">x inheres_in_aggregate y iff x is an instance of Specifically Dependent Continuant and y is an instance of Object Aggregate and z is an instance of Object, such that z bearer_of x, and all other members of y are bearers of a unique instance of the same type as x.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">inheres in aggregate</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_affected_by -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_affected_by">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000056"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <CommonCoreOntologies:definition xml:lang="en">c is_affected_by p iff p is an instance of a Process and c is an instance of a Continuant, such that p influences c in some manner, most often by producing a change in c.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is affected by</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_cause_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_cause_of">
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <CommonCoreOntologies:definition xml:lang="en">x is_cause_of y iff x and y are instances of occurrents, and y is a consequence of x.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is cause of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_disrupted_by -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_disrupted_by">
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <terms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2022-12-30T21:32:27-05:00</terms:created>
+        <terms:creator rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://cubrc.org</terms:creator>
+        <CommonCoreOntologies:definition>Inverse of disrupts.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is disrupted by</rdfs:label>
+        <skos:prefLabel xml:lang="en">is disrupted by</skos:prefLabel>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_input_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_input_of">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000056"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <CommonCoreOntologies:definition xml:lang="en">x is_input_of y iff x is an instance of Continuant and y is an instance of Process, such that the presence of x at the beginning of y is a necessary condition for the start of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is input of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_made_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_made_of">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topObjectProperty"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_material_of"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000030"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000030"/>
+        <CommonCoreOntologies:definition xml:lang="en">An object o is made of an object m when m is the material that o consists of and that material does not undergo a change of kind during the creation of o</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is made of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_material_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_material_of">
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000030"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000030"/>
+        <CommonCoreOntologies:definition xml:lang="en">An object m is material of an object o when m is the material of which o consists and that material does not undergo a change of kind during the creation of o</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is material of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_object_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_object_of">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000056"/>
+        <CommonCoreOntologies:definition xml:lang="en">If p is a process and c is a continuant, then c is object of p if and only if the c is part of the projected state that the agent intends to achieve by performing p.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is object of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_output_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_output_of">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000056"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <CommonCoreOntologies:definition xml:lang="en">x is_output_of y iff x is an instance of Continuant and y is an instance of Process, such that the presence of x at the end of y is a necessary condition for the completion of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is output of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_part_of_process -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_part_of_process">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000132"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <CommonCoreOntologies:definition xml:lang="en">x is_part_of_process y iff x and y are instances of Process, such that x occurs during the temporal interval of y, and x either provides an input to y or receives an output of y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is part of process</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_predecessor_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_predecessor_of">
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_successor_of"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000004"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000004"/>
+        <CommonCoreOntologies:definition xml:lang="en">A continuant c1 is a predecessor of some continuant c2 iff there is some process p1 and c1 is an input to p1 and c2 is an output of p1.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:elucidation xml:lang="en">More informally, c1 is a predecessor of c2 iff c1 has been followed or replaced by c2.</CommonCoreOntologies:elucidation>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is predecessor of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_site_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_site_of">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000183"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/occurs_at"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000029"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <CommonCoreOntologies:definition xml:lang="en">x is_site_of y iff x is an instance of Site and y is an instance of Process, such that y occurs in x.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is site of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_successor_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_successor_of">
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000004"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000004"/>
+        <CommonCoreOntologies:definition xml:lang="en">A continuant c2 is a successor of some continuant c1 iff there is some process p1 and c1 is an input to p1 and c2 is an output of p1. Inverse of is predecessor. </CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is successor of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/is_temporal_region_of -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/is_temporal_region_of">
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000008"/>
+        <rdfs:range>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000015"/>
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000035"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:range>
+        <CommonCoreOntologies:definition xml:lang="en">x is_temporal_region_of y iff y is an instance of a process or process boundary and x is an instance of a temporal region, such that the duration of x temporally projects on y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">is temporal region of</rdfs:label>
+        <skos:editorialNote xml:lang="en">Leaving this is in ERO for now since BFO2020 has no inverse of occupies-temporal-region yet.</skos:editorialNote>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/occurs_at -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/occurs_at">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000066"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000029"/>
+        <CommonCoreOntologies:definition xml:lang="en">x occurs_at y iff x is an instance of Process and y is an instance of Site, such that x occurs in y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">occurs at</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/process_started_by -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/process_started_by">
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/caused_by"/>
+        <owl:inverseOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/process_starts"/>
+        <CommonCoreOntologies:definition xml:lang="en">x process_started_by y iff x and y are instances of processes, and x is caused_by y, and i is an instance of a temporal instant, and r is an instant of a temporal interval, and x has starting instance i, and y occurs on r, and r interval contains i.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:elucidation xml:lang="en">A process x is started by another process y when y causes x while y is still occurring.</CommonCoreOntologies:elucidation>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">process started by</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/process_starts -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/process_starts">
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/is_cause_of"/>
+        <CommonCoreOntologies:definition xml:lang="en">x process_starts y iff x and y are instances of processes, and x is_cause_of y, and i is an instance of a temporal instant, and r is an instant of a temporal interval, and y has starting instance i, and x occurs on r, and r interval contains i.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:elucidation xml:lang="en">A process x starts another process y when x causes y while x is still occurring.</CommonCoreOntologies:elucidation>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">process starts</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/quality_of_aggregate -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/quality_of_aggregate">
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/inheres_in_aggregate"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <CommonCoreOntologies:definition xml:lang="en">x quality_of_aggregate y iff y is an instance of Object Aggregate and x is an instance of Quality, such that x disposition_of_aggregate y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">quality of aggregate</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ontologyrepository.com/CommonCoreOntologies/role_of_aggregate -->
+
+    <owl:ObjectProperty rdf:about="http://www.ontologyrepository.com/CommonCoreOntologies/role_of_aggregate">
+        <rdfs:subPropertyOf rdf:resource="http://www.ontologyrepository.com/CommonCoreOntologies/inheres_in_aggregate"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000023"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <CommonCoreOntologies:definition xml:lang="en">x role_of_aggregate y iff y is an instance of Object Aggregate and x is an instance of Role, such that x disposition_of_aggregate y.</CommonCoreOntologies:definition>
+        <CommonCoreOntologies:is_curated_in_ontology rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://www.ontologyrepository.com/CommonCoreOntologies/Mid/ExtendedRelationOntology</CommonCoreOntologies:is_curated_in_ontology>
+        <rdfs:label xml:lang="en">role of aggregate</rdfs:label>
+    </owl:ObjectProperty>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.29) https://github.com/owlcs/owlapi -->
+

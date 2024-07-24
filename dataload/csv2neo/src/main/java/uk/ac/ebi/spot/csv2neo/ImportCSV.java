@@ -210,9 +210,9 @@ public class ImportCSV {
             driver.verifyConnectivity();
             try (var session = driver.session(SessionConfig.builder().withDatabase(db).build())) {
                 try{
-                    session.run("CREATE CONSTRAINT FOR (n:Ontology) REQUIRE n.id IS UNIQUE");
-                    session.run("CREATE CONSTRAINT FOR (n:OntologyEntity) REQUIRE n.id IS UNIQUE");
-                    session.run("CREATE CONSTRAINT FOR (n:OntologyClass) REQUIRE n.id IS UNIQUE");
+                    session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (n:Ontology) REQUIRE n.id IS UNIQUE");
+                    session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (n:OntologyEntity) REQUIRE n.id IS UNIQUE");
+                    session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (n:OntologyClass) REQUIRE n.id IS UNIQUE");
                 } catch(Exception e){
                     e.printStackTrace();
                 }

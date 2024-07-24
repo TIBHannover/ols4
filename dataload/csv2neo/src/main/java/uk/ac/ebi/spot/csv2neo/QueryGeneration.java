@@ -72,7 +72,7 @@ public class QueryGeneration {
             sb.append("MATCH (n"+idToLabel(values[0])+" {id: "+"\'"+values[0]+"\'"+"}),")
                     .append("(m"+idToLabel(values[2])+" {id: "+"\'"+values[2]+"\'"+"}) ")
                     .append("WHERE n.id STARTS WITH '"+values[0].split("\\+")[0]+"' AND m.id STARTS WITH '"+values[2].split("\\+")[0]+"' ")
-                    .append("AND n.ontologyId = '"+values[0].split("\\+")[0]+"' AND m.ontologyId = '"+values[2].split("\\+")[0]+"'")
+                    .append("AND n.ontologyId = '"+values[0].split("\\+")[0]+"' AND m.ontologyId = '"+values[2].split("\\+")[0]+"' ")
                     .append("CREATE (n)-[:")
                     .append("`"+values[1].replace("|","`:`")+"`")
                     .append("]->(m)");

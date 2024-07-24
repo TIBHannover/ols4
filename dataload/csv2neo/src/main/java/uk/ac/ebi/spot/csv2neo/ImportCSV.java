@@ -52,7 +52,7 @@ public class ImportCSV {
                 continue;
 
             Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
-            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader());
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
             String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
             for (CSVRecord csvRecord : csvParser) {
                 String[] row = csvRecord.toList().toArray(String[]::new);
@@ -81,10 +81,9 @@ public class ImportCSV {
                 continue;
 
             Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
-            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader());
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
             String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
 
-            //Read CSV line by line and use the string array as you want
             for (CSVRecord csvRecord : csvParser) {
                 String[] row = csvRecord.toList().toArray(String[]::new);
                 String query = generateRelationCreationQuery(headers,row);
@@ -126,10 +125,8 @@ public class ImportCSV {
             String[] headers = allRows.get(0);
             List<String[]> rows = allRows.subList(1, allRows.size());
 
-            //Read CSV line by line and use the string array as you want
             for (String[] row : rows) {
                 String query = generateNodeCreationQuery(headers,row);
-                //System.out.println(query);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
                 if(safe){
@@ -146,8 +143,6 @@ public class ImportCSV {
                         e.printStackTrace();
                     }
             }
-
-
         }
 
         for (File file : files){
@@ -158,7 +153,6 @@ public class ImportCSV {
                     .withSkipLines(0)
                     .withCSVParser(parser)
                     .build();
-
 
             List<String[]> allRows = csvReader.readAll();
             String[] headers = allRows.get(0);

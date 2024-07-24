@@ -21,14 +21,14 @@ Use linker to link the json into a jsonl file.
 
     java -jar linker/target/linker-1.0-SNAPSHOT.jar --input foundry_out.json --output foundry_out.jsonl
 
-## Step 2: JSON to CSV *for Neo4j*
+## Step 3: JSON to CSV *for Neo4j*
 
 You can now convert this huge JSON file to a CSV file ready for Neo4j, using json2neo:
 
     rm -rf output_csv && mkdir output_csv
     java -jar json2neo/target/json2neo-1.0-SNAPSHOT.jar --input foundry_out_.jsonl --outDir output_csv
 
-## Step 3: CSV to Neo4j
+## Step 4: CSV to Neo4j
 
 Now (after 5-10 mins) you should have a directory full of CSV files. These files are formatted especially for Neo4j. You can load them using `neo4j-admin import` command or the `csv2neo` module. 
 
@@ -53,7 +53,7 @@ The module is flexible and enables you to perform multiple ingestions on a live 
 
     java -jar csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -i -d output_csv
 
-## Step 4: JSON to JSON *for Solr*
+## Step 5: JSON to JSON *for Solr*
 
 Similar to how the Neo4j CSV was generated, you can also generate JSON files ready for uploading to SOLR using `json2solr` which can also be performed on a live Solr instance.
 

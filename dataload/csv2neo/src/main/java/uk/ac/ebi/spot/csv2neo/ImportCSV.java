@@ -60,19 +60,7 @@ public class ImportCSV {
                 //System.out.println(query);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                if(safe){
-                    try (Transaction tx = session.beginTransaction()) {
-                        tx.run(query);
-                        tx.commit();
-                    } catch(Exception e){
-                        e.printStackTrace();
-                    }
-                } else
-                    try{
-                        session.run(query);
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    }
+                executeQuery(session, safe, query);
             }
         }
 
@@ -90,19 +78,7 @@ public class ImportCSV {
                 //System.out.println(query);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                if(safe){
-                    try (Transaction tx = session.beginTransaction()) {
-                        tx.run(query);
-                        tx.commit();
-                    } catch(Exception e){
-                        e.printStackTrace();
-                    }
-                } else
-                    try{
-                        session.run(query);
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    }
+                executeQuery(session, safe, query);
             }
         }
     }
@@ -129,19 +105,7 @@ public class ImportCSV {
                 String query = generateNodeCreationQuery(headers,row);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                if(safe){
-                    try (Transaction tx = session.beginTransaction()) {
-                        tx.run(query);
-                        tx.commit();
-                    } catch(Exception e){
-                        e.printStackTrace();
-                    }
-                } else
-                    try{
-                        session.run(query);
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    }
+                executeQuery(session, safe, query);
             }
         }
 
@@ -164,21 +128,26 @@ public class ImportCSV {
                 //System.out.println(query);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                if(safe){
-                    try (Transaction tx = session.beginTransaction()) {
-                        tx.run(query);
-                        tx.commit();
-                    } catch(Exception e){
-                        e.printStackTrace();
-                    }
-                } else
-                    try{
-                        session.run(query);
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    }
+                executeQuery(session, safe, query);
+
             }
         }
+    }
+
+    private static void executeQuery(Session session, boolean safe, String query){
+        if(safe){
+            try (Transaction tx = session.beginTransaction()) {
+                tx.run(query);
+                tx.commit();
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        } else
+            try{
+                session.run(query);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
     }
 
     private static Options getOptions() {

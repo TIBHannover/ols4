@@ -6,7 +6,7 @@ import {
   Radio,
   RadioGroup,
 } from "@mui/material";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import urlJoin from "url-join";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { theme } from "../../../app/mui";
@@ -31,11 +31,14 @@ import {
   showCounts,
   showObsolete,
   showSiblings,
+  setSpecificRootIri,
+  getEntity,
 } from "../ontologiesSlice";
 
 export default function EntityTree({
   ontology,
   entityType,
+  specifiedRootIri,
   selectedEntity,
   lang,
   onNavigateToEntity,
@@ -45,6 +48,7 @@ export default function EntityTree({
   ontology: Ontology;
   selectedEntity?: Entity;
   entityType: "entities" | "classes" | "properties" | "individuals";
+  specifiedRootIri?: string;
   lang: string;
   onNavigateToEntity: (ontology: Ontology, entity: Entity) => void;
   onNavigateToOntology: (ontologyId: string, entity: Entity) => void;
@@ -136,6 +140,19 @@ export default function EntityTree({
         })
       );
       return () => promise.abort(); // component was unmounted
+    } else if (specifiedRootIri) {
+            let promise = dispatch(
+                getAncestors({
+                    ontologyId: ontology.getOntologyId(),
+                    entityType,
+                    entityIri: specifiedRootIri,
+                    lang,
+                    showObsoleteEnabled,
+                    showSiblingsEnabled,
+                    apiUrl,
+                })
+            );
+            return () => promise.abort(); // component was unmounted
     } else {
       let promise = dispatch(
         getRootEntities({
@@ -157,9 +174,45 @@ export default function EntityTree({
     preferredRoots,
     lang,
     showObsoleteEnabled,
+    specifiedRootIri,
   ]);
 
+    useEffect(() => {
+        if (specifiedRootIri) {
+            dispatch(
+                getEntity({
+                    ontologyId: ontology.getOntologyId(),
+                    entityIri: specifiedRootIri,
+                    apiUrl: apiUrl,
+                })
+            );
+        }
+    }, [dispatch, specifiedRootIri, ontology.getOntologyId(),]);
+
+    useEffect(() => {
+        if (specifiedRootIri) {
+            dispatch(setSpecificRootIri(specifiedRootIri));
+        }
+    }, [dispatch, specifiedRootIri]);
+
+  const prevNodeChildrenRef = useRef(nodeChildren);
+
+  const haveRelevantPartsChanged = (prev, next) => {
+    if (!prev || !next) return true;
+    const prevKeys = Object.keys(prev);
+    const nextKeys = Object.keys(next);
+    if (prevKeys.length !== nextKeys.length) return true;
+    for (let key of prevKeys) {
+      if (prev[key] !== next[key]) return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
+    const prevNodeChildren = prevNodeChildrenRef.current;
+    if (!haveRelevantPartsChanged(prevNodeChildren, nodeChildren)) {
+      return;
+    }
     let nodesMissingChildren: string[] = manuallyExpandedNodes.filter(
       (absoluteIdentity) =>
         nodesWithChildrenLoaded.indexOf(absoluteIdentity) === -1
@@ -174,10 +227,6 @@ export default function EntityTree({
         ),
       ];
     }
-    // console.log(
-    //   "!!!! Getting missing node children: " +
-    //     JSON.stringify(nodesMissingChildren)
-    // );
 
     let promises: any = [];
     for (let absId of nodesMissingChildren) {
@@ -204,7 +253,7 @@ export default function EntityTree({
     lang,
     JSON.stringify(manuallyExpandedNodes),
     JSON.stringify(automaticallyExpandedNodes),
-    JSON.stringify(nodeChildren),
+    nodeChildren,
     ontology.getOntologyId(),
     entityType,
     preferredRoots,
@@ -337,7 +386,7 @@ export default function EntityTree({
         ) : null}
         <div className="lg:col-span-1 flex flex-col bg-white px-2 mb-2 rounded-lg">
           {entityType === "classes" &&
-            ontology.getPreferredRoots().length > 0 && (
+            ontology.getPreferredRoots().length > 0 && !specifiedRootIri && (
               <div className="mb-2">
                 <FormControl>
                   <RadioGroup

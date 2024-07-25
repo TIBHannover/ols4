@@ -22,16 +22,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.springframework.web.bind.annotation.RestController;
 import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.repository.Validation;
 import uk.ac.ebi.spot.ols.repository.solr.OlsSolrClient;
@@ -202,12 +200,12 @@ public class V1SearchController {
 //        solrQuery.addHighlightField("https://github.com/EBISPOT/owl2neo#definition");
 
 //        solrQuery.addFacetField("ontology_name", "ontology_prefix", "type", "subset", "is_defining_ontology", "is_obsolete");
-        
+
         /*
 		 * Fix: Start issue -
 		 * https://github.com/EBISPOT/ols4/issues/613
 		 * Added new OLS4 faceFields
-		 * 
+		 *
 		 */
 		// TODO: Need to check and add additional faceted fields if required
 		solrQuery.addFacetField("ontologyId", "ontologyIri", "ontologyPreferredPrefix", "type", "isDefiningOntology", "isObsolete");
@@ -297,7 +295,7 @@ public class V1SearchController {
         responseBody.put("numFound", qr.getResults().getNumFound());
         responseBody.put("start", start);
         responseBody.put("docs", docs);
-        
+
         /*
 		 * Fix: Start issue -
 		 * https://github.com/EBISPOT/ols4/issues/613
@@ -314,7 +312,7 @@ public class V1SearchController {
         Map<String, Object> responseObj = new HashMap<>();
         responseObj.put("responseHeader", responseHeader);
         responseObj.put("response", responseBody);
-        
+
         /*
 		 * Fix: Start issue -
 		 * https://github.com/EBISPOT/ols4/issues/613
@@ -330,7 +328,7 @@ public class V1SearchController {
         response.getOutputStream().write(gson.toJson(responseObj).getBytes(StandardCharsets.UTF_8));
         response.flushBuffer();
     }
-    
+
     private Map<String, List<String>> parseFacetFields(List<FacetField> facetFields) {
 		Map<String, List<String>> facetFieldsMap = new HashMap<>();
 		List<String> newFacetFields;
@@ -381,9 +379,4 @@ public class V1SearchController {
         }
         return builder.toString();
     }
-
-
-
-
-
 }

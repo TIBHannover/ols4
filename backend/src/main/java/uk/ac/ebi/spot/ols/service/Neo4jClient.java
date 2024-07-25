@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Stopwatch;
 import com.google.gson.*;
-import com.google.gson.stream.MalformedJsonException;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.exceptions.NoSuchRecordException;
@@ -151,6 +150,11 @@ public class Neo4jClient {
 				System.out.println("invalid trimmed json: "+r.get(resVar).get("_json").asString().replaceAll("\"\\\\\"", "\""));
 				System.out.println(jse2.getMessage() + " - default non-map value will be assigned.");
 			}
+		} catch(org.neo4j.driver.exceptions.value.Uncoercible u) {
+			System.out.println(u.getMessage() + " - Object is tried instead of String. External Array characters are removed. ");
+			String s = r.get(resVar).get("_json").asObject().toString();
+			System.out.println("object json: "+s.substring(1, s.length() - 1));
+			parsed = JsonParser.parseString(s.substring(1, s.length() - 1));
 		}
 
 		return parsed;

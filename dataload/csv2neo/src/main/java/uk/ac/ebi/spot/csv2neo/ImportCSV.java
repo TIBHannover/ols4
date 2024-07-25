@@ -1,8 +1,18 @@
 package uk.ac.ebi.spot.csv2neo;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvException;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.neo4j.driver.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -21,14 +31,12 @@ public class ImportCSV {
     static FileReader fr;
     static BufferedReader br;
 
-    public static List<File> showFiles(File[] files) throws IOException {
+    public static List<File> listFiles(File[] files) throws IOException {
         List<File> fileList = new ArrayList<File>();
         for (File file : files) {
             if (file.isDirectory()) {
-                System.out.println("Directory: " + file.getAbsolutePath());
-                fileList.addAll(showFiles(file.listFiles()));
+                fileList.addAll(listFiles(file.listFiles()));
             } else {
-                System.out.println("File: " + file.getAbsolutePath());
                 fileList.add(file);
             }
         }
@@ -36,109 +44,110 @@ public class ImportCSV {
         return fileList;
     }
 
-    public static void generateNEO(List<File> files, Session session) throws IOException {
-        for (File file : files){
-            if(!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
+    public static void generateCreationQueries(List<File> files, Session session, boolean safe) throws IOException {
+
+        for (File file : files) {
+            if (!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
                     || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
                 continue;
-            fr = new FileReader(file.getAbsolutePath());
-            br = new BufferedReader(fr);
-            String line = br.readLine();
-            String[] titles = {};
-            if (line != null)
-                titles = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-            String[] pieces = null;
-            while((line = br.readLine())!=null){
-                System.out.println(line);
-                pieces = split(line,",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-                String query = generateNodeCreationQuery(titles,pieces);
-                System.out.println("query: "+query);
-                try (Transaction tx = session.beginTransaction()) {
-                    tx.run(query);
-                    tx.commit();
-                } catch(Exception e){
-                    e.printStackTrace();
-                }
+
+            Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+            String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
+            for (CSVRecord csvRecord : csvParser) {
+                String[] row = csvRecord.toList().toArray(String[]::new);
+                String query = generateNodeCreationQuery(headers,row);
+                //System.out.println(query);
+                if(query.isEmpty())
+                    System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
+                executeQuery(session, safe, query);
             }
         }
 
         for (File file : files){
             if((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
                 continue;
-            fr = new FileReader(file.getAbsolutePath());
-            br = new BufferedReader(fr);
-            String line = br.readLine();
-            String[] titles = {};
-            if (line != null)
-                titles = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-            String[] pieces = null;
-            while((line = br.readLine())!=null){
-                System.out.println(line);
-                pieces = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-                String query = generateRelationCreationQuery(titles,pieces);
-                System.out.println("query: "+query);
-                try (Transaction tx = session.beginTransaction()) {
-                    tx.run(query);
-                    tx.commit();
-                } catch(Exception e){
-                    e.printStackTrace();
-                }
+
+            Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+            String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
+
+            for (CSVRecord csvRecord : csvParser) {
+                String[] row = csvRecord.toList().toArray(String[]::new);
+                String query = generateRelationCreationQuery(headers,row);
+                //System.out.println(query);
+                if(query.isEmpty())
+                    System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
+                executeQuery(session, safe, query);
             }
         }
     }
 
-    public static String[] split(String input, String regex){
-        String[] tokens = {};
-        char c = '{';
-        char d = '\"';
-        char e = '}';
-        String left = String.valueOf(d) + c;
-        String right = String.valueOf(e) + d;
-        int countLeftCurly = countOccurrences(input, left);
-        int countRightCurly = countOccurrences(input, right);
+    public static void generateCQ(List<File> files, Session session, boolean safe) throws IOException, CsvException {
 
-        if(countLeftCurly == 0 && countRightCurly == 0){
-            tokens = input.split(regex);
-        } else if(countLeftCurly == countRightCurly && countLeftCurly == 1){
-            String[] content = input.split("\"\\{");
-            String before = "";
-            String after = "";
-            String json = "";
-            before = content[0];
-            if (before.endsWith(","))
-                before = before.substring(0,before.length()-1);
-            String[] content2 = content[1].split("\\}\"");
-            json = String.valueOf(d)+String.valueOf(c)+content2[0]+String.valueOf(e)+String.valueOf(d);
-            after = content2[1];
-            if(after.startsWith(","))
-                after = after.substring(1,after.length());
-            String[] beforeArray = before.split(regex);
-            String[] afterArray = after.split(regex);
-            int length = beforeArray.length + 1 + afterArray.length;
-            tokens = new String[length];
-            for (int i =0;i<length;i++){
-                if(i<beforeArray.length)
-                    tokens[i] = beforeArray[i];
-                else if(i==beforeArray.length)
-                    tokens[i] = json;
-                else
-                    tokens[i] = afterArray[i-(beforeArray.length+1)];
+        CSVParser parser = new CSVParserBuilder().withSeparator(',').withQuoteChar('"').build();
+
+        for (File file : files){
+            if(!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
+                    || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
+                continue;
+
+            CSVReader csvReader = new CSVReaderBuilder(new FileReader(file.getAbsolutePath()))
+                    .withSkipLines(0)
+                    .withCSVParser(parser)
+                    .build();
+
+            List<String[]> allRows = csvReader.readAll();
+            String[] headers = allRows.get(0);
+            List<String[]> rows = allRows.subList(1, allRows.size());
+
+            for (String[] row : rows) {
+                String query = generateNodeCreationQuery(headers,row);
+                if(query.isEmpty())
+                    System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
+                executeQuery(session, safe, query);
             }
         }
 
-        return tokens;
+        for (File file : files){
+            if((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
+                continue;
+
+            CSVReader csvReader = new CSVReaderBuilder(new FileReader(file.getAbsolutePath()))
+                    .withSkipLines(0)
+                    .withCSVParser(parser)
+                    .build();
+
+            List<String[]> allRows = csvReader.readAll();
+            String[] headers = allRows.get(0);
+            List<String[]> rows = allRows.subList(1, allRows.size());
+
+            //Read CSV line by line and use the string array as you want
+            for (String[] row : rows) {
+                String query = generateRelationCreationQuery(headers,row);
+                //System.out.println(query);
+                if(query.isEmpty())
+                    System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
+                executeQuery(session, safe, query);
+
+            }
+        }
     }
 
-    public static int countOccurrences(String input, String pattern) {
-        int count = 0;
-        int index = 0;
-
-        while ((index = input.indexOf(pattern, index)) != -1) {
-            count++;
-            index += pattern.length();
-        }
-
-        return count;
+    private static void executeQuery(Session session, boolean safe, String query){
+        if(safe){
+            try (Transaction tx = session.beginTransaction()) {
+                tx.run(query);
+                tx.commit();
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        } else
+            try{
+                session.run(query);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
     }
 
     private static Options getOptions() {
@@ -151,6 +160,7 @@ public class ImportCSV {
         options.addOption("uri", "databaseuri",true, "neo4j database uri");
         options.addOption("db", "database",true, "neo4j database name");
         options.addOption("d", "directory",true, "neo4j csv import directory");
+        options.addOption("s", "safe",false, "execute each neo4j query in transactions or the session");
         return options;
     }
 
@@ -165,25 +175,32 @@ public class ImportCSV {
         final String directory = cmd.hasOption("d") ? cmd.getOptionValue("d") : "/tmp/out";
         final String ontologiesToBeRemoved = cmd.hasOption("rm") ? cmd.getOptionValue("rm") : "";
 
-        File dir = new File(directory);
-        List<File> files = showFiles(dir.listFiles());
-
         try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
             driver.verifyConnectivity();
             try (var session = driver.session(SessionConfig.builder().withDatabase(db).build())) {
                 try{
-                    session.run("CREATE CONSTRAINT FOR (n:Ontology) REQUIRE n.id IS UNIQUE");
-                    session.run("CREATE CONSTRAINT FOR (n:OntologyEntity) REQUIRE n.id IS UNIQUE");
-                    session.run("CREATE CONSTRAINT FOR (n:OntologyClass) REQUIRE n.id IS UNIQUE");
+                    session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (n:Ontology) REQUIRE n.id IS UNIQUE");
+                    session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (n:OntologyEntity) REQUIRE n.id IS UNIQUE");
+                    session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (n:OntologyClass) REQUIRE n.id IS UNIQUE");
                 } catch(Exception e){
                     e.printStackTrace();
                 }
                 System.out.println("Start Neo4J Modification...");
-                if(cmd.hasOption("i"))
-                    generateNEO(files,session);
-                else
+                if(cmd.hasOption("i")){
+                    File dir = new File(directory);
+                    List<File> files = listFiles(dir.listFiles());
+                    if(cmd.hasOption("s"))
+                        generateCreationQueries(files,session,true);
+                    else
+                        generateCreationQueries(files,session,false);
+                } else
                     for(String ontology : ontologiesToBeRemoved.split(","))
-                        session.run(generateOntologyDeleteQuery(ontology));
+                        try {
+                            session.run(generateOntologyDeleteQuery(ontology));
+                        } catch (Exception e){
+                            e.printStackTrace();
+                        }
+
             }
         }
     }

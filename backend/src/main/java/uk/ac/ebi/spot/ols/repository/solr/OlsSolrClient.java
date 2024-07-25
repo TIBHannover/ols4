@@ -2,6 +2,7 @@ package uk.ac.ebi.spot.ols.repository.solr;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -23,8 +24,10 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -95,10 +98,32 @@ public class OlsSolrClient {
 
         if(qr.getResults().getNumFound() < 1) {
             logger.debug("Expected at least 1 result for solr getFirst for solr query = {}", query.constructQuery().jsonStr());
+            //return new JsonObject();
             throw new RuntimeException("Expected at least 1 result for solr getFirst");
         }
 
         return getOlsEntityFromSolrResult(qr.getResults().get(0));
+    }
+
+    public JsonElement getByIndex(OlsSolrQuery query, int i) {
+
+        QueryResponse qr = runSolrQuery(query, null);
+
+        if(qr.getResults().getNumFound() < 1) {
+            logger.debug("Expected at least 1 result for solr getFirst for solr query = {}", query.constructQuery().jsonStr());
+            throw new RuntimeException("Expected at least 1 result for solr getFirst");
+        }
+
+        return getOlsEntityFromSolrResult(qr.getResults().get(i));
+    }
+
+    public Set<JsonElement> getSet(OlsSolrQuery query){
+        Set<JsonElement> tempSet = new HashSet<>();
+        QueryResponse qr = runSolrQuery(query, null);
+        for (int i = 0; i<qr.getResults().size();i++){
+            tempSet.add(getOlsEntityFromSolrResult(qr.getResults().get(i)));
+        }
+        return tempSet;
     }
 
     private JsonElement getOlsEntityFromSolrResult(SolrDocument doc) {

@@ -18,19 +18,21 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FacetField.Count;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
+import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.repository.Validation;
 import uk.ac.ebi.spot.ols.repository.solr.OlsSolrClient;
 import uk.ac.ebi.spot.ols.repository.transforms.LocalizationTransform;
@@ -44,7 +46,7 @@ import uk.ac.ebi.spot.ols.repository.v1.mappers.AnnotationExtractor;
  * @date 02/07/2015
  * Samples, Phenotypes and Ontologies Team, EMBL-EBI
  */
-@Controller
+@RestController
 public class V1SearchController {
 
     Gson gson = new Gson();
@@ -59,7 +61,15 @@ public class V1SearchController {
     @RequestMapping(path = "/api/search", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public void search(
             @RequestParam("q") String query,
+            @RequestParam(value = "schema", required = false) Collection<String> schemas,
+            @RequestParam(value = "classification", required = false) Collection<String> classifications,
             @RequestParam(value = "ontology", required = false) Collection<String> ontologies,
+            @Parameter(description = "Set to true (default setting is false) for intersection (default behavior is union) of classifications.")
+            @RequestParam(value = "exclusive", required = false, defaultValue = "false") boolean exclusive,
+            @Parameter(description = "Use License option to filter based on license.label, license.logo and license.url variables. " +
+                    "Use Composite Option to filter based on the objects (i.e. collection, subject) within the classifications variable. " +
+                    "Use Linear option to filter based on String and Collection<String> based variables.")
+            @RequestParam(value = "option", required = false, defaultValue = "LINEAR") FilterOption filterOption,
             @RequestParam(value = "type", required = false) Collection<String> types,
             @RequestParam(value = "slim", required = false) Collection<String> slims,
             @RequestParam(value = "fieldList", required = false) Collection<String> fieldList,
@@ -78,6 +88,8 @@ public class V1SearchController {
             @RequestParam(value = "lang", defaultValue = "en") String lang,
             HttpServletResponse response
     ) throws IOException, SolrServerException {
+
+        ontologies = ontologyRepository.filterOntologyIDs(schemas,classifications,ontologies,exclusive,filterOption,lang);
 
         final SolrQuery solrQuery = new SolrQuery(); // 1
 

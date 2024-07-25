@@ -6,9 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Stopwatch;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.exceptions.NoSuchRecordException;
@@ -130,12 +128,36 @@ public class Neo4jClient {
 
 		Page<JsonElement> page = new PageImpl<>(
 				result.list().stream()
-						.map(r -> JsonParser.parseString(r.get(resVar).get("_json").asString()))
+						.map(r -> parseElementByRecord(r,resVar))
 						.collect(Collectors.toList()),
 				pageable, count);
 
 		session.close();
 		return page;
+	}
+
+	public JsonElement parseElementByRecord(Record r, String resVar){
+		JsonElement parsed = new JsonObject();
+
+		try {
+			parsed = JsonParser.parseString(r.get(resVar).get("_json").asString());
+		} catch (JsonSyntaxException jse){
+			System.out.println("invalid json: "+r.get(resVar).get("_json").asString());
+			System.out.println(jse.getMessage() + " - Some suspicious fragments will be removed from json.");
+			try {
+				parsed = JsonParser.parseString(r.get(resVar).get("_json").asString().replaceAll("\"\\\\\"", "\"").replaceAll("\\\\\"", "\""));
+			} catch (JsonSyntaxException jse2){
+				System.out.println("invalid trimmed json: "+r.get(resVar).get("_json").asString().replaceAll("\"\\\\\"", "\""));
+				System.out.println(jse2.getMessage() + " - default non-map value will be assigned.");
+			}
+		} catch(org.neo4j.driver.exceptions.value.Uncoercible u) {
+			System.out.println(u.getMessage() + " - Object is tried instead of String. External Array characters are removed. ");
+			String s = r.get(resVar).get("_json").asObject().toString();
+			System.out.println("object json: "+s.substring(1, s.length() - 1));
+			parsed = JsonParser.parseString(s.substring(1, s.length() - 1));
+		}
+
+		return parsed;
 	}
 
 	public JsonElement queryOne(String query, String resVar, Value parameters) {

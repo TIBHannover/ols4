@@ -47,6 +47,10 @@ public class RDF2JSON {
         Option noDates = new Option(null, "noDates", false, "Set to leave LOADED dates blank (for testing)");
         noDates.setRequired(false);
         options.addOption(noDates);
+        
+        Option rdfConvert = new Option(null, "convertToRDF", true, "Whether or not to convert the ontology to RDF/Xml format before parsing.");
+        rdfConvert.setRequired(false);
+        options.addOption(rdfConvert);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -69,6 +73,7 @@ public class RDF2JSON {
         boolean bLoadLocalFiles = cmd.hasOption("loadLocalFiles");
         boolean bNoDates = cmd.hasOption("noDates");
         String mergeOutputWith = cmd.getOptionValue("mergeOutputWith");
+        boolean convertToRDF = cmd.hasOption("convertToRDF");
 
 
         System.out.println("Configs: " + configFilePaths);
@@ -140,7 +145,7 @@ public class RDF2JSON {
 
             try {
 
-                OntologyGraph graph = new OntologyGraph(ontoConfig, bLoadLocalFiles, bNoDates, downloadedPath);
+                OntologyGraph graph = new OntologyGraph(ontoConfig, bLoadLocalFiles, bNoDates, downloadedPath, convertToRDF);
 
                 if(graph.ontologyNode == null) {
                     System.out.println("No Ontology node found; nothing will be written");

@@ -13,6 +13,7 @@
 		<module>linker</module>
 		<module>json2solr</module>
 		<module>json2neo</module>
+		<module>csv2neo</module>
 		<module>extras</module>
     </modules>
 

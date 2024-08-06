@@ -1,5 +1,7 @@
 package uk.ac.ebi.spot.csv2neo;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,11 +38,53 @@ public class QueryGeneration {
         } else {
             System.out.println("titles and values are not equal");
             System.out.println("titles: "+titles.length + " - values: " +values.length);
-            /*for (String value : values)
-                System.out.println("value: "+value);*/
         }
         return sb.toString();
     }
+
+    public static String generateBlankNodeCreationQuery(String[] titles, String[] values){
+
+        StringBuilder sb = new StringBuilder();
+
+        if (titles.length == values.length) {
+
+            sb.append("CREATE (")
+                    .append(":")
+                    .append("`"+values[1].replace("|","`:`")+"`")
+                    .append(" $props")
+
+                    .append(")")
+                    .append(" ");
+        } else {
+            System.out.println("titles and values are not equal");
+            System.out.println("titles: "+titles.length + " - values: " +values.length);
+        }
+        return sb.toString();
+    }
+
+    public static Map<String,Object> generateProps(String[] titles, String[] values){
+
+        Map<String,Object> props = new HashMap<>();
+        if (titles.length == values.length) {
+            for (int i = 0; i < values.length; i++) {
+                if (i == 0)
+                    props.put("id",values[i]);
+                if(i !=1){
+                    props.put(titles[i].split(":")[0].replaceAll("\"\"","\""),convertToJSONArray(values[i]));
+                }
+            }
+
+        } else {
+            System.out.println("titles and values are not equal");
+            System.out.println("titles: "+titles.length + " - values: " +values.length);
+        }
+
+        Map<String,Object> params = new HashMap<>();
+        params.put( "props", props );
+
+        return params;
+    }
+
 
     public static String generateNodeSetQuery(String[] titles, String[] values){
 
@@ -79,8 +123,6 @@ public class QueryGeneration {
         } else {
             System.out.println("titles and values are not equal");
             System.out.println("titles: "+titles.length + " - values: " +values.length);
-            /*for (String value : values)
-                System.out.println("value: "+value);*/
         }
 
         return sb.toString();

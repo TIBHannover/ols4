@@ -14,6 +14,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -56,11 +58,11 @@ public class ImportCSV {
             String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
             for (CSVRecord csvRecord : csvParser) {
                 String[] row = csvRecord.toList().toArray(String[]::new);
-                String query = generateNodeCreationQuery(headers,row);
-                //System.out.println(query);
+                String query = generateBlankNodeCreationQuery(headers,row);
+                Map<String,Object> params = generateProps(headers,row);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                executeQuery(session, safe, query);
+                executeBlankQuery(session, params, safe, query);
             }
         }
 
@@ -75,7 +77,6 @@ public class ImportCSV {
             for (CSVRecord csvRecord : csvParser) {
                 String[] row = csvRecord.toList().toArray(String[]::new);
                 String query = generateRelationCreationQuery(headers,row);
-                //System.out.println(query);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
                 executeQuery(session, safe, query);
@@ -122,7 +123,6 @@ public class ImportCSV {
             String[] headers = allRows.get(0);
             List<String[]> rows = allRows.subList(1, allRows.size());
 
-            //Read CSV line by line and use the string array as you want
             for (String[] row : rows) {
                 String query = generateRelationCreationQuery(headers,row);
                 //System.out.println(query);
@@ -145,6 +145,22 @@ public class ImportCSV {
         } else
             try{
                 session.run(query);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+    }
+
+    private static void executeBlankQuery(Session session, Map<String,Object> params, boolean safe, String query){
+        if(safe){
+            try (Transaction tx = session.beginTransaction()) {
+                tx.run(query, params);
+                tx.commit();
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        } else
+            try{
+                session.run(query, params);
             } catch (Exception e){
                 e.printStackTrace();
             }

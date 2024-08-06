@@ -1,5 +1,7 @@
 package uk.ac.ebi.spot.csv2neo;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,59 +12,41 @@ import java.util.regex.Pattern;
  */
 public class QueryGeneration {
 
-    public static String generateNodeCreationQuery(String[] titles, String[] values){
-
+    public static String generateBlankNodeCreationQuery(String[] titles, String[] values){
         StringBuilder sb = new StringBuilder();
-
         if (titles.length == values.length) {
 
             sb.append("CREATE (")
                     .append(":")
                     .append("`"+values[1].replace("|","`:`")+"`")
-                    .append(" {");
-            sb.append("id: ").append("\'"+values[0]+"\'");
+                    .append(" $props")
 
-            for (int i = 2; i < values.length; i++) {
-                String text = values[i].replaceAll("\"\"","\"").replaceAll("\\\\", "\\\\\\\\").replaceAll("\'","\\\\'");
-                sb.append(", ")
-                        .append("`"+titles[i].split(":")[0].replaceAll("\"\"","\"")+"`")
-                        .append(": ")
-                        .append(convertToJSONArray("\'"+text+"\'"));
-            }
-
-            sb.append("}")
                     .append(")")
                     .append(" ");
         } else {
             System.out.println("titles and values are not equal");
             System.out.println("titles: "+titles.length + " - values: " +values.length);
-            /*for (String value : values)
-                System.out.println("value: "+value);*/
         }
         return sb.toString();
     }
 
-    public static String generateNodeSetQuery(String[] titles, String[] values){
+    public static Map<String,Object> generateProps(String[] titles, String[] values){
 
-        StringBuilder sb = new StringBuilder();
+        Map<String,Object> props = new HashMap<>();
+        props.put("id",values[0]);
+        if (titles.length == values.length) {
+            for (int i = 2; i < values.length; i++)
+                props.put(titles[i].split(":")[0].replaceAll("\"\"","\""),convertToJSONArray(values[i]));
 
-        if (titles.length == values.length){
-            sb.append("MATCH (n) where n.id = ").append("\'"+values[0].substring(1, values[0].length() - 1)+"\'").append(" SET ");
-
-            boolean first = true;
-
-            for (int i = 2; i < values.length; i++){
-                if(!first)
-                    sb.append(" AND ");
-                first = false;
-                String text = values[i].substring(1, values[i].length() - 1).replaceAll("\"\"","\"").replaceAll("\\\\", "\\\\\\\\").replaceAll("\'","\\\\'");
-                sb.append("n.").append("`"+titles[i].substring(1, titles[i].length() - 1).split(":")[0].replaceAll("\"\"","\"")+"`")
-                        .append(" = ").append(convertToJSONArray("\'"+text+"\'"));
-            }
-
+        } else {
+            System.out.println("titles and values are not equal");
+            System.out.println("titles: "+titles.length + " - values: " +values.length);
         }
 
-        return sb.toString();
+        Map<String,Object> params = new HashMap<>();
+        params.put( "props", props );
+
+        return params;
     }
 
     public static String generateRelationCreationQuery(String[] titles, String[] values){
@@ -79,8 +63,6 @@ public class QueryGeneration {
         } else {
             System.out.println("titles and values are not equal");
             System.out.println("titles: "+titles.length + " - values: " +values.length);
-            /*for (String value : values)
-                System.out.println("value: "+value);*/
         }
 
         return sb.toString();

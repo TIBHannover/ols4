@@ -1,10 +1,5 @@
 package uk.ac.ebi.spot.csv2neo;
 
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import com.opencsv.exceptions.CsvException;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.neo4j.driver.*;
@@ -14,6 +9,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -56,11 +53,11 @@ public class ImportCSV {
             String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
             for (CSVRecord csvRecord : csvParser) {
                 String[] row = csvRecord.toList().toArray(String[]::new);
-                String query = generateNodeCreationQuery(headers,row);
-                //System.out.println(query);
+                String query = generateBlankNodeCreationQuery(headers,row);
+                Map<String,Object> params = generateProps(headers,row);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                executeQuery(session, safe, query);
+                executeQuery(session, params, safe, query);
             }
         }
 
@@ -75,76 +72,30 @@ public class ImportCSV {
             for (CSVRecord csvRecord : csvParser) {
                 String[] row = csvRecord.toList().toArray(String[]::new);
                 String query = generateRelationCreationQuery(headers,row);
-                //System.out.println(query);
                 if(query.isEmpty())
                     System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                executeQuery(session, safe, query);
+                executeQuery(session, null, safe, query);
             }
         }
     }
 
-    public static void generateCQ(List<File> files, Session session, boolean safe) throws IOException, CsvException {
-
-        CSVParser parser = new CSVParserBuilder().withSeparator(',').withQuoteChar('"').build();
-
-        for (File file : files){
-            if(!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
-                    || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
-                continue;
-
-            CSVReader csvReader = new CSVReaderBuilder(new FileReader(file.getAbsolutePath()))
-                    .withSkipLines(0)
-                    .withCSVParser(parser)
-                    .build();
-
-            List<String[]> allRows = csvReader.readAll();
-            String[] headers = allRows.get(0);
-            List<String[]> rows = allRows.subList(1, allRows.size());
-
-            for (String[] row : rows) {
-                String query = generateNodeCreationQuery(headers,row);
-                if(query.isEmpty())
-                    System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                executeQuery(session, safe, query);
-            }
-        }
-
-        for (File file : files){
-            if((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
-                continue;
-
-            CSVReader csvReader = new CSVReaderBuilder(new FileReader(file.getAbsolutePath()))
-                    .withSkipLines(0)
-                    .withCSVParser(parser)
-                    .build();
-
-            List<String[]> allRows = csvReader.readAll();
-            String[] headers = allRows.get(0);
-            List<String[]> rows = allRows.subList(1, allRows.size());
-
-            //Read CSV line by line and use the string array as you want
-            for (String[] row : rows) {
-                String query = generateRelationCreationQuery(headers,row);
-                //System.out.println(query);
-                if(query.isEmpty())
-                    System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                executeQuery(session, safe, query);
-
-            }
-        }
-    }
-
-    private static void executeQuery(Session session, boolean safe, String query){
+    private static void executeQuery(Session session, Map<String,Object> params, boolean safe, String query){
         if(safe){
             try (Transaction tx = session.beginTransaction()) {
-                tx.run(query);
+                if (params != null)
+                    tx.run(query, params);
+                else
+                    tx.run(query);
                 tx.commit();
             } catch(Exception e){
                 e.printStackTrace();
             }
         } else
             try{
-                session.run(query);
+                if (params != null)
+                    session.run(query, params);
+                else
+                    session.run(query);
             } catch (Exception e){
                 e.printStackTrace();
             }

@@ -7,6 +7,10 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -37,7 +41,7 @@ public class ImportCSV {
         return fileList;
     }
 
-    public static void executeBatchedNodeQueries(List<File> files, Session session, int batchSize) throws IOException {
+    public static void executeBatchedNodeQueries(List<File> files, Driver driver, int batchSize, int poolSize) throws IOException, InterruptedException {
         for (File file : files) {
             if (!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
                     || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
@@ -46,24 +50,18 @@ public class ImportCSV {
             org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
             String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
             List<List<CSVRecord>> splitRecords = splitList(csvParser.getRecords(),batchSize);
+            CountDownLatch latch = new CountDownLatch(splitRecords.size());
+            ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
             for (List<CSVRecord> records : splitRecords){
-                try (Transaction tx = session.beginTransaction()){
-                    for (CSVRecord csvRecord : records) {
-                        String[] row = csvRecord.toList().toArray(String[]::new);
-                        String query = generateBlankNodeCreationQuery(headers,row);
-                        Map<String,Object> params = generateProps(headers,row);
-                        if(query.isEmpty())
-                            System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                        else
-                            tx.run(query,params);
-                    }
-                    tx.commit();
-                }
+                NodeCreationQueryTask task = new NodeCreationQueryTask(driver,latch, records,headers,file);
+                executorService.submit(task);
             }
+            latch.await();
+            executorService.shutdown();
         }
     }
 
-    public static void executeBatchedRelationshipQueries(List<File> files, Session session, int batchSize) throws IOException {
+    public static void executeBatchedRelationshipQueries(List<File> files, Driver driver, int batchSize, int poolSize) throws IOException, InterruptedException {
         for (File file : files) {
             if ((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
                 continue;
@@ -72,19 +70,14 @@ public class ImportCSV {
             org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
             String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
             List<List<CSVRecord>> splitRecords = splitList(csvParser.getRecords(), batchSize);
+            CountDownLatch latch = new CountDownLatch(splitRecords.size());
+            ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
             for (List<CSVRecord> records : splitRecords){
-                try (Transaction tx = session.beginTransaction()){
-                    for (CSVRecord csvRecord : records) {
-                        String[] row = csvRecord.toList().toArray(String[]::new);
-                        String query = generateRelationCreationQuery(headers,row);
-                        if(query.isEmpty())
-                            System.out.println("empty query for appended line: "+Arrays.toString(row)+" in file: "+file);
-                        else
-                            tx.run(query);
-                    }
-                    tx.commit();
-                }
+                RelationShipCreationQueryTask task = new RelationShipCreationQueryTask(driver,latch,records,headers,file);
+                executorService.submit(task);
             }
+            latch.await();
+            executorService.shutdown();
         }
     }
 
@@ -107,6 +100,7 @@ public class ImportCSV {
         options.addOption("db", "database",true, "neo4j database name");
         options.addOption("d", "directory",true, "neo4j csv import directory");
         options.addOption("bs", "batchsize",true, "batch size for splitting queries into multiple transactions.");
+        options.addOption("ps", "pool size",true, "number of threads in the pool");
         return options;
     }
 
@@ -121,6 +115,7 @@ public class ImportCSV {
         final String directory = cmd.hasOption("d") ? cmd.getOptionValue("d") : "/tmp/out";
         final String ontologiesToBeRemoved = cmd.hasOption("rm") ? cmd.getOptionValue("rm") : "";
         final int batchSize = cmd.hasOption("bs") && Integer.parseInt(cmd.getOptionValue("bs"))>0 ? Integer.parseInt(cmd.getOptionValue("bs")) : 1000;
+        final int poolSize = cmd.hasOption("ps") && Integer.parseInt(cmd.getOptionValue("ps"))>0 ? Integer.parseInt(cmd.getOptionValue("ps")) : 20;
 
         try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
             driver.verifyConnectivity();
@@ -152,8 +147,8 @@ public class ImportCSV {
                 if(cmd.hasOption("i")){
                     File dir = new File(directory);
                     List<File> files = listFiles(dir.listFiles());
-                    executeBatchedNodeQueries(files, session,batchSize);
-                    executeBatchedRelationshipQueries(files,session,batchSize);
+                    executeBatchedNodeQueries(files,driver,batchSize,poolSize);
+                    executeBatchedRelationshipQueries(files,driver,batchSize, poolSize);
                 } else
                     for(String ontology : ontologiesToBeRemoved.split(","))
                         try {
@@ -161,6 +156,8 @@ public class ImportCSV {
                         } catch (Exception e){
                             e.printStackTrace();
                         }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }

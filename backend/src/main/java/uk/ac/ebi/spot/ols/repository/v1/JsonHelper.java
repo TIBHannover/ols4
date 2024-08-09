@@ -15,6 +15,9 @@ public class JsonHelper {
         return objectToString(json.get(key));
     }
 
+    public static boolean getBoolean(JsonObject json, String key) {
+        return json.getAsJsonPrimitive(key).getAsBoolean();
+    }
 
     public static String objectToString(JsonElement value) {
 
@@ -72,6 +75,18 @@ public class JsonHelper {
 
     public static List<String> getStrings(JsonObject json, String predicate) {
         return getValues(json, predicate).stream().map(JsonHelper::objectToString).collect(Collectors.toList());
+    }
+
+    /**
+     * This methi
+     * @param json
+     * @param predicate
+     * @return
+     */
+    public static String getType(JsonObject json, String predicate){
+        List<String> types = getValues(json, predicate).stream().map(JsonHelper::objectToString).collect(Collectors.toList());
+        types.remove("entity");
+        return types.get(0);
     }
 
     public static List<JsonObject> getObjects(JsonObject json, String predicate) {

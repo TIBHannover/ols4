@@ -4,18 +4,20 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
 import uk.ac.ebi.spot.ols.model.FilterOption;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import uk.ac.ebi.spot.ols.repository.Validation;
 import uk.ac.ebi.spot.ols.repository.solr.OlsSolrClient;
 import uk.ac.ebi.spot.ols.repository.transforms.LocalizationTransform;
@@ -29,7 +31,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
+@Tag(name = "Select Controller")
 @RestController
 public class V1SelectController {
 
@@ -40,6 +44,8 @@ public class V1SelectController {
 
     @Autowired
     private OlsSolrClient solrClient;
+
+    private static final Logger logger = LoggerFactory.getLogger(V1SelectController.class);
 
     @RequestMapping(path = "/api/select", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public void select(
@@ -77,7 +83,9 @@ public class V1SelectController {
         solrQuery.setQuery(query);
         solrQuery.set("defType", "edismax");
         solrQuery.set("qf", "label whitespace_edge_label synonym whitespace_edge_synonym shortForm whitespace_edge_shortForm curie iri");
-        solrQuery.set("bq", "type:ontology^10.0 isDefiningOntology:true^100.0 str_label:\"" + queryLc + "\"^1000  edge_label:\"" + queryLc + "\"^500 str_synonym:\"" + queryLc + "\" edge_synonym:\"" + queryLc + "\"^100");
+        solrQuery.set("bq", "type:ontology^10.0 " +
+                IS_DEFINING_ONTOLOGY.getText() +":true^100.0 str_label:\"" + queryLc + "\"^1000  edge_label:\"" +
+                queryLc + "\"^500 str_synonym:\"" + queryLc + "\" edge_synonym:\"" + queryLc + "\"^100");
         solrQuery.set("wt", "json");
 
         solrQuery.setFields("_json", "id");
@@ -99,7 +107,7 @@ public class V1SelectController {
         }
 
         if (isLocal) {
-            solrQuery.addFilterQuery("isDefiningOntology:true");
+            solrQuery.addFilterQuery(IS_DEFINING_ONTOLOGY.getText() + ":true");
         }
 
         if (childrenOf != null) {
@@ -116,7 +124,7 @@ public class V1SelectController {
             solrQuery.addFilterQuery("hierarchicalAncestor: (" + result + ")");
         }
 
-        solrQuery.addFilterQuery("isObsolete:" + queryObsoletes);
+        solrQuery.addFilterQuery(IS_OBSOLETE.getText() + ":" + queryObsoletes);
         solrQuery.setStart(start);
         solrQuery.setRows(rows);
         solrQuery.setHighlight(true);
@@ -127,7 +135,7 @@ public class V1SelectController {
         solrQuery.addHighlightField("whitespace_edge_synonym");
         solrQuery.addHighlightField("synonym");
 
-        System.out.println("select: " + solrQuery.toQueryString());
+       logger.debug("select: ()", solrQuery.toQueryString());
 
         QueryResponse qr = solrClient.dispatchSearch(solrQuery, "ols4_entities");
 
@@ -168,9 +176,12 @@ public class V1SelectController {
             if (fieldList.contains("description")) outDoc.put("description", JsonHelper.getStrings(json, "definition"));
             if (fieldList.contains("short_form")) outDoc.put("short_form", JsonHelper.getString(json, "shortForm"));
             if (fieldList.contains("obo_id")) outDoc.put("obo_id", JsonHelper.getString(json, "curie"));
-            if (fieldList.contains("is_defining_ontology")) outDoc.put("is_defining_ontology",
-                    JsonHelper.getString(json, "isDefiningOntology") != null && JsonHelper.getString(json, "isDefiningOntology").equals("true"));
-            if (fieldList.contains("type")) outDoc.put("type", "class");
+            if (fieldList.contains(IS_DEFINING_ONTOLOGY.getOls3Text())) outDoc.put(IS_DEFINING_ONTOLOGY.getOls3Text(),
+                    JsonHelper.getString(json, IS_DEFINING_ONTOLOGY.getText()) != null &&
+                            JsonHelper.getString(json, IS_DEFINING_ONTOLOGY.getText()).equals("true"));
+            if (fieldList.contains("type")) {
+                outDoc.put("type", JsonHelper.getType(json, "type"));
+            }
             if (fieldList.contains("synonym")) outDoc.put("synonym", JsonHelper.getStrings(json, "synonym"));
             if (fieldList.contains("ontology_prefix")) outDoc.put("ontology_prefix", JsonHelper.getString(json, "ontologyPreferredPrefix"));
 

@@ -67,7 +67,15 @@ public class QueryGeneration {
     }
 
     public static String generateOntologyDeleteQuery(String ontologyPrefix){
-        return "MATCH (n) where n.id STARTS WITH '"+ontologyPrefix+"' DETACH DELETE n";
+        return "MATCH (n) WHERE n.id STARTS WITH '"+ontologyPrefix+"' DETACH DELETE n";
+    }
+
+    public static String countRelationShipsOfOntology(String ontologyPrefix) {
+        return "MATCH (n)-[r]-(m) WHERE '"+ontologyPrefix+"' IN n.ontologyId and '"+ontologyPrefix+"' IN m.ontologyId return count(distinct r)";
+    }
+
+    public static String countNodesOfOntology(String ontologyPrefix, String type){
+        return "MATCH (n) WHERE n.id STARTS WITH '"+ontologyPrefix+"' AND '"+type+"' IN n.type return count(n) ";
     }
 
     public static String idToLabel(String id){

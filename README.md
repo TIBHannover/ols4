@@ -24,15 +24,16 @@ This repository contains three projects:
 
 # Deploying OLS4
 
-Deployment instructions will go here. OLS4 is still under heavy development, so currently we only have detailed
-instructions for developers below.
-
-However, if you just want to try it out, this should get you going:
+If you want to try OLS4 out, this should get you going:
 
     export OLS4_CONFIG=./dataload/configs/efo.json
     docker compose up
 
 You should now be able to access the OLS4 frontend at `http://localhost:8081`.
+
+If you need to set the heap size, you can do so using:
+
+    JAVA_OPTS="-Xms5G -Xmx25G"  docker compose up
 
 If you want to test it with your own ontology, copy the OWL or RDFS ontology file to the `testcases` folder (which is
 mounted in Docker). Then make a new config file for your ontology in `dataload/configs` (you can use `efo.json` as a
@@ -174,6 +175,10 @@ or if you want to load all testcases, you can use
 
     ./dev-testing/teststack.sh ./testcases ./output
 
+If you need to set the Java heap size, you can set the environment the JAVA_OPTS variable as follows:
+
+     export JAVA_OPTS="-Xms5G -Xmx10G"
+
 Once Neo4J and Solr is up, to start the backend (REST API) you can run:
 
     ./dev-testing/start-backend.sh
@@ -184,7 +189,7 @@ Once the backend is up, you can start the frontend with:
 
 Once you are done testing, to stop everything:
 
-    ./stopall.sh
+    ./stopNeo4JSolr.sh
 
 ### Running the dataload locally
 
@@ -359,43 +364,74 @@ local (Dockerized) Solr and Neo4j servers:
 The frontend is a React application in `frontend`. See [frontend docs](frontend/README.md)
 for details on how to run the frontend.
 
-## Development: Updating `testcases_expected_output`
+## Development: Updating `testcases_expected_output` and `testcases_expected_output_api`
+If you make changes to the data load or API of OLS, you need to run testcases and compare it against the expected outputs 
+to ensure backward compatibility. This testing consists of 
 
-If you change something that results in the test output changing (e.g. adding new tests, changing what the output looks
-like), the CI on this repo will fail.
+1. testing the dataload outputs by comparing test outputs to expected outputs,
+2. API testing which compares API responses to expected responses, and
+3. adding the latest expected outputs to Git.
 
-To fix this, you need to replace the `testcases_expected_output` and `testcases_expected_output_api` folders with the
-new expected output. **You should do this in the same commit as your code/test changes because then we can track exactly
-what changed in the output.**
+### Testing dataload
+These tests are run locally as described in [Test testcases from dataload to UI](#test-testcases-from-dataload-to-ui).
+Ensure that the environment variables `NEO4J_HOME`, `SOLR_HOME` and `OLS4_HOME` are set up accordingly.
 
-First make sure all the JARs are up to date:
+1. First make sure all the OLS4 JARs are up to date by running :
+ 
+       mvn clean package
 
-    mvn clean package
+2. Generate new output files and import into Neo4J and Solr: 
 
-Then run the test scripts:
+       ./dev-testing/teststack.sh ./testcases ./testcases_output
 
-* `./test_dataload.sh` (~1 minute) will test the dataload locally, updating `testcases_expected_output`. All you need is
-  Java and Maven.
-* `./test_api.sh` (~15 mins) will test the entire OLS4 stack (dataload → solr/neo4j → api server) using Docker compose
-  to bring up and tear down all the services for each testcase, updating `testcases_expected_output_api`. You need to
-  have Docker and Docker compose installed.
+3. Compare `/testcases_output` with `/testcases_expected_output`:
 
-To run both:
+       ./compare_testcase_output.sh
 
-    ./test_dataload.sh
-    ./test_api.sh
+4. The output of step 3 is written to `testcases_compare_result.log`. If no differences are found, this file will be empty. 
+Ensure that all differences in this file can be explained and that they do make sense.
 
-Now remove the existing expected output:
+5. Once you are happy with the output in `testcases_output`, remove the old `testcases_expected_output` and replace with
+new expected output:
 
-    rm -rf testcases_expected_output
-    rm -rf testcases_expected_output_api
+       rm -rf testcases_expected_output
+       cp -r testcases_output/testcases testcases_expected_output
 
-Copy your new output to the respective directories:
+6. Now continue with API testing.
 
-    cp -r testcases_output testcases_expected_output
-    cp -r testcases_output_api testcases_expected_output_api
+### Testing API
+Before doing API testing you must have completed the [dataload testing](#testing-dataload).
 
-You can now add it to your commit:
+7. Start the backend:
 
-    git add -A testcases_expected_output
-    git add -A testcases_expected_output_api
+        ./dev-testing/start-backend.sh
+
+8. Run API tests against backend using: 
+
+       ./test_api_fast.sh http://localhost:8080 ./testcases_output_api ./testcases_expected_output_api --deep
+
+9. The results of step 8 is written to `./apitester4.log`. Differences are written to the end of the file. When there are no
+differences, this file will end with these lines:
+
+       RecursiveJsonDiff.diff() reported success
+       apitester reported success; exit code 0
+
+10. Ensure that all differences listed in `./apitester4.log` are accounted for. Once you are happy with the output, remove 
+the old `testcases_expected_output_api` and replace with new expected output: 
+
+        rm -rf testcases_expected_output_api
+        cp -r testcases_output testcases_expected_output_api
+
+11. Add the latest expected outputs to Git:
+
+        git add -A testcases_expected_output
+        git add -A testcases_expected_output_api
+
+    **You should do this in the same commit as your code/test changes because then we can track exactly
+    what changed in the output.**
+
+12. You can stop the OLS4 backend with "Ctrl-C", and Solr and Neo4J with:
+
+        ./dev-testing/stopNeo4JSolr.sh
+
+

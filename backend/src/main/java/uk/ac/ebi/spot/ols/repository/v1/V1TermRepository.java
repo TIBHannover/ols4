@@ -16,6 +16,7 @@ import uk.ac.ebi.spot.ols.repository.solr.OlsSolrClient;
 import uk.ac.ebi.spot.ols.repository.solr.OlsSolrQuery;
 import uk.ac.ebi.spot.ols.repository.solr.SearchType;
 import uk.ac.ebi.spot.ols.repository.v1.mappers.V1TermMapper;
+import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -139,7 +140,7 @@ public class V1TermRepository {
         OlsSolrQuery query = new OlsSolrQuery();
         query.addFilter("type", List.of("class"), SearchType.WHOLE_FIELD);
         query.addFilter("ontologyId", List.of(ontologyId), SearchType.WHOLE_FIELD);
-        if (obsoletes != null) query.addFilter("isObsolete", List.of(Boolean.toString(obsoletes)), SearchType.WHOLE_FIELD);
+        if (obsoletes != null) query.addFilter(IS_OBSOLETE.getText(), List.of(Boolean.toString(obsoletes)), SearchType.WHOLE_FIELD);
 
         return solrClient.searchSolrPaginated(query, pageable)
                 .map(result -> V1TermMapper.mapTerm(result, lang));
@@ -185,11 +186,11 @@ public class V1TermRepository {
         OlsSolrQuery query = new OlsSolrQuery();
         query.addFilter("type", List.of("class"), SearchType.WHOLE_FIELD);
         query.addFilter("ontologyId", List.of(ontologyId), SearchType.WHOLE_FIELD);
-        query.addFilter("hasDirectParent", List.of("false"), SearchType.WHOLE_FIELD);
-        query.addFilter("hasHierarchicalParent", List.of("false"), SearchType.WHOLE_FIELD);
+        query.addFilter(HAS_DIRECT_PARENTS.getText(), List.of("false"), SearchType.WHOLE_FIELD);
+        query.addFilter(HAS_HIERARCHICAL_PARENTS.getText(), List.of("false"), SearchType.WHOLE_FIELD);
 
         if (!obsolete)
-            query.addFilter("isObsolete", List.of("false"), SearchType.WHOLE_FIELD);
+            query.addFilter(IS_OBSOLETE.getText(), List.of("false"), SearchType.WHOLE_FIELD);
 
         return solrClient.searchSolrPaginated(query, pageable)
                 .map(result -> V1TermMapper.mapTerm(result, lang));
@@ -198,7 +199,17 @@ public class V1TermRepository {
     //    @Query (countQuery = "MATCH (n:PreferredRootTerm) WHERE n.ontology_name = {0} AND n.is_obsolete = {1} RETURN count(n)",
     //            value = "MATCH (n:PreferredRootTerm) WHERE n.ontology_name = {0} AND n.is_obsolete = {1} RETURN n")
     public Page<V1Term> getPreferredRootTerms(String ontologyId, boolean obsolete, String lang, Pageable pageable) {
-        throw new RuntimeException();
+
+        OlsSolrQuery query = new OlsSolrQuery();
+        query.addFilter("type", List.of("class"), SearchType.WHOLE_FIELD);
+        query.addFilter("ontologyId", List.of(ontologyId), SearchType.WHOLE_FIELD);
+        query.addFilter("isPreferredRoot", List.of("true"), SearchType.WHOLE_FIELD);
+
+        if (!obsolete)
+            query.addFilter(IS_OBSOLETE.getText(), List.of(Boolean.toString(obsolete)), SearchType.WHOLE_FIELD);
+
+        return solrClient.searchSolrPaginated(query, pageable)
+                .map(result -> V1TermMapper.mapTerm(result, lang));
     }
 
     //    @Query (value = "MATCH (n:PreferredRootTerm) WHERE n.ontology_name = {0} AND n.is_obsolete = {1} RETURN count(n)")
@@ -219,7 +230,7 @@ public class V1TermRepository {
 
         OlsSolrQuery query = new OlsSolrQuery();
         query.addFilter("type", List.of("class"), SearchType.WHOLE_FIELD);
-        query.addFilter("isDefiningOntology", List.of("true"), SearchType.WHOLE_FIELD);
+        query.addFilter(IS_DEFINING_ONTOLOGY.getText(), List.of("true"), SearchType.WHOLE_FIELD);
 
         return solrClient.searchSolrPaginated(query, pageable)
                 .map(result -> V1TermMapper.mapTerm(result, lang));
@@ -240,7 +251,7 @@ public class V1TermRepository {
 
         OlsSolrQuery query = new OlsSolrQuery();
         query.addFilter("type", List.of("class"), SearchType.WHOLE_FIELD);
-        query.addFilter("isDefiningOntology", List.of("true"), SearchType.WHOLE_FIELD);
+        query.addFilter(IS_DEFINING_ONTOLOGY.getText(), List.of("true"), SearchType.WHOLE_FIELD);
         query.addFilter("iri", List.of(iri), SearchType.WHOLE_FIELD);
 
         return solrClient.searchSolrPaginated(query, pageable)
@@ -261,7 +272,7 @@ public class V1TermRepository {
 
         OlsSolrQuery query = new OlsSolrQuery();
         query.addFilter("type", List.of("class"), SearchType.WHOLE_FIELD);
-        query.addFilter("isDefiningOntology", List.of("true"), SearchType.WHOLE_FIELD);
+        query.addFilter(IS_DEFINING_ONTOLOGY.getText(), List.of("true"), SearchType.WHOLE_FIELD);
         query.addFilter("shortForm", List.of(shortForm), SearchType.WHOLE_FIELD);
 
         return solrClient.searchSolrPaginated(query, pageable)
@@ -283,7 +294,7 @@ public class V1TermRepository {
 
         OlsSolrQuery query = new OlsSolrQuery();
         query.addFilter("type", List.of("class"), SearchType.WHOLE_FIELD);
-        query.addFilter("isDefiningOntology", List.of("true"), SearchType.WHOLE_FIELD);
+        query.addFilter(IS_DEFINING_ONTOLOGY.getText(), List.of("true"), SearchType.WHOLE_FIELD);
         query.addFilter("curie", List.of(oboId), SearchType.WHOLE_FIELD);
 
         return solrClient.searchSolrPaginated(query, pageable)

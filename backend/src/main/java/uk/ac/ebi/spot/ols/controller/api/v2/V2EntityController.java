@@ -15,7 +15,6 @@ import org.springframework.web.util.UriUtils;
 import uk.ac.ebi.spot.ols.controller.api.v2.helpers.DynamicQueryHelper;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
-import uk.ac.ebi.spot.ols.repository.solr.OlsFacetedResultsPage;
 import uk.ac.ebi.spot.ols.repository.v2.V2EntityRepository;
 
 import javax.validation.constraints.NotNull;
@@ -24,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 @RestController
 @RequestMapping("/api/v2")
@@ -47,7 +47,7 @@ public class V2EntityController {
 
         Map<String,Collection<String>> properties = new HashMap<>();
         if(!includeObsoleteEntities)
-            properties.put("isObsolete", List.of("false"));
+            properties.put(IS_OBSOLETE.getText(), List.of("false"));
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(
@@ -73,7 +73,7 @@ public class V2EntityController {
 
         Map<String,Collection<String>> properties = new HashMap<>();
         if(!includeObsoleteEntities)
-            properties.put("isObsolete", List.of("false"));
+            properties.put(IS_OBSOLETE.getText(), List.of("false"));
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(

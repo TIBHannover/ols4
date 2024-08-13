@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.FacetField;
@@ -21,6 +22,8 @@ import org.apache.solr.client.solrj.response.FacetField.Count;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,8 +32,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.springframework.web.bind.annotation.RestController;
 import uk.ac.ebi.spot.ols.model.FilterOption;
+import org.springframework.web.bind.annotation.RestController;
 import uk.ac.ebi.spot.ols.repository.Validation;
 import uk.ac.ebi.spot.ols.repository.solr.OlsSolrClient;
 import uk.ac.ebi.spot.ols.repository.transforms.LocalizationTransform;
@@ -39,11 +42,11 @@ import uk.ac.ebi.spot.ols.repository.v1.JsonHelper;
 import uk.ac.ebi.spot.ols.repository.v1.V1OntologyRepository;
 import uk.ac.ebi.spot.ols.repository.v1.mappers.AnnotationExtractor;
 
-/**
- * @author Simon Jupp
- * @date 02/07/2015
- * Samples, Phenotypes and Ontologies Team, EMBL-EBI
- */
+
+import static uk.ac.ebi.ols.shared.DefinedFields.*;
+
+
+@Tag(name = "Search Controller")
 @RestController
 public class V1SearchController {
 
@@ -55,6 +58,8 @@ public class V1SearchController {
     @Autowired
     private OlsSolrClient solrClient;
 
+
+    private static final Logger logger = LoggerFactory.getLogger(V1SearchController.class);
 
     @RequestMapping(path = "/api/search", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public void search(
@@ -97,8 +102,10 @@ public class V1SearchController {
                 String[] fields = {"label_s", "synonym_s", "short_form_s", "obo_id_s", "iri_s", "annotations_trimmed"};
                 solrQuery.setQuery(
                         "((" +
-                                createUnionQuery(query.toLowerCase(), SolrFieldMapper.mapFieldsList(List.of(fields)).toArray(new String[0]), true)
-                                + ") AND (isDefiningOntology:\"true\"^100 OR isDefiningOntology:false^0))"
+                                createUnionQuery(query.toLowerCase(), SolrFieldMapper.mapFieldsList(List.of(fields))
+                                        .toArray(new String[0]), true)
+                                + ") AND ("+ IS_DEFINING_ONTOLOGY.getText() + ":\"true\"^100 OR " +
+                                IS_DEFINING_ONTOLOGY.getText() + ":false^0))"
                 );
 
             } else {
@@ -111,13 +118,14 @@ public class V1SearchController {
                 solrQuery.set("qf", String.join(" ", SolrFieldMapper.mapFieldsList(List.of(fields))));
 
                 solrQuery.set("bq",
-                        "isDefiningOntology:\"true\"^100 " +
+                        IS_DEFINING_ONTOLOGY.getText() + ":\"true\"^100 " +
                         "lowercase_label:\"" + query.toLowerCase() + "\"^5 " +
                         "lowercase_synonym:\"" + query.toLowerCase() + "\"^3");
             }
         } else {
             if (exact) {
-                String[] fields = SolrFieldMapper.mapFieldsList(queryFields.stream().map(queryField -> queryField + "_s").collect(Collectors.toList())).toArray(new String[0]);
+                String[] fields = SolrFieldMapper.mapFieldsList(queryFields.stream().map(queryField -> queryField + "_s")
+                        .collect(Collectors.toList())).toArray(new String[0]);
                 solrQuery.setQuery(createUnionQuery(query.toLowerCase(), fields, true));
             } else {
 
@@ -145,7 +153,7 @@ public class V1SearchController {
         }
 
         if (isLocal) {
-            solrQuery.addFilterQuery("imported:false");
+            solrQuery.addFilterQuery(IMPORTED.getText() + ":false");
         }
 
         if (isLeaf) {
@@ -188,7 +196,7 @@ public class V1SearchController {
             }
         }
 
-        solrQuery.addFilterQuery("isObsolete:" + queryObsoletes);
+        solrQuery.addFilterQuery(IS_OBSOLETE.getText() + ":" + queryObsoletes);
 
         solrQuery.setStart(start);
         solrQuery.setRows(rows);
@@ -208,20 +216,23 @@ public class V1SearchController {
 		 *
 		 */
 		// TODO: Need to check and add additional faceted fields if required
-		solrQuery.addFacetField("ontologyId", "ontologyIri", "ontologyPreferredPrefix", "type", "isDefiningOntology", "isObsolete");
+		solrQuery.addFacetField("ontologyId",
+                "ontologyIri",
+                "ontologyPreferredPrefix",
+                "type",
+                IS_DEFINING_ONTOLOGY.getText(),
+                IS_OBSOLETE.getText());
 		/*
 		 * Fix: End
 		 */
         solrQuery.add("wt", format);
 
-
-        System.out.println(solrQuery.jsonStr());
+        logger.debug("search: ()", solrQuery.toQueryString());
 
         QueryResponse qr = solrClient.dispatchSearch(solrQuery, "ols4_entities");
 
         List<Object> docs = new ArrayList<>();
         for(SolrDocument res : qr.getResults()) {
-
             String _json = (String)res.get("_json");
             if(_json == null) {
                 throw new RuntimeException("_json was null");
@@ -261,9 +272,12 @@ public class V1SearchController {
             if (fieldList.contains("description")) outDoc.put("description", JsonHelper.getStrings(json, "definition"));
             if (fieldList.contains("short_form")) outDoc.put("short_form", JsonHelper.getString(json, "shortForm"));
             if (fieldList.contains("obo_id")) outDoc.put("obo_id", JsonHelper.getString(json, "curie"));
-            if (fieldList.contains("is_defining_ontology")) outDoc.put("is_defining_ontology",
-                    JsonHelper.getString(json, "isDefiningOntology") != null && JsonHelper.getString(json, "isDefiningOntology").equals("true"));
-            if (fieldList.contains("type")) outDoc.put("type", "class");
+            if (fieldList.contains(IS_DEFINING_ONTOLOGY.getOls3Text())) outDoc.put(IS_DEFINING_ONTOLOGY.getOls3Text(),
+                    JsonHelper.getString(json, IS_DEFINING_ONTOLOGY.getText()) != null &&
+                            JsonHelper.getString(json, IS_DEFINING_ONTOLOGY.getText()).equals("true"));
+            if (fieldList.contains("type")) {
+                outDoc.put("type", JsonHelper.getType(json, "type"));
+            }
             if (fieldList.contains("synonym")) outDoc.put("synonym", JsonHelper.getStrings(json, "synonym"));
             if (fieldList.contains("ontology_prefix")) outDoc.put("ontology_prefix", JsonHelper.getString(json, "ontologyPreferredPrefix"));
             if (fieldList.contains("subset")) outDoc.put("subset", JsonHelper.getStrings(json, "http://www.geneontology.org/formats/oboInOwl#inSubset"));

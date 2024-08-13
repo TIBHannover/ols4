@@ -1,84 +1,34 @@
 package uk.ac.ebi.rdf2json;
 
-import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.ANNOTATION_PROPERTY;
-import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.CLASS;
-import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.DATA_PROPERTY;
-import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.ENTITY;
-import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.INDIVIDUAL;
-import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.OBJECT_PROPERTY;
-import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.PROPERTY;
+import com.google.gson.stream.JsonWriter;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import org.apache.jena.riot.RDFLanguages;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
+import org.semanticweb.owlapi.model.*;
+import uk.ac.ebi.rdf2json.annotators.*;
+import uk.ac.ebi.rdf2json.helpers.RdfListEvaluator;
+import uk.ac.ebi.rdf2json.properties.*;
+
+import org.apache.jena.riot.Lang;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.riot.RDFParser;
+import org.apache.jena.riot.RDFParserBuilder;
+import org.apache.jena.riot.system.StreamRDF;
+import org.apache.jena.sparql.core.Quad;
+
+import javax.net.ssl.HttpsURLConnection;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import javax.net.ssl.HttpsURLConnection;
-
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFLanguages;
-import org.apache.jena.riot.RDFParser;
-import org.apache.jena.riot.RDFParserBuilder;
-import org.apache.jena.riot.system.StreamRDF;
-import org.apache.jena.sparql.core.Quad;
-import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
-import org.semanticweb.owlapi.model.OWLDocumentFormat;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.OWLOntologyStorageException;
-
-import com.google.gson.stream.JsonWriter;
-
-import uk.ac.ebi.rdf2json.annotators.AncestorsAnnotator;
-import uk.ac.ebi.rdf2json.annotators.ConfigurablePropertyAnnotator;
-import uk.ac.ebi.rdf2json.annotators.DefinitionAnnotator;
-import uk.ac.ebi.rdf2json.annotators.DirectParentsAnnotator;
-import uk.ac.ebi.rdf2json.annotators.DisjointWithAnnotator;
-import uk.ac.ebi.rdf2json.annotators.EquivalenceAnnotator;
-import uk.ac.ebi.rdf2json.annotators.HasIndividualsAnnotator;
-import uk.ac.ebi.rdf2json.annotators.HierarchicalParentsAnnotator;
-import uk.ac.ebi.rdf2json.annotators.HierarchyFlagsAnnotator;
-import uk.ac.ebi.rdf2json.annotators.HierarchyMetricsAnnotator;
-import uk.ac.ebi.rdf2json.annotators.InverseOfAnnotator;
-import uk.ac.ebi.rdf2json.annotators.IsObsoleteAnnotator;
-import uk.ac.ebi.rdf2json.annotators.LabelAnnotator;
-import uk.ac.ebi.rdf2json.annotators.NegativePropertyAssertionAnnotator;
-import uk.ac.ebi.rdf2json.annotators.OboSynonymTypeNameAnnotator;
-import uk.ac.ebi.rdf2json.annotators.OntologyMetadataAnnotator;
-import uk.ac.ebi.rdf2json.annotators.PreferredRootsAnnotator;
-import uk.ac.ebi.rdf2json.annotators.ReifiedPropertyAnnotator;
-import uk.ac.ebi.rdf2json.annotators.RelatedAnnotator;
-import uk.ac.ebi.rdf2json.annotators.SearchableAnnotationValuesAnnotator;
-import uk.ac.ebi.rdf2json.annotators.ShortFormAnnotator;
-import uk.ac.ebi.rdf2json.annotators.SynonymAnnotator;
-import uk.ac.ebi.rdf2json.helpers.RdfListEvaluator;
-import uk.ac.ebi.rdf2json.properties.PropertySet;
-import uk.ac.ebi.rdf2json.properties.PropertyValue;
-import uk.ac.ebi.rdf2json.properties.PropertyValueAncestors;
-import uk.ac.ebi.rdf2json.properties.PropertyValueBNode;
-import uk.ac.ebi.rdf2json.properties.PropertyValueLiteral;
-import uk.ac.ebi.rdf2json.properties.PropertyValueRelated;
-import uk.ac.ebi.rdf2json.properties.PropertyValueURI;
+import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.*;
+import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 public class OntologyGraph implements StreamRDF {
 
@@ -93,21 +43,26 @@ public class OntologyGraph implements StreamRDF {
 
 	private RDFParserBuilder createParser(Lang lang) {
 
-		if (lang != null) {
-			return RDFParser.create().forceLang(lang).strict(false).checking(false);
+		if(lang != null) {
+			return RDFParser.create()
+					.forceLang(lang)
+					.strict(false)
+					.checking(false);
 		} else {
-			return RDFParser.create().strict(false).checking(false);
+			return RDFParser.create()
+					.strict(false)
+					.checking(false);
 		}
 	}
 
-	private void parseRDF(String url, boolean convertToRDF) {
-		
+	private void parseRDF(String url, boolean convertToRDF)  {
+
 		try {
 			if (loadLocalFiles && !url.contains("://")) {
 				System.out.println("Using local file for " + url);
 				sourceFileTimestamp = new File(url).lastModified();
-				createParser(RDFLanguages.filenameToLang(url, Lang.RDFXML)).source(new FileInputStream(url))
-						.parse(this);
+				createParser(RDFLanguages.filenameToLang(url, Lang.RDFXML))
+						.source(new FileInputStream(url)).parse(this);
 			} else {
 				if (downloadedPath != null) {
 					String existingDownload = downloadedPath + "/" + urlToFilename(url);
@@ -117,12 +72,11 @@ public class OntologyGraph implements StreamRDF {
 						sourceFileTimestamp = new File(existingDownload).lastModified();
 						Lang lang = null;
 						try {
-							String existingDownloadMimeType = Files
-									.readString(Paths.get(existingDownload + ".mimetype"));
+							String existingDownloadMimeType = Files.readString(Paths.get(existingDownload + ".mimetype"));
 							lang = RDFLanguages.contentTypeToLang(existingDownloadMimeType);
-						} catch (IOException ignored) {
+						} catch(IOException ignored) {
 						}
-						if (lang == null) {
+						if(lang == null) {
 							lang = Lang.RDFXML;
 						}
 						createParser(lang).source(is).parse(this);
@@ -133,7 +87,6 @@ public class OntologyGraph implements StreamRDF {
 					}
 				} else {
 					System.out.println("Downloading (no predownload path provided) " + url);
-					
 					if (convertToRDF) {
 						String outputFile = "./src/main/resources/result";
 						OWLOntology ont = convertOntologyToRDF(url, outputFile);
@@ -144,18 +97,16 @@ public class OntologyGraph implements StreamRDF {
 							ext = ".ttl";
 						url = outputFile + ext;
 					}
-
-					createParser(null).source(url).parse(this);
 					sourceFileTimestamp = System.currentTimeMillis();
+					createParser(null).source(url).parse(this);
 				}
 			}
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	}
+		} catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	private OWLOntology convertOntologyToRDF(String url, String outputFile) throws IOException {
 		OWLOntologyManager ontManager = OWLManager.createOWLOntologyManager();
@@ -231,7 +182,7 @@ public class OntologyGraph implements StreamRDF {
 		}
 		return ont;
 	}
-	
+
 	private String replaceURLByProtocol(URLConnection con, String url) {
 		if (con instanceof HttpsURLConnection) {
 			url = url.replace("https:", "http:");
@@ -239,16 +190,19 @@ public class OntologyGraph implements StreamRDF {
 			url = url.replace("http:", "https:");
 		}
 		return url;
-		
+
 	}
+
 
 	private String urlToFilename(String url) {
 		return url.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
 	}
 
+
 	private boolean loadLocalFiles;
 
 	String downloadedPath;
+
 
 	OntologyGraph(Map<String, Object> config, boolean loadLocalFiles, boolean noDates, String downloadedPath, boolean convertToRDF) {
 
@@ -263,16 +217,17 @@ public class OntologyGraph implements StreamRDF {
 
 		String url = (String) config.get("ontology_purl");
 
-		if (url == null) {
+		if(url == null) {
 
-			Collection<Map<String, Object>> products = (Collection<Map<String, Object>>) config.get("products");
+			Collection<Map<String,Object>> products =
+					(Collection<Map<String,Object>>) config.get("products");
 
-			if (products != null) {
-				for (Map<String, Object> product : products) {
+			if(products != null) {
+				for(Map<String,Object> product : products) {
 
 					String purl = (String) product.get("ontology_purl");
 
-					if (purl != null && purl.endsWith(".owl")) {
+					if(purl != null && purl.endsWith(".owl")) {
 						url = purl;
 						break;
 					}
@@ -282,8 +237,8 @@ public class OntologyGraph implements StreamRDF {
 
 		}
 
-		if (url == null) {
-			System.out.println("Could not determine URL for ontology " + (String) config.get("id"));
+		if(url == null) {
+			System.out.println("Could not determine URL for ontology " + (String)config.get("id"));
 			return;
 		}
 
@@ -291,14 +246,15 @@ public class OntologyGraph implements StreamRDF {
 		parseRDF(url, convertToRDF);
 
 		// Before we evaluate imports, mark all the nodes so far as not imported
-		for (String id : nodes.keySet()) {
+		for(String id : nodes.keySet()) {
 			OntologyNode c = nodes.get(id);
-			if (c.uri != null) {
-				c.properties.addProperty("imported", PropertyValueLiteral.fromString("false"));
+			if(c.uri != null) {
+				c.properties.addProperty(IMPORTED.getText(), PropertyValueLiteral.fromBoolean("false"));
 			}
 		}
 
-		while (importUrls.size() > 0) {
+
+		while(importUrls.size() > 0) {
 			String importUrl = importUrls.get(0);
 			importUrls.remove(0);
 
@@ -307,56 +263,52 @@ public class OntologyGraph implements StreamRDF {
 		}
 
 		// Now the imports are done, mark everything else as imported
-		for (String id : nodes.keySet()) {
+		for(String id : nodes.keySet()) {
 			OntologyNode c = nodes.get(id);
-			if (c.uri != null) {
-				if (!c.properties.hasProperty("imported")) {
-					c.properties.addProperty("imported", PropertyValueLiteral.fromString("true"));
+			if(c.uri != null) {
+				if(!c.properties.hasProperty(IMPORTED.getText())) {
+					c.properties.addProperty(IMPORTED.getText(), PropertyValueLiteral.fromBoolean("true"));
 				}
 			}
 		}
 
-		if (this.ontologyNode == null) {
+		if(this.ontologyNode == null) {
 
 			////
 			//// There was no owl:Ontology.
-			//// Could be an RDFS "ontology", or schema.org, or just some garbage file that
-			//// didn't have any ontology in it
+			//// Could be an RDFS "ontology", or schema.org, or just some garbage file that didn't have any ontology in it
 			////
 
-			// Fallback 1: look for a single node without an rdf:type (fixes loading dcterms
-			// and dc elements rdf files)
+			// Fallback 1: look for a single node without an rdf:type (fixes loading dcterms and dc elements rdf files)
 
-			List<OntologyNode> nodesWithoutTypes = this.nodes.values().stream()
-					.filter(node -> node.uri != null
-							&& !node.properties.hasProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+			List<OntologyNode> nodesWithoutTypes = this.nodes.values().stream().filter(
+							node -> node.uri != null && !node.properties.hasProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
 					.collect(Collectors.toList());
 
-			if (nodesWithoutTypes.size() == 1) {
+			if(nodesWithoutTypes.size() == 1) {
 				this.ontologyNode = nodesWithoutTypes.get(0);
 			}
 
-			if (this.ontologyNode == null) {
+			if(this.ontologyNode == null) {
 
-				// Fallback 2: fabricate an ontology node using the base_uri (fixes loading
-				// Schema.org rdf)
+				// Fallback 2: fabricate an ontology node using the base_uri (fixes loading Schema.org rdf)
 
 				List<String> baseUris = (List<String>) this.config.get("base_uri");
 
-				if (baseUris != null) {
+				if(baseUris != null) {
 					this.ontologyNode = new OntologyNode();
 					this.ontologyNode.uri = baseUris.get(0);
 					this.ontologyNode.types.add(OntologyNode.NodeType.ONTOLOGY);
 					this.nodes.put(baseUris.get(0), this.ontologyNode);
 				}
 
-				if (this.ontologyNode == null) {
+				if(this.ontologyNode == null) {
 
 					// Fallback 3: fabricate an ontology node using the purl
 
-					String purl = (String) this.config.get("ontology_purl");
+					String purl = (String)this.config.get("ontology_purl");
 
-					if (purl != null) {
+					if(purl != null) {
 						this.ontologyNode = new OntologyNode();
 						this.ontologyNode.uri = purl;
 						this.ontologyNode.types.add(OntologyNode.NodeType.ONTOLOGY);
@@ -366,30 +318,34 @@ public class OntologyGraph implements StreamRDF {
 			}
 		}
 
-		ontologyNode.properties.addProperty("numberOfEntities", PropertyValueLiteral
-				.fromString(Integer.toString(numberOfClasses + numberOfProperties + numberOfIndividuals)));
+		ontologyNode.properties.addProperty(
+				"numberOfEntities", PropertyValueLiteral.fromString(Integer.toString(
+						numberOfClasses + numberOfProperties + numberOfIndividuals)));
 
-		ontologyNode.properties.addProperty("numberOfClasses",
-				PropertyValueLiteral.fromString(Integer.toString(numberOfClasses)));
+		ontologyNode.properties.addProperty(
+				"numberOfClasses", PropertyValueLiteral.fromString(Integer.toString(numberOfClasses)));
 
-		ontologyNode.properties.addProperty("numberOfProperties",
-				PropertyValueLiteral.fromString(Integer.toString(numberOfProperties)));
+		ontologyNode.properties.addProperty(
+				"numberOfProperties", PropertyValueLiteral.fromString(Integer.toString(numberOfProperties)));
 
-		ontologyNode.properties.addProperty("numberOfIndividuals",
-				PropertyValueLiteral.fromString(Integer.toString(numberOfIndividuals)));
+		ontologyNode.properties.addProperty(
+				"numberOfIndividuals", PropertyValueLiteral.fromString(Integer.toString(numberOfIndividuals)));
 
-		if (!noDates) {
+
+		if(!noDates) {
 			String now = java.time.LocalDateTime.now().toString();
 
-			ontologyNode.properties.addProperty("loaded", PropertyValueLiteral.fromString(now));
+			ontologyNode.properties.addProperty(
+					"loaded", PropertyValueLiteral.fromString(now));
 
-			ontologyNode.properties.addProperty("sourceFileTimestamp",
-					PropertyValueLiteral.fromString(new Date(sourceFileTimestamp).toString()));
+			ontologyNode.properties.addProperty(
+					"sourceFileTimestamp", PropertyValueLiteral.fromString(new Date(sourceFileTimestamp).toString()));
 		}
 
-		for (String language : languages) {
+		for(String language : languages) {
 			ontologyNode.properties.addProperty("language", PropertyValueLiteral.fromString(language));
 		}
+
 
 		long endTime = System.nanoTime();
 		System.out.println("load ontology: " + ((endTime - startTime) / 1000 / 1000 / 1000));
@@ -397,8 +353,7 @@ public class OntologyGraph implements StreamRDF {
 		SearchableAnnotationValuesAnnotator.annotateSearchableAnnotationValues(this);
 		InverseOfAnnotator.annotateInverseOf(this);
 		NegativePropertyAssertionAnnotator.annotateNegativePropertyAssertions(this);
-		OboSynonymTypeNameAnnotator.annotateOboSynonymTypeNames(this); // n.b. this one labels axioms so must run before
-																		// the ReifiedPropertyAnnotator
+		OboSynonymTypeNameAnnotator.annotateOboSynonymTypeNames(this); // n.b. this one labels axioms so must run before the ReifiedPropertyAnnotator
 		DirectParentsAnnotator.annotateDirectParents(this);
 		RelatedAnnotator.annotateRelated(this);
 		HierarchicalParentsAnnotator.annotateHierarchicalParents(this); // must run after RelatedAnnotator
@@ -409,8 +364,7 @@ public class OntologyGraph implements StreamRDF {
 		SynonymAnnotator.annotateSynonyms(this);
 		ReifiedPropertyAnnotator.annotateReifiedProperties(this);
 		OntologyMetadataAnnotator.annotateOntologyMetadata(this);
-		HierarchyFlagsAnnotator.annotateHierarchyFlags(this); // must run after DirectParentsAnnotator and
-																// HierarchicalParentsAnnotator
+		HierarchyFlagsAnnotator.annotateHierarchyFlags(this); // must run after DirectParentsAnnotator and HierarchicalParentsAnnotator
 		IsObsoleteAnnotator.annotateIsObsolete(this);
 		LabelAnnotator.annotateLabels(this); // must run after ShortFormAnnotator
 		ConfigurablePropertyAnnotator.annotateConfigurableProperties(this);
@@ -421,13 +375,12 @@ public class OntologyGraph implements StreamRDF {
 
 	}
 
+
 	static final Set<OntologyNode.NodeType> classTypes = new TreeSet<>(Set.of(ENTITY, CLASS));
 	static final Set<OntologyNode.NodeType> dataPropertyTypes = new TreeSet<>(Set.of(ENTITY, PROPERTY, DATA_PROPERTY));
 
-	static final Set<OntologyNode.NodeType> objectPropertyTypes = new TreeSet<>(
-			Set.of(ENTITY, PROPERTY, OBJECT_PROPERTY));
-	static final Set<OntologyNode.NodeType> annotationPropertyTypes = new TreeSet<>(
-			Set.of(ENTITY, PROPERTY, ANNOTATION_PROPERTY));
+	static final Set<OntologyNode.NodeType> objectPropertyTypes = new TreeSet<>(Set.of(ENTITY, PROPERTY, OBJECT_PROPERTY));
+	static final Set<OntologyNode.NodeType> annotationPropertyTypes = new TreeSet<>(Set.of(ENTITY, PROPERTY, ANNOTATION_PROPERTY));
 
 	static final Set<OntologyNode.NodeType> propertyTypes = new TreeSet<>(Set.of(ENTITY, PROPERTY));
 	static final Set<OntologyNode.NodeType> individualTypes = new TreeSet<>(Set.of(ENTITY, INDIVIDUAL));
@@ -442,27 +395,26 @@ public class OntologyGraph implements StreamRDF {
 		writer.name("iri");
 		writer.value(ontologyNode.uri);
 
-		for (String configKey : config.keySet()) {
+		for(String configKey : config.keySet()) {
 			Object configVal = config.get(configKey);
 
 			// we include this (lowercased) as "ontologyId" rather than "id",
 			// so that the name "id" doesn't clash with downstream id fields in neo4j/solr
 			//
-			if (configKey.equals("id"))
+			if(configKey.equals("id"))
 				continue;
 
 			// already included explicitly above
-			if (configKey.equals("ontologyId"))
+			if(configKey.equals("ontologyId"))
 				continue;
 
 			// don't print the iri from the config, we already printed the one from the OWL
 			// TODO: which one to keep, or should we keep both?
-			if (configKey.equals("iri"))
+			if(configKey.equals("iri"))
 				continue;
 
-			// annotated as hasPreferredRoot by PreferredRootsAnnotator, no need to
-			// duplicate
-			if (configKey.equals("preferred_root_term"))
+			// annotated as hasPreferredRoot by PreferredRootsAnnotator, no need to duplicate
+			if(configKey.equals("preferred_root_term"))
 				continue;
 
 			// everything else from the config is stored as a normal property
@@ -475,7 +427,7 @@ public class OntologyGraph implements StreamRDF {
 		writer.name("classes");
 		writer.beginArray();
 
-		for (String id : nodes.keySet()) {
+		for(String id : nodes.keySet()) {
 			OntologyNode c = nodes.get(id);
 			if (c.uri == null) {
 				// don't print bnodes at top level
@@ -488,10 +440,11 @@ public class OntologyGraph implements StreamRDF {
 
 		writer.endArray();
 
+
 		writer.name("properties");
 		writer.beginArray();
 
-		for (String id : nodes.keySet()) {
+		for(String id : nodes.keySet()) {
 			OntologyNode c = nodes.get(id);
 			if (c.uri == null) {
 				// don't print bnodes at top level
@@ -510,10 +463,11 @@ public class OntologyGraph implements StreamRDF {
 
 		writer.endArray();
 
+
 		writer.name("individuals");
 		writer.beginArray();
 
-		for (String id : nodes.keySet()) {
+		for(String id : nodes.keySet()) {
 			OntologyNode c = nodes.get(id);
 			if (c.uri == null) {
 				// don't print bnodes at top level
@@ -526,17 +480,19 @@ public class OntologyGraph implements StreamRDF {
 
 		writer.endArray();
 
+
 		writer.endObject();
 
 	}
 
+
 	private void writeNode(JsonWriter writer, OntologyNode c, Set<String> types) throws IOException {
 
-		if (c.types.contains(OntologyNode.NodeType.RDF_LIST)) {
+		if(c.types.contains(OntologyNode.NodeType.RDF_LIST)) {
 
 			writer.beginArray();
 
-			for (PropertyValue listEntry : RdfListEvaluator.evaluateRdfList(c, this)) {
+			for(PropertyValue listEntry : RdfListEvaluator.evaluateRdfList(c, this)) {
 				writePropertyValue(writer, listEntry, null);
 			}
 
@@ -558,10 +514,10 @@ public class OntologyGraph implements StreamRDF {
 
 	private void writeProperties(JsonWriter writer, PropertySet properties, Set<String> types) throws IOException {
 
-		if (types != null) {
+		if(types != null) {
 			writer.name("type");
 			writer.beginArray();
-			for (String type : types) {
+			for(String type : types) {
 				writer.value(type);
 			}
 			writer.endArray();
@@ -570,7 +526,7 @@ public class OntologyGraph implements StreamRDF {
 		// TODO: sort keys, rdf:type should be first ideally
 		for (String predicate : properties.getPropertyPredicates()) {
 
-			if (types != null && types.contains("ontology") && predicate.equals("ontologyId")) {
+			if(types != null && types.contains("ontology") && predicate.equals("ontologyId")) {
 				// hack to workaround a punning issue.
 				// if the Ontology is also a Class it will have an ontologyId added by
 				// the OntologyMetadataAnnotator, but there is already an ontologyId field
@@ -584,7 +540,7 @@ public class OntologyGraph implements StreamRDF {
 
 			writer.name(predicate);
 
-			if (values.size() == 1) {
+			if(values.size() == 1) {
 				writePropertyValue(writer, values.get(0), null);
 			} else {
 				writer.beginArray();
@@ -595,6 +551,7 @@ public class OntologyGraph implements StreamRDF {
 			}
 		}
 	}
+
 
 	public void writePropertyValue(JsonWriter writer, PropertyValue value, Set<String> types) throws IOException {
 		if (value.axioms.size() > 0) {
@@ -608,7 +565,7 @@ public class OntologyGraph implements StreamRDF {
 			writeValue(writer, value);
 			writer.name("axioms");
 			writer.beginArray();
-			for (PropertySet axiom : value.axioms) {
+			for(PropertySet axiom : value.axioms) {
 				writer.beginObject();
 				writeProperties(writer, axiom, null);
 				writer.endObject();
@@ -625,80 +582,105 @@ public class OntologyGraph implements StreamRDF {
 	private boolean isXMLBuiltinDatatype(String uri) {
 		return uri.startsWith("http://www.w3.org/2001/XMLSchema#");
 	}
-
 	public void writeValue(JsonWriter writer, PropertyValue value) throws IOException {
 		assert (value.axioms == null);
 
-		switch (value.getType()) {
-		case BNODE:
-			OntologyNode c = nodes.get(((PropertyValueBNode) value).getId());
-			if (c == null) {
-				// empty bnode values present in some ontologies, see issue #116
-				writer.value("");
-			} else {
-				writeNode(writer, c, null);
-			}
-			break;
-		case ID:
-			break;
-		case LITERAL:
-			PropertyValueLiteral literal = (PropertyValueLiteral) value;
-			writer.beginObject();
-			writer.name("type");
-			writer.beginArray();
-			writer.value("literal");
-			writer.endArray();
-			if (!literal.getDatatype().equals("http://www.w3.org/2001/XMLSchema#string")) {
-				writer.name("datatype");
-				writer.value(literal.getDatatype());
-			}
-			writer.name("value");
-			writer.value(literal.getValue());
-			if (!literal.getLang().equals("")) {
-				writer.name("lang");
-				writer.value(literal.getLang());
-			}
-			writer.endObject();
-			break;
-		case URI:
-			String uri = ((PropertyValueURI) value).getUri();
-			OntologyNode uriNode = nodes.get(uri);
-			if (uriNode != null && !isXMLBuiltinDatatype(uri)
-					&& uriNode.types.contains(OntologyNode.NodeType.DATATYPE)) {
-				// special case for rdfs:Datatype; nest it as with a bnode instead of
-				// referencing
-				writeNode(writer, uriNode, Set.of("datatype"));
-			} else {
-				writer.value(uri);
-			}
-			break;
-		case RELATED:
-			writer.beginObject();
-			writer.name("property");
-			writer.value(((PropertyValueRelated) value).getProperty());
-			writer.name("value");
-			writer.value(((PropertyValueRelated) value).getFiller().uri);
-			writeProperties(writer, ((PropertyValueRelated) value).getClassExpression().properties, Set.of("related"));
-			writer.endObject();
-			break;
-		case ANCESTORS:
-			PropertyValueAncestors ancestors = (PropertyValueAncestors) value;
-			Set<String> ancestorIris = ancestors.getAncestors(this);
-			if (ancestorIris.size() == 1) {
-				writer.value(ancestorIris.iterator().next());
-			} else {
-				writer.beginArray();
-				for (String ancestorIri : ancestorIris) {
-					writer.value(ancestorIri);
+		switch(value.getType()) {
+			case BNODE:
+				OntologyNode c = nodes.get(((PropertyValueBNode) value).getId());
+				if (c == null) {
+					// empty bnode values present in some ontologies, see issue #116
+					writer.value("");
+				} else {
+					writeNode(writer, c, null);
 				}
-				writer.endArray();
-			}
-			break;
-		default:
-			writer.value("?");
-			break;
+				break;
+			case ID:
+				break;
+			case LITERAL:
+				PropertyValueLiteral literal = (PropertyValueLiteral) value;
+				if (literal.getDatatype() != null) {
+					if (literal.getDatatype().equals("http://www.w3.org/2001/XMLSchema#boolean")) {
+						writer.value(Boolean.valueOf(literal.getValue()).booleanValue());
+					} else if (literal.getDatatype().equals("http://www.w3.org/2001/XMLSchema#double")) {
+						writer.value(Double.valueOf(literal.getValue()).doubleValue());
+					} else if (literal.getDatatype().equals("http://www.w3.org/2001/XMLSchema#string")) {
+						writer.beginObject();
+						writer.name("type");
+						writer.beginArray();
+						writer.value("literal");
+						writer.endArray();
+						if(!literal.getDatatype().equals("http://www.w3.org/2001/XMLSchema#string")) {
+							writer.name("datatype");
+							writer.value(literal.getDatatype());
+						}
+						writer.name("value");
+						writer.value(literal.getValue());
+						if(!literal.getLang().equals("")) {
+							writer.name("lang");
+							writer.value(literal.getLang());
+						}
+						writer.endObject();
+					} else {
+						writer.beginObject();
+						writer.name("type");
+						writer.beginArray();
+						writer.value("literal");
+						writer.endArray();
+						writer.name("datatype");
+						writer.value(literal.getDatatype());
+						writer.name("value");
+						writer.value(literal.getValue());
+						if(!literal.getLang().equals("")) {
+							writer.name("lang");
+							writer.value(literal.getLang());
+						}
+						writer.endObject();
+					}
+				}
+				break;
+			case URI:
+				String uri = ((PropertyValueURI) value).getUri();
+				OntologyNode uriNode = nodes.get(uri);
+				if(uriNode != null && !isXMLBuiltinDatatype(uri) && uriNode.types.contains(OntologyNode.NodeType.DATATYPE)) {
+					// special case for rdfs:Datatype; nest it as with a bnode instead of referencing
+					writeNode(writer, uriNode, Set.of("datatype"));
+				} else {
+					writer.value(uri);
+				}
+				break;
+			case RELATED:
+				writer.beginObject();
+				writer.name("property");
+				writer.value(((PropertyValueRelated) value).getProperty());
+				writer.name("value");
+				writer.value(((PropertyValueRelated) value).getFiller().uri);
+				writeProperties(writer, ((PropertyValueRelated) value).getClassExpression().properties, Set.of("related"));
+				writer.endObject();
+				break;
+			case ANCESTORS:
+				PropertyValueAncestors ancestors = (PropertyValueAncestors) value;
+				Set<String> ancestorIris = ancestors.getAncestors(this);
+				if(ancestorIris.size() == 1) {
+					writer.value(ancestorIris.iterator().next());
+				} else {
+					writer.beginArray();
+					for(String ancestorIri : ancestorIris) {
+						writer.value(ancestorIri);
+					}
+					writer.endArray();
+				}
+				break;
+			default:
+				writer.value("?");
+				break;
 		}
 	}
+
+
+
+
+
 
 	public Map<String, OntologyNode> nodes = new TreeMap<>();
 	public OntologyNode ontologyNode = null;
@@ -712,7 +694,7 @@ public class OntologyGraph implements StreamRDF {
 
 		entity = new OntologyNode();
 
-		if (!node.isBlank())
+		if(!node.isBlank())
 			entity.uri = id;
 
 		nodes.put(id, entity);
@@ -727,7 +709,7 @@ public class OntologyGraph implements StreamRDF {
 	@Override
 	public void triple(Triple triple) {
 
-		if (triple.getObject().isLiteral()) {
+		if(triple.getObject().isLiteral()) {
 			handleLiteralTriple(triple);
 		} else {
 			handleNamedNodeTriple(triple);
@@ -737,13 +719,14 @@ public class OntologyGraph implements StreamRDF {
 
 	}
 
+
 	public void handleLiteralTriple(Triple triple) {
 
 		String subjId = nodeIdFromJenaNode(triple.getSubject());
 		OntologyNode subjNode = getOrCreateNode(triple.getSubject());
 
 		String lang = triple.getObject().getLiteralLanguage();
-		if (lang != null && !lang.equals("")) {
+		if(lang != null && !lang.equals("")) {
 			languages.add(lang);
 		}
 
@@ -756,101 +739,101 @@ public class OntologyGraph implements StreamRDF {
 		OntologyNode subjNode = getOrCreateNode(triple.getSubject());
 
 		switch (triple.getPredicate().getURI()) {
-		case "http://www.w3.org/1999/02/22-rdf-syntax-ns#type":
-			handleType(subjNode, triple.getObject());
-			break;
-		case "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest":
-		case "http://www.w3.org/1999/02/22-rdf-syntax-ns#first":
-			subjNode.types.add(OntologyNode.NodeType.RDF_LIST);
-			break;
+			case "http://www.w3.org/1999/02/22-rdf-syntax-ns#type":
+				handleType(subjNode, triple.getObject());
+				break;
+			case "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest":
+			case "http://www.w3.org/1999/02/22-rdf-syntax-ns#first":
+				subjNode.types.add(OntologyNode.NodeType.RDF_LIST);
+				break;
 
-		case "http://www.w3.org/2002/07/owl#imports":
-			importUrls.add(triple.getObject().getURI());
-			break;
+			case "http://www.w3.org/2002/07/owl#imports":
+				importUrls.add(triple.getObject().getURI());
+				break;
 		}
 
 		subjNode.properties.addProperty(triple.getPredicate().getURI(), PropertyValue.fromJenaNode(triple.getObject()));
+
 
 	}
 
 	public void handleType(OntologyNode subjNode, Node type) {
 
-		if (!type.isURI())
+		if(!type.isURI())
 			return;
 
 		switch (type.getURI()) {
 
-		case "http://www.w3.org/2002/07/owl#Ontology":
+			case "http://www.w3.org/2002/07/owl#Ontology":
 
-			subjNode.types.add(OntologyNode.NodeType.ONTOLOGY);
+				subjNode.types.add(OntologyNode.NodeType.ONTOLOGY);
 
-			if (ontologyNode == null) {
-				ontologyNode = subjNode;
-			}
+				if(ontologyNode == null) {
+					ontologyNode = subjNode;
+				}
 
-			break;
+				break;
 
-		case "http://www.w3.org/2002/07/owl#Class":
-		case "http://www.w3.org/2000/01/rdf-schema#Class":
-		case "http://www.w3.org/2004/02/skos/core#Concept":
-		case "http://www.w3.org/2004/02/skos/core#ConceptScheme":
-			subjNode.types.add(OntologyNode.NodeType.CLASS);
-			if (subjNode.uri != null) {
-				++numberOfClasses;
-			}
+			case "http://www.w3.org/2002/07/owl#Class":
+			case "http://www.w3.org/2000/01/rdf-schema#Class":
+			case "http://www.w3.org/2004/02/skos/core#Concept":
+				subjNode.types.add(OntologyNode.NodeType.CLASS);
+				if(subjNode.uri != null) {
+					++ numberOfClasses;
+				}
 
-			break;
+				break;
 
-		case "http://www.w3.org/2002/07/owl#AnnotationProperty":
-			subjNode.types.add(OntologyNode.NodeType.ANNOTATION_PROPERTY);
-			addAddAndCountProperties(subjNode);
-			break;
+			case "http://www.w3.org/2002/07/owl#AnnotationProperty":
+				subjNode.types.add(OntologyNode.NodeType.ANNOTATION_PROPERTY);
+				addAddAndCountProperties(subjNode);
+				break;
 
-		case "http://www.w3.org/2002/07/owl#ObjectProperty":
-			subjNode.types.add(OntologyNode.NodeType.OBJECT_PROPERTY);
-			addAddAndCountProperties(subjNode);
-			break;
-		case "http://www.w3.org/2002/07/owl#DatatypeProperty":
-			subjNode.types.add(OntologyNode.NodeType.DATA_PROPERTY);
-			addAddAndCountProperties(subjNode);
-			break;
-		case "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property":
-			addAddAndCountProperties(subjNode);
-			break;
+			case "http://www.w3.org/2002/07/owl#ObjectProperty":
+				subjNode.types.add(OntologyNode.NodeType.OBJECT_PROPERTY);
+				addAddAndCountProperties(subjNode);
+				break;
+			case "http://www.w3.org/2002/07/owl#DatatypeProperty":
+				subjNode.types.add(OntologyNode.NodeType.DATA_PROPERTY);
+				addAddAndCountProperties(subjNode);
+				break;
+			case "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property":
+				addAddAndCountProperties(subjNode);
+				break;
 
-		case "http://www.w3.org/2002/07/owl#NamedIndividual":
-			subjNode.types.add(OntologyNode.NodeType.INDIVIDUAL);
+			case "http://www.w3.org/2002/07/owl#NamedIndividual":
+				subjNode.types.add(OntologyNode.NodeType.INDIVIDUAL);
 
-			if (subjNode.uri != null) {
-				++numberOfIndividuals;
-			}
+				if(subjNode.uri != null) {
+					++ numberOfIndividuals;
+				}
 
-			break;
+				break;
 
-		case "http://www.w3.org/2002/07/owl#Axiom":
-			subjNode.types.add(OntologyNode.NodeType.AXIOM);
-			break;
+			case "http://www.w3.org/2002/07/owl#Axiom":
+				subjNode.types.add(OntologyNode.NodeType.AXIOM);
+				break;
 
-		case "http://www.w3.org/2002/07/owl#Restriction":
-			subjNode.types.add(OntologyNode.NodeType.RESTRICTION);
-			break;
+			case "http://www.w3.org/2002/07/owl#Restriction":
+				subjNode.types.add(OntologyNode.NodeType.RESTRICTION);
+				break;
 
-		case "http://www.w3.org/2002/07/owl#AllDisjointClasses":
-			subjNode.types.add(OntologyNode.NodeType.ALL_DISJOINT_CLASSES);
-			break;
-		case "http://www.w3.org/2002/07/owl#AllDisjointProperties":
-			subjNode.types.add(OntologyNode.NodeType.ALL_DISJOINT_PROPERTIES);
-			break;
-		case "http://www.w3.org/2002/07/owl#AllDifferent":
-			subjNode.types.add(OntologyNode.NodeType.ALL_DIFFERENT);
-			break;
-		case "http://www.w3.org/2002/07/owl#NegativePropertyAssertion":
-			subjNode.types.add(OntologyNode.NodeType.NEGATIVE_PROPERTY_ASSERTION);
-			break;
+			case "http://www.w3.org/2002/07/owl#AllDisjointClasses":
+				subjNode.types.add(OntologyNode.NodeType.ALL_DISJOINT_CLASSES);
+				break;
+			case "http://www.w3.org/2002/07/owl#AllDisjointProperties":
+				subjNode.types.add(OntologyNode.NodeType.ALL_DISJOINT_PROPERTIES);
+				break;
+			case "http://www.w3.org/2002/07/owl#AllDifferent":
+				subjNode.types.add(OntologyNode.NodeType.ALL_DIFFERENT);
+				break;
+			case "http://www.w3.org/2002/07/owl#NegativePropertyAssertion":
+				subjNode.types.add(OntologyNode.NodeType.NEGATIVE_PROPERTY_ASSERTION);
+				break;
 
-		case "http://www.w3.org/2000/01/rdf-schema#Datatype":
-			subjNode.types.add(OntologyNode.NodeType.DATATYPE);
-			break;
+			case "http://www.w3.org/2000/01/rdf-schema#Datatype":
+				subjNode.types.add(OntologyNode.NodeType.DATATYPE);
+				break;
 		}
 	}
 
@@ -882,53 +865,56 @@ public class OntologyGraph implements StreamRDF {
 
 	}
 
-	public String nodeIdFromJenaNode(Node node) {
-		if (node.isURI()) {
+
+	public String nodeIdFromJenaNode(Node node)  {
+		if(node.isURI()) {
 			return node.getURI();
 		}
-		if (node.isBlank()) {
+		if(node.isBlank()) {
 			return node.getBlankNodeId().toString();
 		}
 		throw new RuntimeException("unknown node type");
 	}
 
-	public String nodeIdFromPropertyValue(PropertyValue node) {
-		if (node.getType() == PropertyValue.Type.URI) {
+	public String nodeIdFromPropertyValue(PropertyValue node)  {
+		if(node.getType() == PropertyValue.Type.URI) {
 			return ((PropertyValueURI) node).getUri();
 		}
-		if (node.getType() == PropertyValue.Type.BNODE) {
+		if(node.getType() == PropertyValue.Type.BNODE) {
 			return ((PropertyValueBNode) node).getId();
 		}
 		throw new RuntimeException("unknown node type");
 	}
 
+
+
 	private static void writeGenericValue(JsonWriter writer, Object val) throws IOException {
 
-		if (val instanceof Collection) {
+		if(val instanceof Collection) {
 			writer.beginArray();
-			for (Object entry : ((Collection<Object>) val)) {
+			for(Object entry : ((Collection<Object>) val)) {
 				writeGenericValue(writer, entry);
 			}
 			writer.endArray();
-		} else if (val instanceof Map) {
-			Map<String, Object> map = new TreeMap<String, Object>((Map<String, Object>) val);
+		} else if(val instanceof Map) {
+			Map<String,Object> map = new TreeMap<String,Object> ( (Map<String,Object>) val );
 			writer.beginObject();
-			for (String k : map.keySet()) {
+			for(String k : map.keySet()) {
 				writer.name(k);
 				writeGenericValue(writer, map.get(k));
 			}
 			writer.endObject();
-		} else if (val instanceof String) {
+		} else if(val instanceof String) {
 			writer.value((String) val);
-		} else if (val instanceof Integer) {
+		} else if(val instanceof Integer) {
 			writer.value((Integer) val);
-		} else if (val instanceof Double) {
+		} else if(val instanceof Double) {
 			writer.value((Double) val);
-		} else if (val instanceof Long) {
+		} else if(val instanceof Long) {
 			writer.value((Long) val);
-		} else if (val instanceof Boolean) {
+		} else if(val instanceof Boolean) {
 			writer.value((Boolean) val);
-		} else if (val == null) {
+		} else if(val == null) {
 			writer.nullValue();
 		} else {
 			throw new RuntimeException("Unknown value type");
@@ -936,39 +922,40 @@ public class OntologyGraph implements StreamRDF {
 
 	}
 
+
 	public boolean areSubgraphsIsomorphic(PropertyValue rootNodeA, PropertyValue rootNodeB) {
 
 		OntologyNode a = nodes.get(nodeIdFromPropertyValue(rootNodeA));
 		OntologyNode b = nodes.get(nodeIdFromPropertyValue(rootNodeB));
 
-		if (!a.properties.getPropertyPredicates().equals(b.properties.getPropertyPredicates())) {
+		if(! a.properties.getPropertyPredicates().equals( b.properties.getPropertyPredicates() )) {
 			return false;
 		}
 
-		for (String predicate : a.properties.getPropertyPredicates()) {
+		for(String predicate : a.properties.getPropertyPredicates()) {
 			List<PropertyValue> valuesA = a.properties.getPropertyValues(predicate);
 			List<PropertyValue> valuesB = b.properties.getPropertyValues(predicate);
 
-			if (valuesA.size() != valuesB.size())
+			if(valuesA.size() != valuesB.size())
 				return false;
 
-			for (int n = 0; n < valuesA.size(); ++n) {
+			for(int n = 0; n < valuesA.size(); ++ n) {
 				PropertyValue valueA = valuesA.get(n);
 				PropertyValue valueB = valuesB.get(n);
 
-				if (valueA.getType() != PropertyValue.Type.BNODE) {
+				if(valueA.getType() != PropertyValue.Type.BNODE) {
 					// non bnode value, simple case
-					if (!valueA.equals(valueB)) {
+					if(!valueA.equals(valueB)) {
 						return false;
 					}
 				}
 
 				// bnode value
 
-				if (valueB.getType() != PropertyValue.Type.BNODE)
+				if(valueB.getType() != PropertyValue.Type.BNODE)
 					return false;
 
-				if (!areSubgraphsIsomorphic(valueA, valueB))
+				if(!areSubgraphsIsomorphic(valueA, valueB))
 					return false;
 			}
 		}
@@ -976,15 +963,16 @@ public class OntologyGraph implements StreamRDF {
 		return true;
 	}
 
+
 	public OntologyNode getNodeForPropertyValue(PropertyValue value) {
 
-		switch (value.getType()) {
-		case URI:
-			return nodes.get(((PropertyValueURI) value).getUri());
-		case BNODE:
-			return nodes.get(((PropertyValueBNode) value).getId());
-		default:
-			throw new RuntimeException("not a node");
+		switch(value.getType()) {
+			case URI:
+				return nodes.get( ((PropertyValueURI) value).getUri() );
+			case BNODE:
+				return nodes.get( ((PropertyValueBNode) value).getId() );
+			default:
+				throw new RuntimeException("not a node");
 		}
 	}
 }

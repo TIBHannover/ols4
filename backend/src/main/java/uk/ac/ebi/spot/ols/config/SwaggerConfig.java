@@ -13,7 +13,8 @@ import javax.servlet.ServletContext;
 @Configuration
 public class SwaggerConfig {
 
-    private final String OLS4_SERVER_URL = "https://www.ebi.ac.uk/ols4";
+    //private final String OLS4_SERVER_URL = "https://www.ebi.ac.uk/ols4";
+	private final String OLS4_SERVER_URL = "http://localhost:8080";
 
     @Lazy
     @Bean

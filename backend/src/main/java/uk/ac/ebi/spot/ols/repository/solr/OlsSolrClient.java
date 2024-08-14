@@ -36,8 +36,8 @@ public class OlsSolrClient {
 
 
     @NotNull
-    @org.springframework.beans.factory.annotation.Value("${ols.solr.host:http://localhost:8999}")
-    public String host = "http://localhost:8999";
+    @org.springframework.beans.factory.annotation.Value("${ols.solr.host:http://localhost:8983}")
+    public String host = "http://localhost:8983";
 
 
     private Gson gson = new Gson();

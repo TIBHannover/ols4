@@ -18,6 +18,7 @@ import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedResponse;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
 import uk.ac.ebi.spot.ols.repository.v2.V2IndividualRepository;
+import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
@@ -47,7 +48,7 @@ public class V2IndividualController {
 
         Map<String, Collection<String>> properties = new HashMap<>();
         if(!includeObsoleteEntities)
-            properties.put("isObsolete", List.of("false"));
+            properties.put(IS_OBSOLETE.getText(), List.of("false"));
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(
@@ -72,7 +73,7 @@ public class V2IndividualController {
 
         Map<String, Collection<String>> properties = new HashMap<>();
         if(!includeObsoleteEntities)
-            properties.put("isObsolete", List.of("false"));
+            properties.put(IS_OBSOLETE.getText(), List.of("false"));
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(
@@ -97,10 +98,8 @@ public class V2IndividualController {
     }
 
 
-    // The instances of classes are individuals. So, the /instances endpoint is part of the Class controller.
-    //
-    @RequestMapping(path = "/ontologies/{onto}/classes/{class}/instances", produces = {MediaType.APPLICATION_JSON_VALUE }, method = RequestMethod.GET)
-    public HttpEntity<V2PagedResponse<V2Entity>> getClassInstances(
+    @RequestMapping(path = "/ontologies/{onto}/classes/{class}/individuals", produces = {MediaType.APPLICATION_JSON_VALUE }, method = RequestMethod.GET)
+    public HttpEntity<V2PagedResponse<V2Entity>> getClassIndividuals(
             @PageableDefault(size = 20, page = 0) Pageable pageable,
             @PathVariable("onto") String ontologyId,
             @PathVariable("class") String classIri,
@@ -111,7 +110,7 @@ public class V2IndividualController {
 
         return new ResponseEntity<>(
                 new V2PagedResponse<>(
-                        individualRepository.getInstancesOfClass(ontologyId, classIri, pageable, lang)
+                        individualRepository.getIndividualsOfClass(ontologyId, classIri, pageable, lang)
                 ),
                 HttpStatus.OK);
 

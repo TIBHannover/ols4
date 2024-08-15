@@ -25,9 +25,8 @@ import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.model.v1.V1Ontology;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
-import uk.ac.ebi.spot.ols.repository.solr.OlsFacetedResultsPage;
-import uk.ac.ebi.spot.ols.repository.v2.V2EntityRepository;
 import uk.ac.ebi.spot.ols.repository.v2.V2OntologyRepository;
+import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -65,7 +64,7 @@ public class V2OntologyController {
     ) throws ResourceNotFoundException, IOException {
         Map<String,Collection<String>> properties = new HashMap<>();
         if(!includeObsoleteEntities)
-            properties.put("isObsolete", List.of("false"));
+            properties.put(IS_OBSOLETE.getText(), List.of("false"));
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(

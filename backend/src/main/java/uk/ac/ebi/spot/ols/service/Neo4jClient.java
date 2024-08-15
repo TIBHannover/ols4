@@ -10,28 +10,30 @@ import com.google.gson.*;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.exceptions.NoSuchRecordException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import uk.ac.ebi.spot.ols.repository.neo4j.OlsNeo4jClient;
 
 import javax.validation.constraints.NotNull;
 
 @Component
 public class Neo4jClient {
 
-
 	@NotNull
 	@org.springframework.beans.factory.annotation.Value("${ols.neo4j.host:bolt://localhost:7687}")
 	private String host;
 
-
-
 	private Gson gson = new Gson();
 
 	private Driver driver;
+
+	private static final Logger logger = LoggerFactory.getLogger(Neo4jClient.class);
 
 	public Driver getDriver() {
 
@@ -49,6 +51,13 @@ public class Neo4jClient {
 
 	}
 
+	public long returnNodeCount() {
+		Session session = getSession();
+		Result result = session.run("MATCH (n) RETURN COUNT(n)");
+		long count = result.single().get(0).asLong();
+		session.close();
+		return count;
+	}
 
 	// only used by OLS3 graph repo, remove at some point
 	public List<Map<String,Object>> rawQuery(String query) {
@@ -104,8 +113,8 @@ public class Neo4jClient {
 			queryToRun = query;
 		}
 
-		System.out.println(queryToRun);
-		System.out.println(gson.toJson(parameters.asMap()));
+		logger.debug(queryToRun);
+		logger.trace(gson.toJson(parameters.asMap()));
 
 		Stopwatch timer = Stopwatch.createStarted();
 		Result result = session.run(
@@ -113,11 +122,11 @@ public class Neo4jClient {
 
 		    parameters
 		);
-		System.out.println("Neo4j run paginated query: " + timer.stop());
+		logger.info("Neo4j run paginated query: " + timer.stop());
 
 		Stopwatch timer2 = Stopwatch.createStarted();
 		Result countResult = session.run(countQuery, parameters);
-		System.out.println("Neo4j run paginated count: " + timer2.stop());
+		logger.info("Neo4j run paginated count: " + timer2.stop());
 
 		Record countRecord = countResult.single();
 		int count = countRecord.get(0).asInt();
@@ -164,11 +173,11 @@ public class Neo4jClient {
 
 		Session session = getSession();
 
-		System.out.println(query);
+		logger.debug(query);
 
 		Stopwatch timer = Stopwatch.createStarted();
 		Result result = session.run(query, parameters);
-		System.out.println("Neo4j run query " + query + ": " + timer.stop());
+		logger.info("Neo4j run query " + query + ": " + timer.stop());
 
 		Value v = null;
 

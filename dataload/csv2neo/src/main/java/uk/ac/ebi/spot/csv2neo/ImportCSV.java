@@ -26,9 +26,6 @@ import static uk.ac.ebi.spot.csv2neo.QueryGeneration.*;
  */
 public class ImportCSV {
 
-    static FileReader fr;
-    static BufferedReader br;
-
     public static List<File> listFiles(File[] files) throws IOException {
         List<File> fileList = new ArrayList<File>();
         for (File file : files) {
@@ -42,7 +39,7 @@ public class ImportCSV {
         return fileList;
     }
 
-    public static void executeBatchedNodeQueries(List<File> files, Driver driver, int batchSize, int poolSize) throws IOException, InterruptedException {
+    public static void executeBatchedNodeQueries(List<File> files, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
         for (File file : files) {
             if (!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
                     || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
@@ -54,7 +51,7 @@ public class ImportCSV {
             CountDownLatch latch = new CountDownLatch(splitRecords.size());
             ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
             for (List<CSVRecord> records : splitRecords){
-                NodeCreationQueryTask task = new NodeCreationQueryTask(driver,latch, records,headers,file);
+                NodeCreationQueryTask task = new NodeCreationQueryTask(driver,latch, records,headers,file,attempts);
                 executorService.submit(task);
             }
             latch.await();
@@ -62,7 +59,7 @@ public class ImportCSV {
         }
     }
 
-    public static void executeBatchedRelationshipQueries(List<File> files, Driver driver, int batchSize, int poolSize) throws IOException, InterruptedException {
+    public static void executeBatchedRelationshipQueries(List<File> files, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
         for (File file : files) {
             if ((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
                 continue;
@@ -74,7 +71,7 @@ public class ImportCSV {
             CountDownLatch latch = new CountDownLatch(splitRecords.size());
             ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
             for (List<CSVRecord> records : splitRecords){
-                RelationShipCreationQueryTask task = new RelationShipCreationQueryTask(driver,latch,records,headers,file);
+                RelationShipCreationQueryTask task = new RelationShipCreationQueryTask(driver,latch,records,headers,file, attempts);
                 executorService.submit(task);
             }
             latch.await();
@@ -156,6 +153,7 @@ public class ImportCSV {
         options.addOption("d", "directory",true, "neo4j csv import directory");
         options.addOption("bs", "batch_size",true, "batch size for splitting queries into multiple transactions.");
         options.addOption("ps", "pool_size",true, "number of threads in the pool");
+        options.addOption("t", "attempts",true, "number of attempts for a particular batch");
         return options;
     }
 
@@ -171,6 +169,7 @@ public class ImportCSV {
         final String ontologyPrefixes = cmd.hasOption("o") ? cmd.getOptionValue("o") : "";
         final int batchSize = cmd.hasOption("bs") && Integer.parseInt(cmd.getOptionValue("bs"))>0 ? Integer.parseInt(cmd.getOptionValue("bs")) : 1000;
         final int poolSize = cmd.hasOption("ps") && Integer.parseInt(cmd.getOptionValue("ps"))>0 ? Integer.parseInt(cmd.getOptionValue("ps")) : 20;
+        final int attempts = cmd.hasOption("t") ? Integer.parseInt(cmd.getOptionValue("t")) : 5;
 
         try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
             driver.verifyConnectivity();
@@ -204,8 +203,8 @@ public class ImportCSV {
                         File dir = new File(directory);
                         List<File> files = listFiles(dir.listFiles());
                         displayCSV(files);
-                        executeBatchedNodeQueries(files,driver,batchSize,poolSize);
-                        executeBatchedRelationshipQueries(files,driver,batchSize, poolSize);
+                        executeBatchedNodeQueries(files,driver,batchSize,poolSize,attempts);
+                        executeBatchedRelationshipQueries(files,driver,batchSize, poolSize,attempts);
                         displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).findFirst().get(),driver);
                     } else if (cmd.getOptionValue("m").equals("rm")){
                         for(String ontology : ontologyPrefixes.split(",")){
@@ -215,7 +214,6 @@ public class ImportCSV {
                                 e.printStackTrace();
                             }
                         }
-
                     } else if (cmd.getOptionValue("m").equals("d")){
                         for(String ontology : ontologyPrefixes.split(",")){
                             var resultN = session.run(countAllNodesOfOntology(ontology));

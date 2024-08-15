@@ -5,6 +5,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.neo4j.driver.*;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -25,9 +26,6 @@ import static uk.ac.ebi.spot.csv2neo.QueryGeneration.*;
  */
 public class ImportCSV {
 
-    static FileReader fr;
-    static BufferedReader br;
-
     public static List<File> listFiles(File[] files) throws IOException {
         List<File> fileList = new ArrayList<File>();
         for (File file : files) {
@@ -41,7 +39,7 @@ public class ImportCSV {
         return fileList;
     }
 
-    public static void executeBatchedNodeQueries(List<File> files, Driver driver, int batchSize, int poolSize) throws IOException, InterruptedException {
+    public static void executeBatchedNodeQueries(List<File> files, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
         for (File file : files) {
             if (!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
                     || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
@@ -53,7 +51,7 @@ public class ImportCSV {
             CountDownLatch latch = new CountDownLatch(splitRecords.size());
             ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
             for (List<CSVRecord> records : splitRecords){
-                NodeCreationQueryTask task = new NodeCreationQueryTask(driver,latch, records,headers,file);
+                NodeCreationQueryTask task = new NodeCreationQueryTask(driver,latch, records,headers,file,attempts);
                 executorService.submit(task);
             }
             latch.await();
@@ -61,7 +59,7 @@ public class ImportCSV {
         }
     }
 
-    public static void executeBatchedRelationshipQueries(List<File> files, Driver driver, int batchSize, int poolSize) throws IOException, InterruptedException {
+    public static void executeBatchedRelationshipQueries(List<File> files, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
         for (File file : files) {
             if ((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
                 continue;
@@ -73,12 +71,66 @@ public class ImportCSV {
             CountDownLatch latch = new CountDownLatch(splitRecords.size());
             ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
             for (List<CSVRecord> records : splitRecords){
-                RelationShipCreationQueryTask task = new RelationShipCreationQueryTask(driver,latch,records,headers,file);
+                RelationShipCreationQueryTask task = new RelationShipCreationQueryTask(driver,latch,records,headers,file, attempts);
                 executorService.submit(task);
             }
             latch.await();
             executorService.shutdown();
         }
+    }
+
+    /*
+     * File should be the _ontologies.csv file
+     * */
+    public static void displayIngested(File file, Driver driver) throws IOException {
+        System.out.println("---Ingestion Summary---");
+        long noofRelationships = 0;
+        long noofNodes = 0;
+        Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+        org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+        List<CSVRecord> records = csvParser.getRecords();
+        for (CSVRecord record : records){
+            try (Session session = driver.session()){
+                String ontology = record.get(0).split("\\+")[0];
+                var resultN = session.run(countAllNodesOfOntology(ontology));
+                int nodes = resultN.next().get("nodes").asInt();
+                noofNodes += nodes;
+                System.out.println("Number of nodes in ontology "+ontology+" is "+nodes);
+                var resultR = session.run(countAllRelationshipsOfOntology(ontology));
+                int relationships = resultR.next().get("relationships").asInt();
+                noofRelationships += relationships;
+                System.out.println("Number of relationships in ontology "+ontology+" is "+relationships);
+            }
+        }
+        System.out.println("Total number of ingested nodes is "+noofNodes);
+        System.out.println("Total number of ingested nodes is "+noofRelationships);
+    }
+
+    public static void displayCSV(List<File> files) throws IOException {
+        System.out.println("---Ingestion Plan---");
+        long noofRelationships = 0;
+        long noofNodes = 0;
+        for (File file : files){
+            if (file.getName().endsWith("_edges.csv")){
+                try {
+                    Path path = Paths.get(file.getAbsolutePath());
+                    noofRelationships = Files.lines(path).count() -1;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (file.getName().endsWith("_ontologies.csv") || file.getName().endsWith("_properties.csv") || file.getName().endsWith("_classes.csv") || file.getName().endsWith("_individuals.csv")){
+                Path path = Paths.get(file.getAbsolutePath());
+                Reader reader = Files.newBufferedReader(path);
+                org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+                int noofRecords = csvParser.getRecords().size();
+                int noofNewLines = (int) Files.lines(path).count() -1;
+                noofNodes += noofRecords;
+                if (noofRecords != noofNewLines)
+                    System.out.println("Warning: "+noofRecords+" records has been identified in contrast to "+noofNewLines+" new lines in "+file.getName());
+            }
+        }
+        System.out.println("Total number of nodes that will be ingested in csv: " + noofNodes);
+        System.out.println("Total Number of relationships that will be ingested in csv: " + noofRelationships);
     }
 
     public static <T> List<List<T>> splitList(List<T> list, int batchSize) {
@@ -91,16 +143,17 @@ public class ImportCSV {
 
     private static Options getOptions() {
         Options options = new Options();
-        options.addOption("i", "ingest",false, "ingest ontologies");
-        options.addOption("rm", "remove",true, "remove ontology by commas");
+        options.addOption("m", "mode",true, "ingest(i), remove(rm) or display(d) ontologies");
         options.addOption("a", "authenticated",false, "use authentication");
         options.addOption("u", "user",true, "neo4j user name");
         options.addOption("pw", "password",true, "neo4j user password");
-        options.addOption("uri", "databaseuri",true, "neo4j database uri");
+        options.addOption("uri", "database_uri",true, "neo4j database uri");
         options.addOption("db", "database",true, "neo4j database name");
+        options.addOption("o", "ontologies",true, "ontologies to be removed or displayed by commas");
         options.addOption("d", "directory",true, "neo4j csv import directory");
-        options.addOption("bs", "batchsize",true, "batch size for splitting queries into multiple transactions.");
-        options.addOption("ps", "pool size",true, "number of threads in the pool");
+        options.addOption("bs", "batch_size",true, "batch size for splitting queries into multiple transactions.");
+        options.addOption("ps", "pool_size",true, "number of threads in the pool");
+        options.addOption("t", "attempts",true, "number of attempts for a particular batch");
         return options;
     }
 
@@ -113,9 +166,10 @@ public class ImportCSV {
         final String dbUser = cmd.hasOption("u") ? cmd.getOptionValue("u") : "neo4j";
         final String dbPassword = cmd.hasOption("pw") ? cmd.getOptionValue("pw") : "testtest";
         final String directory = cmd.hasOption("d") ? cmd.getOptionValue("d") : "/tmp/out";
-        final String ontologiesToBeRemoved = cmd.hasOption("rm") ? cmd.getOptionValue("rm") : "";
+        final String ontologyPrefixes = cmd.hasOption("o") ? cmd.getOptionValue("o") : "";
         final int batchSize = cmd.hasOption("bs") && Integer.parseInt(cmd.getOptionValue("bs"))>0 ? Integer.parseInt(cmd.getOptionValue("bs")) : 1000;
         final int poolSize = cmd.hasOption("ps") && Integer.parseInt(cmd.getOptionValue("ps"))>0 ? Integer.parseInt(cmd.getOptionValue("ps")) : 20;
+        final int attempts = cmd.hasOption("t") ? Integer.parseInt(cmd.getOptionValue("t")) : 5;
 
         try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
             driver.verifyConnectivity();
@@ -144,18 +198,33 @@ public class ImportCSV {
                     }
 
                 System.out.println("Start Neo4J Modification...");
-                if(cmd.hasOption("i")){
-                    File dir = new File(directory);
-                    List<File> files = listFiles(dir.listFiles());
-                    executeBatchedNodeQueries(files,driver,batchSize,poolSize);
-                    executeBatchedRelationshipQueries(files,driver,batchSize, poolSize);
-                } else
-                    for(String ontology : ontologiesToBeRemoved.split(","))
-                        try {
-                            session.run(generateOntologyDeleteQuery(ontology));
-                        } catch (Exception e){
-                            e.printStackTrace();
+                if(cmd.hasOption("m")){
+                    if (cmd.getOptionValue("m").equals("i")){
+                        File dir = new File(directory);
+                        List<File> files = listFiles(dir.listFiles());
+                        displayCSV(files);
+                        executeBatchedNodeQueries(files,driver,batchSize,poolSize,attempts);
+                        executeBatchedRelationshipQueries(files,driver,batchSize, poolSize,attempts);
+                        displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).findFirst().get(),driver);
+                    } else if (cmd.getOptionValue("m").equals("rm")){
+                        for(String ontology : ontologyPrefixes.split(",")){
+                            try {
+                                session.run(generateOntologyDeleteQuery(ontology));
+                            } catch (Exception e){
+                                e.printStackTrace();
+                            }
                         }
+                    } else if (cmd.getOptionValue("m").equals("d")){
+                        for(String ontology : ontologyPrefixes.split(",")){
+                            var resultN = session.run(countAllNodesOfOntology(ontology));
+                            System.out.println("Number of nodes in ontology "+ontology+" is "+resultN.next().get("nodes").asInt());
+                            var resultR = session.run(countAllRelationshipsOfOntology(ontology));
+                            System.out.println("Number of relationships in ontology "+ontology+" is "+resultR.next().get("relationships").asInt());
+                        }
+                    }
+                } else {
+                    System.out.println("Mode should be i, d, or rm");
+                }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

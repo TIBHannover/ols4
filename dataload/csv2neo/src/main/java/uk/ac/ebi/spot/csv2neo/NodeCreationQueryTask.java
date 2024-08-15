@@ -5,7 +5,6 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -25,33 +24,37 @@ public class NodeCreationQueryTask implements Runnable {
     private final List<CSVRecord> records;
     private final String[] headers;
     private final File file;
+    private final int attempts;
 
-    public NodeCreationQueryTask(Driver driver,CountDownLatch latch, List<CSVRecord> records, String[] headers, File file) {
+    public NodeCreationQueryTask(Driver driver, CountDownLatch latch, List<CSVRecord> records, String[] headers, File file, int attempts) {
         this.driver = driver;
         this.latch = latch;
         this.records = records;
         this.headers = headers;
         this.file = file;
-
+        this.attempts = attempts;
     }
 
     @Override
     public void run() {
-        try (Session session = driver.session()) {
-            session.writeTransaction(tx -> {
-                for (CSVRecord csvRecord : records) {
-                    String[] row = csvRecord.toList().toArray(String[]::new);
-                    String query = generateBlankNodeCreationQuery(headers,row);
-                    Map<String,Object> params = generateProps(headers,row);
-                    if(query.isEmpty())
-                        System.out.println("empty query for appended line: "+ Arrays.toString(row)+" in file: "+file);
-                    else
-                        tx.run(query,params);
+        boolean success = false;
+        for(int i = 0;i<attempts;i++){
+            try (Session session = driver.session()) {
+                if(!success){
+                    success =session.executeWrite(tx -> {
+                        for (CSVRecord csvRecord : records) {
+                            String[] row = csvRecord.toList().toArray(String[]::new);
+                            String query = generateBlankNodeCreationQuery(headers, row);
+                            Map<String, Object> params = generateProps(headers, row);
+                            tx.run(query, params);
+                        }
+                        return true;
+                    });
+                    latch.countDown();
                 }
-                return null;
-            });
-        } finally {
-            latch.countDown();
+            } catch(Exception e) {
+                System.out.println("Attempt "+i+" error: "+e.getMessage());
+            }
         }
     }
 }

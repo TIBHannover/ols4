@@ -78,12 +78,6 @@ public class RestCallStatistics {
 		return new ResponseEntity<>(assembler.toModel(page, restCallAssembler), HttpStatus.OK);
     }
 
-    @Operation(summary = "All REST Calls List")
-    @RequestMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.POST)
-    public  List<RestCall> getList() {
-        return restCallService.findAll();
-    }
-
     @Operation(summary = "REST Calls statistics by URL")
     @RequestMapping(value = "/byUrl", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.POST)
     public HttpEntity<PagedModel<KeyValueResultDto>> getStatisticsByUrl(

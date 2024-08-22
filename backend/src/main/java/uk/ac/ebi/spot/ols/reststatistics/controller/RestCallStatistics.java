@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import uk.ac.ebi.spot.ols.reststatistics.entity.RestCall;
 import uk.ac.ebi.spot.ols.reststatistics.service.RestCallService;
 import uk.ac.ebi.spot.ols.reststatistics.service.RestCallStatisticsService;
 import uk.ac.ebi.spot.ols.reststatistics.dto.KeyValueResultDto;

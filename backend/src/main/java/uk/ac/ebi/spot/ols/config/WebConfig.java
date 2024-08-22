@@ -2,13 +2,9 @@ package uk.ac.ebi.spot.ols.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.servlet.config.annotation.*;
-import org.springframework.web.util.UrlPathHelper;
+import uk.ac.ebi.spot.ols.reststatistics.service.RestCallHandlerService;
 
 /**
  * @author Simon Jupp
@@ -25,6 +21,10 @@ public class WebConfig extends WebMvcConfigurerAdapter {
      *
      * @param configurer
      */
+
+    @Autowired
+    RestCallHandlerService restCallHandlerService;
+
     @Override
     public void configurePathMatch(PathMatchConfigurer configurer) {
 //        UrlPathHelper urlPathHelper = new UrlPathHelper();
@@ -36,17 +36,15 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 
     }
 
-//     @Bean
-//     MaintenanceInterceptor getMaintenanceInterceptor() {
-//         return new MaintenanceInterceptor();
-//     }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(getRestCallInterceptor());
+    }
 
-//     @Autowired
-//     MaintenanceInterceptor interceptor;
-//     @Override
-//      public void addInterceptors(InterceptorRegistry registry) {
-//          registry.addInterceptor(interceptor);
-//      }
+    @Bean
+    public RestCallInterceptor getRestCallInterceptor() {
+        return new RestCallInterceptor(restCallHandlerService);
+    }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {

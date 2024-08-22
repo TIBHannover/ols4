@@ -13,6 +13,14 @@ services:
         - ./testcases:/opt/ols/dataload/testcases:ro
           #- ./docker_out:/tmp/out:rw
       command: ./dataload.dockersh ${OLS4_DATALOAD_ARGS:-}
+    mongo:
+      image: mongo:3.4.24
+      ports:
+          - 27017:27017
+      volumes:
+          - ols-mongo-data:/data/db
+      command:
+          - mongod
     ols4-solr:
       image: solr:9.0.0
       environment:
@@ -46,12 +54,15 @@ services:
       environment:
         - OLS_SOLR_HOST=http://ols4-solr:8983
         - OLS_NEO4J_HOST=bolt://ols4-neo4j:7687
+        - spring.data.mongodb.host=mongo
       depends_on:
         - ols4-solr
         - ols4-neo4j
+        - mongo
       links:
         - ols4-solr
         - ols4-neo4j
+        - mongo
     ols4-frontend:
       build:
         context: ./frontend
@@ -76,3 +87,6 @@ services:
 volumes:
     ols4-neo4j-data:
     ols4-solr-data:
+    ols-mongo-data:
+
+

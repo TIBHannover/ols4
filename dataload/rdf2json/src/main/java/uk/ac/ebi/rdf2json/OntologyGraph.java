@@ -41,6 +41,7 @@ import java.net.URL;
 import java.io.FileNotFoundException;
 import java.net.URLConnection;
 
+
 public class OntologyGraph implements StreamRDF {
 
     public Map<String, Object> config;
@@ -120,7 +121,7 @@ public class OntologyGraph implements StreamRDF {
             throw new RuntimeException(e);
         }
     }
-    
+
     private OWLOntology convertOntologyToRDF(String url, String outputFile) throws IOException {
         OWLOntologyManager ontManager = OWLManager.createOWLOntologyManager();
         FileOutputStream fos = null;

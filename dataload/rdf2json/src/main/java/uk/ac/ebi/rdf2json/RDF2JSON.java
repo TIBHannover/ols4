@@ -43,7 +43,7 @@ public class RDF2JSON {
         Option output = new Option(null, "output", true, "JSON output filename");
         output.setRequired(true);
         options.addOption(output);
-	
+
         Option loadLocalFiles = new Option(null, "loadLocalFiles", false, "Whether or not to load local files (unsafe, for testing)");
         loadLocalFiles.setRequired(false);
         options.addOption(loadLocalFiles);
@@ -51,8 +51,8 @@ public class RDF2JSON {
         Option noDates = new Option(null, "noDates", false, "Set to leave LOADED dates blank (for testing)");
         noDates.setRequired(false);
         options.addOption(noDates);
-        
-        Option rdfConvert = new Option(null, "convertToRDF", true, "Whether or not to convert the ontology to RDF/Xml format before parsing.");
+
+        Option rdfConvert = new Option(null, "convertToRDF", false, "Whether or not to convert the ontology to RDF/Xml format before parsing.");
         rdfConvert.setRequired(false);
         options.addOption(rdfConvert);
 
@@ -184,10 +184,10 @@ public class RDF2JSON {
             actualReader.beginObject();
 
             while (scanReader.peek() != JsonToken.END_OBJECT) {
-    
+
                 String name = scanReader.nextName();
                 actualReader.nextName();
-    
+
                 if (name.equals("ontologies")) {
 
                     scanReader.beginArray();

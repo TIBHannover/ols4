@@ -400,7 +400,10 @@ public class OntologyGraph implements StreamRDF {
             writer.value(ontologyId);
 
             writer.name("iri");
-            writer.value(ontologyNode.uri);
+            if(ontologyNode.uri != null)
+                writer.value(ontologyNode.uri);
+            else
+                writer.value(config.get("ontology_purl").toString());
 
             for (String configKey : config.keySet()) {
                 Object configVal = config.get(configKey);

@@ -19,7 +19,9 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -102,15 +104,18 @@ public class OntologyGraph implements StreamRDF {
                 } else {
                     logger.debug("Downloading (no predownload path provided) {}", url);
                     if (convertToRDF) {
-                        String outputFile = "./src/main/resources/result";
+                        String outputFile = "result";
                         OWLOntology ont = convertOntologyToRDF(url, outputFile);
                         OWLDocumentFormat odf = ont.getOWLOntologyManager().getOntologyFormat(ont);
                         String lang1 = odf.getKey();
                         String ext = ".owl";
                         if (lang1.contains("Turtle"))
                             ext = ".ttl";
-                        url = outputFile + ext;
+                        String fileNameInUrl = outputFile + ext;
+                        Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+                        url = Paths.get(resourceDirectory.resolve(fileNameInUrl).toUri()).toString();
                     }
+
 		            sourceFileTimestamp = System.currentTimeMillis();
                     createParser(null).source(url).parse(this);
                 }
@@ -118,6 +123,8 @@ public class OntologyGraph implements StreamRDF {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
@@ -169,11 +176,17 @@ public class OntologyGraph implements StreamRDF {
             else if (!lang1.contains("RDF")) {
                 isRDF = false;
                 OWLDocumentFormat odf1 = new OWLXMLDocumentFormat();
-                fos = new FileOutputStream(outputFile + ext);
+                Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+                String filePath = resourceDirectory.resolve(outputFile+ext).toString();
+                fos = new FileOutputStream(filePath);
                 ont.saveOntology(odf1, fos);
             }
             if (isRDF) {
-                fos = new FileOutputStream(outputFile + ext);
+                OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation()
+                        .toURI().getPath();
+                Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+                String filePath = resourceDirectory.resolve(outputFile+ext).toString();
+                fos = new FileOutputStream(filePath);
                 ont.saveOntology(fos);
             }
         } catch (OWLOntologyCreationException e) {
@@ -182,6 +195,8 @@ public class OntologyGraph implements StreamRDF {
             e.printStackTrace();
         } catch (OWLOntologyStorageException e) {
             e.printStackTrace();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         } finally {
             if (fos != null)
                 fos.close();

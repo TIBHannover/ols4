@@ -35,12 +35,9 @@ import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
 import org.semanticweb.owlapi.model.*;
 import javax.net.ssl.HttpsURLConnection;
-import java.io.File;
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.io.FileInputStream;
 import java.net.URL;
-import java.io.FileNotFoundException;
 import java.net.URLConnection;
 
 
@@ -135,6 +132,7 @@ public class OntologyGraph implements StreamRDF {
         OWLOntology ont = null;
         InputStream is = null;
         URLConnection con = null;
+        String originalUrl = url;
         boolean isParserException = false;
         try {
             boolean isRDF = true;
@@ -166,8 +164,17 @@ public class OntologyGraph implements StreamRDF {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                ont = ontManager.loadOntologyFromOntologyDocument(is);
+                try {
+                    ont = ontManager.loadOntologyFromOntologyDocument(is);
+                } catch (Exception e) {
+                    isParserException = true;
+                }
             }
+
+            if(isParserException){
+                ont = ontManager.loadOntologyFromOntologyDocument(IRI.create(originalUrl));
+            }
+
             OWLDocumentFormat odf = ontManager.getOntologyFormat(ont);
             String lang1 = odf.getKey();
             String ext = ".owl";

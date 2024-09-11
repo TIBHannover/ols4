@@ -166,6 +166,7 @@ public class OntologyGraph implements StreamRDF {
                 }
                 try {
                     ont = ontManager.loadOntologyFromOntologyDocument(is);
+                    isParserException = false;
                 } catch (Exception e) {
                     isParserException = true;
                 }

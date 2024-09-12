@@ -132,7 +132,6 @@ public class OntologyGraph implements StreamRDF {
         OWLOntology ont = null;
         InputStream is = null;
         URLConnection con = null;
-        String originalUrl = url;
         boolean isParserException = false;
         try {
             boolean isRDF = true;
@@ -173,7 +172,7 @@ public class OntologyGraph implements StreamRDF {
             }
 
             if(isParserException){
-                ont = ontManager.loadOntologyFromOntologyDocument(IRI.create(originalUrl));
+                ont = ontManager.loadOntologyFromOntologyDocument(IRI.create(url));
             }
 
             OWLDocumentFormat odf = ontManager.getOntologyFormat(ont);

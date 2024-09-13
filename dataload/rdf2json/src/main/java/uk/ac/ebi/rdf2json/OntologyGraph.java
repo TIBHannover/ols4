@@ -194,51 +194,35 @@ public class OntologyGraph implements StreamRDF {
             OWLDocumentFormat odf = ont.getOWLOntologyManager().getOntologyFormat(ont);
             String lang1 = odf.getKey();
             String ext = ".owl";
-            if (lang1.contains("Turtle"))
+            if (lang1.contains("Turtle")){
+                isRDF = false;
                 ext = ".ttl";
-            else if (lang1.contains("OBO Format")){
+                fos = fileOutPutStreamForExecutionPath(outputFile+ext);
+                ont.saveOntology(fos);
+            } else if (lang1.contains("OBO Format")){
+                isRDF = false;
                 ext = ".owl";
                 Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
                 String filePath = resourceDirectory.resolve(outputFile+ext).toString();
-
                 IOHelper iohelper = new IOHelper();
                 iohelper.saveOntology(ont,new RDFXMLDocumentFormat(),IRI.create(new File(filePath)),true);
-                // below is the procedure to do this without robot and with net.sourceforge.owlapi only.
-                /*OWLAPIOwl2Obo converter = new OWLAPIOwl2Obo(ont.getOWLOntologyManager());
-                OBODoc oboDoc = converter.convert(ont);
-
-                OBOFormatWriter writer = new OBOFormatWriter();
-                writer.setCheckStructure(true);
-                writer.write(oboDoc, new File(filePath));
-                OWLDocumentFormat format = new RDFXMLDocumentFormat();
-                ont.getOWLOntologyManager().saveOntology(ont, format, fos);*/
                 logger.info("initial format: "+ont.getOWLOntologyManager().getOntologyFormat(ont));
                 ont = loadOntology("file:"+filePath);
-
                 logger.info("converted to: "+ont.getOWLOntologyManager().getOntologyFormat(ont));
-            }
-
-            else if (!lang1.contains("RDF")) {
+            } else if (!lang1.contains("RDF")) {
                 OWLDocumentFormat odf1 = new OWLXMLDocumentFormat();
-                Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                String filePath = resourceDirectory.resolve(outputFile+ext).toString();
-                fos = new FileOutputStream(filePath);
+                fos = fileOutPutStreamForExecutionPath(outputFile+ext);
                 ont.saveOntology(odf1, fos);
             }
+
             if (isRDF) {
-                OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation()
-                        .toURI().getPath();
-                Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                String filePath = resourceDirectory.resolve(outputFile+ext).toString();
-                fos = new FileOutputStream(filePath);
-                ont.saveOntology(fos);
+                fos = fileOutPutStreamForExecutionPath(outputFile+ext);
+                ont.saveOntology(new RDFXMLDocumentFormat(),fos);
             }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (OWLOntologyStorageException e) {
             e.printStackTrace();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -246,6 +230,20 @@ public class OntologyGraph implements StreamRDF {
                 fos.close();
         }
         return ont;
+    }
+
+    private FileOutputStream fileOutPutStreamForExecutionPath(String outputFile) {
+        FileOutputStream fos;
+        try {
+            Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+            String filePath = resourceDirectory.resolve(outputFile).toString();
+            fos = new FileOutputStream(filePath);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        return fos;
     }
 
     private String replaceURLByProtocol(URLConnection con, String url) {

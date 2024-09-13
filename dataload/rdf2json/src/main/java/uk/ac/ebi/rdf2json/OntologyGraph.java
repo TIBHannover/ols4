@@ -4,7 +4,7 @@ import com.google.gson.stream.JsonWriter;
 
 import org.apache.jena.riot.RDFLanguages;
 import org.obolibrary.robot.IOHelper;
-import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
+import org.semanticweb.owlapi.formats.*;
 import uk.ac.ebi.rdf2json.annotators.*;
 import uk.ac.ebi.rdf2json.helpers.RdfListEvaluator;
 import uk.ac.ebi.rdf2json.properties.*;
@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
 import org.semanticweb.owlapi.model.*;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
@@ -70,7 +69,7 @@ public class OntologyGraph implements StreamRDF {
         }
     }
 
-    private void parseRDF(String url, boolean convertToRDF)  {
+    private void parseRDF(String url, boolean convertToRDF, String id)  {
 
         try {
             if (loadLocalFiles && !url.contains("://")) {
@@ -103,19 +102,14 @@ public class OntologyGraph implements StreamRDF {
                 } else {
                     logger.debug("Downloading (no predownload path provided) {}", url);
                     if (convertToRDF) {
-                        String outputFile = "result";
-                        OWLOntology ont = convertOntologyToRDF(url, outputFile);
-                        OWLDocumentFormat odf = ont.getOWLOntologyManager().getOntologyFormat(ont);
-                        String lang1 = odf.getKey();
-                        logger.info("language: "+lang1);
-                        String ext = ".owl";
-                        if (lang1.contains("Turtle"))
+                        OWLOntology ont = convertOntologyToRDF(url, id);
+                        OWLDocumentFormat format = ont.getOWLOntologyManager().getOntologyFormat(ont);
+                        logger.info("language: "+format.getKey());
+                        String ext = ".rdf";
+                        if (format instanceof TurtleDocumentFormat)
                             ext = ".ttl";
-                        else if (lang1.contains("OBO Format"))
-                            ext = ".owl";
-                        String fileNameInUrl = outputFile + ext;
                         Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                        url = Paths.get(resourceDirectory.resolve(fileNameInUrl).toUri()).toString();
+                        url = Paths.get(resourceDirectory.resolve(id+ext).toUri()).toString();
                     }
                     logger.info("url: "+url);
                     sourceFileTimestamp = System.currentTimeMillis();
@@ -190,34 +184,25 @@ public class OntologyGraph implements StreamRDF {
         FileOutputStream fos = null;
         OWLOntology ont = loadOntology(url);
         try {
-            boolean isRDF = true;
-            OWLDocumentFormat odf = ont.getOWLOntologyManager().getOntologyFormat(ont);
-            String lang1 = odf.getKey();
-            String ext = ".owl";
-            if (lang1.contains("Turtle")){
-                isRDF = false;
-                ext = ".ttl";
-                fos = fileOutPutStreamForExecutionPath(outputFile+ext);
-                ont.saveOntology(fos);
-            } else if (lang1.contains("OBO Format")){
-                isRDF = false;
-                ext = ".owl";
+            OWLDocumentFormat format = ont.getOWLOntologyManager().getOntologyFormat(ont);
+            if (format instanceof OBODocumentFormat){
                 Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                String filePath = resourceDirectory.resolve(outputFile+ext).toString();
+                logger.info("Saving the original "+format.getKey()+" format ontology to "+outputFile+".obo");
+                fos = getFileOutPutStreamForExecutionPath(outputFile+".obo");
+                ont.saveOntology(format, fos);
+                logger.info("Saving the converted RDF/XML Syntax format ontology to "+outputFile+".rdf");
+                String filePath = resourceDirectory.resolve(outputFile+".rdf").toString();
                 IOHelper iohelper = new IOHelper();
                 iohelper.saveOntology(ont,new RDFXMLDocumentFormat(),IRI.create(new File(filePath)),true);
-                logger.info("initial format: "+ont.getOWLOntologyManager().getOntologyFormat(ont));
                 ont = loadOntology("file:"+filePath);
-                logger.info("converted to: "+ont.getOWLOntologyManager().getOntologyFormat(ont));
-            } else if (!lang1.contains("RDF")) {
-                OWLDocumentFormat odf1 = new OWLXMLDocumentFormat();
-                fos = fileOutPutStreamForExecutionPath(outputFile+ext);
-                ont.saveOntology(odf1, fos);
-            }
-
-            if (isRDF) {
-                fos = fileOutPutStreamForExecutionPath(outputFile+ext);
-                ont.saveOntology(new RDFXMLDocumentFormat(),fos);
+            } else {
+                String ext = (format instanceof TurtleDocumentFormat) ? ".ttl" : ".owl";
+                logger.info("Saving the original "+format.getKey()+" format ontology to "+outputFile+ext);
+                fos = getFileOutPutStreamForExecutionPath(outputFile+ext);
+                ont.saveOntology(format, fos);
+                logger.info("Saving the converted RDF/XML Syntax format ontology to "+outputFile+".rdf");
+                fos = getFileOutPutStreamForExecutionPath(outputFile+".rdf");
+                ont.saveOntology(new RDFXMLDocumentFormat(), fos);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -232,7 +217,7 @@ public class OntologyGraph implements StreamRDF {
         return ont;
     }
 
-    private FileOutputStream fileOutPutStreamForExecutionPath(String outputFile) {
+    private FileOutputStream getFileOutPutStreamForExecutionPath(String outputFile) {
         FileOutputStream fos;
         try {
             Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
@@ -304,7 +289,7 @@ public class OntologyGraph implements StreamRDF {
         }
 
         logger.debug("load ontology from: {}", url);
-        parseRDF(url, convertToRDF);
+        parseRDF(url, convertToRDF, config.getOrDefault("id","result").toString());
 
         // Before we evaluate imports, mark all the nodes so far as not imported
         for(String id : nodes.keySet()) {
@@ -320,7 +305,7 @@ public class OntologyGraph implements StreamRDF {
             importUrls.remove(0);
 
             logger.debug("import: {}", importUrl);
-            parseRDF(importUrl, convertToRDF);
+            parseRDF(importUrl, convertToRDF,config.getOrDefault("id","result").toString());
         }
 
         // Now the imports are done, mark everything else as imported

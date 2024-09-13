@@ -104,12 +104,9 @@ public class OntologyGraph implements StreamRDF {
                     if (convertToRDF) {
                         OWLOntology ont = convertOntologyToRDF(url, id);
                         OWLDocumentFormat format = ont.getOWLOntologyManager().getOntologyFormat(ont);
-                        logger.info("language: "+format.getKey());
-                        String ext = ".rdf";
-                        if (format instanceof TurtleDocumentFormat)
-                            ext = ".ttl";
+                        logger.info("parsing "+id+" ontology in format: "+format.getKey());
                         Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                        url = Paths.get(resourceDirectory.resolve(id+ext).toUri()).toString();
+                        url = Paths.get(resourceDirectory.resolve(id+".rdf").toUri()).toString();
                     }
                     logger.info("url: "+url);
                     sourceFileTimestamp = System.currentTimeMillis();
@@ -127,49 +124,33 @@ public class OntologyGraph implements StreamRDF {
 
     private OWLOntology loadOntology(String url) throws IOException {
         OWLOntologyManager ontManager = OWLManager.createOWLOntologyManager();
-        OWLOntology ont = null;
+        OWLOntology ont;
         InputStream is = null;
         URLConnection con = null;
-        boolean isParserException = false;
         try {
-            boolean isDefaultURLFailed = false;
             try {
                 URL tempURL = new URL(url);
                 con = tempURL.openConnection();
                 is = tempURL.openStream();
             } catch (IOException e) {
-                isDefaultURLFailed = true;
-            }
-            if (isDefaultURLFailed) {
                 url = replaceURLByProtocol(con, url);
                 try {
                     is = new URL(url).openStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            try {
-                ont = ontManager.loadOntologyFromOntologyDocument(is);
-            } catch (Exception e) {
-                isParserException = true;
-            }
-            if (isParserException) {
-                url = replaceURLByProtocol(con, url);
-                try {
-                    is = new URL(url).openStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    ont = ontManager.loadOntologyFromOntologyDocument(is);
-                    isParserException = false;
-                } catch (Exception e) {
-                    isParserException = true;
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
                 }
             }
 
-            if(isParserException){
-                ont = ontManager.loadOntologyFromOntologyDocument(IRI.create(url));
+            try {
+                ont = ontManager.loadOntologyFromOntologyDocument(is);
+            } catch (Exception e) {
+                url = replaceURLByProtocol(con, url);
+                try {
+                    is = new URL(url).openStream();
+                    ont = ontManager.loadOntologyFromOntologyDocument(is);
+                } catch (IOException ioe) {
+                    ont = ontManager.loadOntologyFromOntologyDocument(IRI.create(url));
+                }
             }
         } catch (OWLOntologyCreationException e) {
             throw new RuntimeException(e);
@@ -203,11 +184,14 @@ public class OntologyGraph implements StreamRDF {
                 logger.info("Saving the converted RDF/XML Syntax format ontology to "+outputFile+".rdf");
                 fos = getFileOutPutStreamForExecutionPath(outputFile+".rdf");
                 ont.saveOntology(new RDFXMLDocumentFormat(), fos);
+                Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+                String filePath = resourceDirectory.resolve(outputFile+".rdf").toString();
+                ont = loadOntology("file:"+filePath);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         } catch (OWLOntologyStorageException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {

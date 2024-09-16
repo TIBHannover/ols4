@@ -102,11 +102,12 @@ public class OntologyGraph implements StreamRDF {
                 } else {
                     logger.debug("Downloading (no predownload path provided) {}", url);
                     if (convertToRDF) {
-                        OWLOntology ont = convertOntologyToRDF(url, id);
+                        OntologyConversion conversion = new OntologyConversion(url, id, new RDFXMLDocumentFormat());
+                        OWLOntology ont = conversion.getOntology();
                         OWLDocumentFormat format = ont.getOWLOntologyManager().getOntologyFormat(ont);
                         logger.info("parsing "+id+" ontology in format: "+format.getKey());
                         Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                        url = Paths.get(resourceDirectory.resolve(id+".rdf").toUri()).toString();
+                        url = Paths.get(resourceDirectory.resolve(id+conversion.getExtConverted()).toUri()).toString();
                     }
                     logger.info("url: "+url);
                     sourceFileTimestamp = System.currentTimeMillis();
@@ -120,108 +121,6 @@ public class OntologyGraph implements StreamRDF {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private OWLOntology loadOntology(String url) throws IOException {
-        OWLOntologyManager ontManager = OWLManager.createOWLOntologyManager();
-        OWLOntology ont;
-        InputStream is = null;
-        URLConnection con = null;
-        try {
-            try {
-                URL tempURL = new URL(url);
-                con = tempURL.openConnection();
-                is = tempURL.openStream();
-            } catch (IOException e) {
-                url = replaceURLByProtocol(con, url);
-                try {
-                    is = new URL(url).openStream();
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
-            }
-
-            try {
-                ont = ontManager.loadOntologyFromOntologyDocument(is);
-            } catch (Exception e) {
-                url = replaceURLByProtocol(con, url);
-                try {
-                    is = new URL(url).openStream();
-                    ont = ontManager.loadOntologyFromOntologyDocument(is);
-                } catch (IOException ioe) {
-                    ont = ontManager.loadOntologyFromOntologyDocument(IRI.create(url));
-                }
-            }
-        } catch (OWLOntologyCreationException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (is != null)
-                is.close();
-        }
-        return ont;
-    }
-
-    private OWLOntology convertOntologyToRDF(String url, String outputFile) throws IOException {
-        FileOutputStream fos = null;
-        OWLOntology ont = loadOntology(url);
-        try {
-            OWLDocumentFormat format = ont.getOWLOntologyManager().getOntologyFormat(ont);
-            if (format instanceof OBODocumentFormat){
-                Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                logger.info("Saving the original "+format.getKey()+" format ontology to "+outputFile+".obo");
-                fos = getFileOutPutStreamForExecutionPath(outputFile+".obo");
-                ont.saveOntology(format, fos);
-                logger.info("Saving the converted RDF/XML Syntax format ontology to "+outputFile+".rdf");
-                String filePath = resourceDirectory.resolve(outputFile+".rdf").toString();
-                IOHelper iohelper = new IOHelper();
-                iohelper.saveOntology(ont,new RDFXMLDocumentFormat(),IRI.create(new File(filePath)),true);
-                ont = loadOntology("file:"+filePath);
-            } else {
-                String ext = (format instanceof TurtleDocumentFormat) ? ".ttl" : ".owl";
-                logger.info("Saving the original "+format.getKey()+" format ontology to "+outputFile+ext);
-                fos = getFileOutPutStreamForExecutionPath(outputFile+ext);
-                ont.saveOntology(format, fos);
-                logger.info("Saving the converted RDF/XML Syntax format ontology to "+outputFile+".rdf");
-                fos = getFileOutPutStreamForExecutionPath(outputFile+".rdf");
-                ont.saveOntology(new RDFXMLDocumentFormat(), fos);
-                Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                String filePath = resourceDirectory.resolve(outputFile+".rdf").toString();
-                ont = loadOntology("file:"+filePath);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (OWLOntologyStorageException e) {
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (fos != null)
-                fos.close();
-        }
-        return ont;
-    }
-
-    private FileOutputStream getFileOutPutStreamForExecutionPath(String outputFile) {
-        FileOutputStream fos;
-        try {
-            Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-            String filePath = resourceDirectory.resolve(outputFile).toString();
-            fos = new FileOutputStream(filePath);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-        return fos;
-    }
-
-    private String replaceURLByProtocol(URLConnection con, String url) {
-        if (con instanceof HttpsURLConnection) {
-            url = url.replace("https:", "http:");
-        } else if (con instanceof HttpURLConnection) {
-            url = url.replace("http:", "https:");
-        }
-        return url;
     }
 
     private String urlToFilename(String url) {

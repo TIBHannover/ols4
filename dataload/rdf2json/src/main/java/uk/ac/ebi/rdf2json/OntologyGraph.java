@@ -101,17 +101,29 @@ public class OntologyGraph implements StreamRDF {
                     }
                 } else {
                     logger.debug("Downloading (no predownload path provided) {}", url);
-                    if (convertToRDF) {
-                        OntologyConversion conversion = new OntologyConversion(url, id, new RDFXMLDocumentFormat());
-                        OWLOntology ont = conversion.getOntology();
-                        OWLDocumentFormat format = ont.getOWLOntologyManager().getOntologyFormat(ont);
-                        logger.info("parsing "+id+" ontology in format: "+format.getKey());
-                        Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-                        url = Paths.get(resourceDirectory.resolve(id+conversion.getExtConverted()).toUri()).toString();
+                    try {
+                        logger.info("url: "+url);
+                        sourceFileTimestamp = System.currentTimeMillis();
+                        createParser(null).source(url).parse(this);
+                    } catch (Exception e){
+                        logger.error("Parsing exception: {}",e.getMessage());
+                        if(convertToRDF){
+                            logger.info("converting the ontology to RDF alternatively");
+                            OntologyConversion conversion = new OntologyConversion(url, id, new RDFXMLDocumentFormat());
+                            OWLOntology ont = conversion.getOntology();
+                            OWLDocumentFormat format = ont.getOWLOntologyManager().getOntologyFormat(ont);
+                            logger.info("parsing "+id+" ontology in format: "+format.getKey());
+                            Path resourceDirectory = Paths.get(OntologyGraph.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+                            url = Paths.get(resourceDirectory.resolve(id+conversion.getExtConverted()).toUri()).toString();
+                            logger.info("url of the converted ontology: "+url);
+                            sourceFileTimestamp = System.currentTimeMillis();
+                            createParser(null).source(url).parse(this);
+                        } else {
+                            logger.debug("You may alternatively try to use convertToRDF mode to parse your ontology");
+                            e.printStackTrace();
+                        }
+
                     }
-                    logger.info("url: "+url);
-                    sourceFileTimestamp = System.currentTimeMillis();
-                    createParser(null).source(url).parse(this);
                 }
             }
         } catch (FileNotFoundException e) {

@@ -3,7 +3,6 @@ package uk.ac.ebi.rdf2json;
 import com.google.gson.stream.JsonWriter;
 
 import org.apache.jena.riot.RDFLanguages;
-import org.obolibrary.robot.IOHelper;
 import org.semanticweb.owlapi.formats.*;
 import uk.ac.ebi.rdf2json.annotators.*;
 import uk.ac.ebi.rdf2json.helpers.RdfListEvaluator;
@@ -33,13 +32,7 @@ import static uk.ac.ebi.ols.shared.DefinedFields.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
-import javax.net.ssl.HttpsURLConnection;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 
 
 public class OntologyGraph implements StreamRDF {
@@ -139,6 +132,17 @@ public class OntologyGraph implements StreamRDF {
         return url.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
     }
 
+    public static String removeExtension(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return fileName;
+        }
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            return fileName; // No extension found
+        }
+        return fileName.substring(0, lastDotIndex);
+    }
+
 
     private boolean loadLocalFiles;
 
@@ -200,7 +204,7 @@ public class OntologyGraph implements StreamRDF {
             importUrls.remove(0);
 
             logger.debug("import: {}", importUrl);
-            parseRDF(importUrl, convertToRDF,config.getOrDefault("id","result").toString());
+            parseRDF(importUrl, convertToRDF,config.getOrDefault("id","result").toString()+"_"+removeExtension((importUrl.substring(importUrl.lastIndexOf('/') + 1))));
         }
 
         // Now the imports are done, mark everything else as imported

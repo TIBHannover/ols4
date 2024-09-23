@@ -117,7 +117,7 @@ public class OntologyConversion {
                 try {
                     is = new URL(url).openStream();
                     ont = ontManager.loadOntologyFromOntologyDocument(is);
-                } catch (IOException ioe) {
+                } catch (Exception e2) {
                     ont = ontManager.loadOntologyFromOntologyDocument(IRI.create(url));
                 }
             }

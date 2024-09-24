@@ -1,14 +1,10 @@
 package uk.ac.ebi.rdf2json;
 
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
-import org.apache.commons.cli.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,7 +14,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 
 public class RDF2JSON {
 
@@ -128,46 +141,54 @@ public class RDF2JSON {
             }
         }
 
-        JsonWriter writer = new JsonWriter(new FileWriter(outputFilePath));
-        writer.setIndent("  ");
-
-        writer.beginObject();
-
-	// writer.name("loaded");
-	// writer.value(java.time.LocalDateTime.now().toString());
-
-        writer.name("ontologies");
-        writer.beginArray();
-
+        //JsonWriter writer = new JsonWriter(new FileWriter(outputFilePath));
+        JsonWriterWrapper writerWrapper = JsonWriterWrapper.getInstance(outputFilePath);
+        writerWrapper.initWriter();
+		/*
+		 * JsonWriter writer = writerWrapper.getWriter(); writer.setIndent("  ");
+		 * writer.beginObject(); writer.name("ontologies"); writer.beginArray();
+		 */        
+        //writerWrapper.setWriter(writer);
 
         Set<String> loadedOntologyIds = new HashSet<>();
+        long startTime4 = System.nanoTime();
+        try(ExecutorService service = Executors.newCachedThreadPool()){
+			for (var ontoConfig : mergedConfigs.values()) {
 
-        for(var ontoConfig : mergedConfigs.values()) {
+				String ontologyId = ((String) ontoConfig.get("id")).toLowerCase();
+				logger.info("--- Loading ontology: {}", ontologyId);
 
-            String ontologyId = ((String)ontoConfig.get("id")).toLowerCase();
-            logger.info("--- Loading ontology: {}", ontologyId);
-
-            try {
-
-                OntologyGraph graph = new OntologyGraph(ontoConfig, bLoadLocalFiles, bNoDates, downloadedPath, convertToRDF);
-
-                if(graph.ontologyNode == null) {
-                    logger.error("No Ontology node found; nothing will be written");
-                    continue;
-                }
-
-                long startTime3 = System.nanoTime();
-                logger.info("Writing ontology: {}", ontologyId);
-                graph.write(writer);
-                long endTime3 = System.nanoTime();
-                logger.info("Write ontology {} : {}", ontologyId,((endTime3 - startTime3) / 1000 / 1000 / 1000));
-
-                loadedOntologyIds.add(ontologyId);
-
-            } catch(Throwable t) {
-                 t.printStackTrace();
-            }
+				
+				  Worker ontologyParser = new Worker(ontoConfig, bLoadLocalFiles, bNoDates,
+				  downloadedPath, convertToRDF, ontologyId);
+				  
+				  //ontologyParser.setWriterWrapper(writerWrapper);
+				  
+				  service.execute(ontologyParser);
+				 
+				
+				  /*try {
+				  
+				  OntologyGraph graph = new OntologyGraph(ontoConfig, bLoadLocalFiles,
+				  bNoDates, downloadedPath, convertToRDF);
+				  
+				  if(graph.ontologyNode == null) {
+				  logger.error("No Ontology node found; nothing will be written"); continue; }
+				  
+				  long startTime3 = System.nanoTime(); logger.info("Writing ontology: {}",
+				  ontologyId); graph.write(writer); long endTime3 = System.nanoTime();
+				  logger.info("Write ontology {} : {}", ontologyId,((endTime3 - startTime3) /
+				  1000 / 1000 / 1000));
+				  
+				  loadedOntologyIds.add(ontologyId);
+				  
+				  } catch(Throwable t) { t.printStackTrace(); }
+				 */
+			}
         }
+        JsonWriter writer= writerWrapper.getWriter();
+        long endTime4 = System.nanoTime();
+        logger.info("Write ontology {} : {}",(endTime4 - startTime4), ((endTime4 - startTime4) / 1000 / 1000 / 1000));
 
         if(mergeOutputWith != null) {
 
@@ -234,11 +255,12 @@ public class RDF2JSON {
             logger.info("time to merge output with previous run: {} s", ((endTime - startTime) / 1000 / 1000 / 1000));
         }
 
-
-        writer.endArray();
-        writer.endObject();
-
-        writer.close();
+        //writerWrapper.endWriter();
+		/*
+		 * writer.endArray(); writer.endObject();
+		 * 
+		 * writer.close();
+		 */
     }
 
 

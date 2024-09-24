@@ -114,7 +114,9 @@ public class ImportCSV {
             if (file.getName().endsWith("_edges.csv")){
                 try {
                     Path path = Paths.get(file.getAbsolutePath());
-                    noofRelationships = Files.lines(path).count() -1;
+                    int noofRecords = (int) Files.lines(path).count() - 1;
+                    noofRelationships += noofRecords;
+                    System.out.println(noofRecords+" records has been identified in "+file.getName());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -127,6 +129,8 @@ public class ImportCSV {
                 noofNodes += noofRecords;
                 if (noofRecords != noofNewLines)
                     System.out.println("Warning: "+noofRecords+" records has been identified in contrast to "+noofNewLines+" new lines in "+file.getName());
+                else
+                    System.out.println(noofRecords+" records has been identified in "+file.getName());
             }
         }
         System.out.println("Total number of nodes that will be ingested in csv: " + noofNodes);

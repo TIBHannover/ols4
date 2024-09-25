@@ -20,7 +20,7 @@ import static uk.ac.ebi.spot.csv2neo.QueryGeneration.generateProps;
 public class NodeCreationQueryTask implements Runnable {
 
     private final Driver driver;
-    private final CountDownLatch latch;
+    private CountDownLatch latch;
     private final List<CSVRecord> records;
     private final String[] headers;
     private final File file;
@@ -50,11 +50,16 @@ public class NodeCreationQueryTask implements Runnable {
                         }
                         return true;
                     });
-                    latch.countDown();
                 }
             } catch(Exception e) {
                 System.out.println("Attempt "+i+" error: "+e.getMessage());
             }
         }
+        latch.countDown();
+        System.out.println("There are "+latch.getCount()+" remaining node batches.");
+        if (success)
+            System.out.println(records.size()+" nodes has been successfully added from "+file.getName());
+        else
+            System.out.println("Warning: "+records.size()+" nodes failed to be added from "+file.getName());
     }
 }

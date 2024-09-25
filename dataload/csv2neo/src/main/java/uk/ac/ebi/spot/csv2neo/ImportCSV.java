@@ -106,7 +106,8 @@ public class ImportCSV {
         System.out.println("Total number of ingested nodes is "+noofRelationships);
     }
 
-    public static void displayCSV(List<File> files) throws IOException {
+    public static Map<String,Integer> displayCSV(List<File> files) throws IOException {
+        Map<String,Integer> records = new HashMap<String, Integer>();
         System.out.println("---Ingestion Plan---");
         long noofRelationships = 0;
         long noofNodes = 0;
@@ -115,6 +116,7 @@ public class ImportCSV {
                 try {
                     Path path = Paths.get(file.getAbsolutePath());
                     int noofRecords = (int) Files.lines(path).count() - 1;
+                    records.put(file.getName(),noofRecords);
                     noofRelationships += noofRecords;
                     System.out.println(noofRecords+" records has been identified in "+file.getName());
                 } catch (Exception e) {
@@ -126,6 +128,7 @@ public class ImportCSV {
                 org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
                 int noofRecords = csvParser.getRecords().size();
                 int noofNewLines = (int) Files.lines(path).count() -1;
+                records.put(file.getName(),noofRecords);
                 noofNodes += noofRecords;
                 if (noofRecords != noofNewLines)
                     System.out.println("Warning: "+noofRecords+" records has been identified in contrast to "+noofNewLines+" new lines in "+file.getName());
@@ -135,6 +138,7 @@ public class ImportCSV {
         }
         System.out.println("Total number of nodes that will be ingested in csv: " + noofNodes);
         System.out.println("Total Number of relationships that will be ingested in csv: " + noofRelationships);
+        return records;
     }
 
     public static <T> List<List<T>> splitList(List<T> list, int batchSize) {

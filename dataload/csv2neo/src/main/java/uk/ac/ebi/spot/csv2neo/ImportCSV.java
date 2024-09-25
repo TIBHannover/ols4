@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -80,30 +81,43 @@ public class ImportCSV {
     }
 
     /*
-     * File should be the _ontologies.csv file
+     * Files should be the _ontologies.csv files
      * */
-    public static void displayIngested(File file, Driver driver) throws IOException {
+    public static Map<String,Integer> displayIngested(List<File> files, Driver driver) throws IOException {
         System.out.println("---Ingestion Summary---");
-        long noofRelationships = 0;
-        long noofNodes = 0;
-        Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
-        org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
-        List<CSVRecord> records = csvParser.getRecords();
-        for (CSVRecord record : records){
-            try (Session session = driver.session()){
-                String ontology = record.get(0).split("\\+")[0];
-                var resultN = session.run(countAllNodesOfOntology(ontology));
-                int nodes = resultN.next().get("nodes").asInt();
-                noofNodes += nodes;
-                System.out.println("Number of nodes in ontology "+ontology+" is "+nodes);
-                var resultR = session.run(countAllRelationshipsOfOntology(ontology));
-                int relationships = resultR.next().get("relationships").asInt();
-                noofRelationships += relationships;
-                System.out.println("Number of relationships in ontology "+ontology+" is "+relationships);
+        Map<String,Integer> countRecords = new HashMap<String,Integer>();
+        for (File file : files){
+            Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+            List<CSVRecord> records = csvParser.getRecords();
+            for (CSVRecord record : records){
+                try (Session session = driver.session()){
+                    String ontology = record.get(0).split("\\+")[0];
+                    var resultN = session.run(countNodesOfOntology(ontology,"ontology"));
+                    int nodes = resultN.next().get("nodes").asInt();
+                    countRecords.put(ontology+"_ontologies.csv",nodes);
+                    System.out.println(nodes+" ontologies are ingested from "+ontology);
+                    resultN = session.run(countNodesOfOntology(ontology,"property"));
+                    nodes = resultN.next().get("nodes").asInt();
+                    countRecords.put(ontology+"_properties.csv",nodes);
+                    System.out.println(nodes+" properties are ingested from "+ontology);
+                    resultN = session.run(countNodesOfOntology(ontology,"individual"));
+                    nodes = resultN.next().get("nodes").asInt();
+                    countRecords.put(ontology+"_individuals.csv",nodes);
+                    System.out.println(nodes+" individuals are ingested from "+ontology);
+                    resultN = session.run(countNodesOfOntology(ontology,"class"));
+                    nodes = resultN.next().get("nodes").asInt();
+                    countRecords.put(ontology+"_classes.csv",nodes);
+                    System.out.println(nodes+" classes are ingested from "+ontology);
+                    var resultR = session.run(countAllRelationshipsOfOntology(ontology));
+                    int relationships = resultR.next().get("relationships").asInt();
+                    countRecords.put(ontology+"_relationships.csv",relationships);
+                    System.out.println(relationships+" relationships are ingested from "+ontology);
+                }
             }
+
         }
-        System.out.println("Total number of ingested nodes is "+noofNodes);
-        System.out.println("Total number of ingested nodes is "+noofRelationships);
+        return countRecords;
     }
 
     public static Map<String,Integer> displayCSV(List<File> files) throws IOException {
@@ -210,10 +224,16 @@ public class ImportCSV {
                     if (cmd.getOptionValue("m").equals("i")){
                         File dir = new File(directory);
                         List<File> files = listFiles(dir.listFiles());
-                        displayCSV(files);
+                        Map<String,Integer> planned = displayCSV(files);
                         executeBatchedNodeQueries(files,driver,batchSize,poolSize,attempts);
                         executeBatchedRelationshipQueries(files,driver,batchSize, poolSize,attempts);
-                        displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).findFirst().get(),driver);
+                        Map<String,Integer> ingested = displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).collect(Collectors.toUnmodifiableList()), driver);
+
+                        Set<String> keys = planned.keySet();
+                        keys.addAll(ingested.keySet());
+                        for (String key : keys){
+                            System.out.println("Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
+                        }
                     } else if (cmd.getOptionValue("m").equals("rm")){
                         for(String ontology : ontologyPrefixes.split(",")){
                             try {

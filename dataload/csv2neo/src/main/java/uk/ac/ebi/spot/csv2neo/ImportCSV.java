@@ -229,9 +229,10 @@ public class ImportCSV {
                         executeBatchedRelationshipQueries(files,driver,batchSize, poolSize,attempts);
                         Map<String,Integer> ingested = displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).collect(Collectors.toUnmodifiableList()), driver);
 
-                        Set<String> keys = planned.keySet();
-                        keys.addAll(ingested.keySet());
-                        for (String key : keys){
+                        Set<String> keysP = planned.keySet();
+                        Set<String> keysI = ingested.keySet();
+                        keysP.addAll(keysI);
+                        for (String key : keysP){
                             System.out.println("Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
                         }
                     } else if (cmd.getOptionValue("m").equals("rm")){

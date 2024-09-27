@@ -67,7 +67,21 @@ public class QueryGeneration {
     }
 
     public static String generateOntologyDeleteQuery(String ontologyPrefix){
-        return "MATCH (n) WHERE n.id STARTS WITH '"+ontologyPrefix+"' DETACH DELETE n";
+        // Computationally demanding version that show deleted relationships as well as deleted nodes.
+        // MATCH (n) WHERE n.id STARTS WITH 'ontologyPrefix' OPTIONAL MATCH (n)-[r]-() WITH n, collect(r) AS relationships DETACH DELETE n RETURN COUNT(n) AS deletedCount, relationships
+        return "MATCH (n) WHERE n.id STARTS WITH '"+ontologyPrefix+"+' AND '"+ontologyPrefix+"' IN n.ontologyId WITH n DETACH DELETE n RETURN COUNT(n) AS deletedCount";
+    }
+
+    public static String generateOntologyDeleteQuery(String ontologyPrefix, String label){
+        return "MATCH (n:`"+label+"`) WHERE n.id STARTS WITH '"+ontologyPrefix+"+' AND '"+ontologyPrefix+"' IN n.ontologyId WITH n DETACH DELETE n RETURN COUNT(n) AS deletedCount";
+    }
+
+    public static String generateOntologyDeleteQuery(String ontologyPrefix, int limit){
+        return "MATCH (n) WHERE n.id STARTS WITH '"+ontologyPrefix+"+' AND '"+ontologyPrefix+"' IN n.ontologyId WITH n SKIP 0 LIMIT "+limit+" DETACH DELETE n RETURN COUNT(n) AS deletedCount";
+    }
+
+    public static String generateOntologyDeleteQuery(String ontologyPrefix, String label, int limit){
+        return "MATCH (n:`"+label+"`) WHERE n.id STARTS WITH '"+ontologyPrefix+"+' AND '"+ontologyPrefix+"' IN n.ontologyId WITH n SKIP 0 LIMIT "+limit+" DETACH DELETE n RETURN COUNT(n) AS deletedCount";
     }
 
     public static String countAllRelationshipsOfOntology(String ontologyPrefix) {

@@ -163,6 +163,18 @@ public class ImportCSV {
         return subLists;
     }
 
+    public static int deleteFromSession(Session session, String deletionQuery){
+        int deletedCount = 0;
+        try {
+            System.out.println(deletionQuery);
+            var resultN = session.run(deletionQuery);
+            deletedCount = resultN.next().get("deletedCount").asInt();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return deletedCount;
+    }
+
     private static Options getOptions() {
         Options options = new Options();
         options.addOption("m", "mode",true, "ingest(i), remove(rm) or display(d) ontologies");
@@ -176,6 +188,8 @@ public class ImportCSV {
         options.addOption("bs", "batch_size",true, "batch size for splitting queries into multiple transactions.");
         options.addOption("ps", "pool_size",true, "number of threads in the pool");
         options.addOption("t", "attempts",true, "number of attempts for a particular batch");
+        options.addOption("l", "limit",true, "number of nodes to be removed");
+        options.addOption("lb", "label",true, "node label filter for removal");
         return options;
     }
 
@@ -192,6 +206,8 @@ public class ImportCSV {
         final int batchSize = cmd.hasOption("bs") && Integer.parseInt(cmd.getOptionValue("bs"))>0 ? Integer.parseInt(cmd.getOptionValue("bs")) : 1000;
         final int poolSize = cmd.hasOption("ps") && Integer.parseInt(cmd.getOptionValue("ps"))>0 ? Integer.parseInt(cmd.getOptionValue("ps")) : 20;
         final int attempts = cmd.hasOption("t") ? Integer.parseInt(cmd.getOptionValue("t")) : 5;
+        final int limit = cmd.hasOption("l") ? Integer.parseInt(cmd.getOptionValue("l")) : 1000;
+        final String label = cmd.hasOption("lb") ? cmd.getOptionValue("lb") : "OntologyEntity";
 
         try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
             driver.verifyConnectivity();
@@ -228,7 +244,6 @@ public class ImportCSV {
                         executeBatchedNodeQueries(files,driver,batchSize,poolSize,attempts);
                         executeBatchedRelationshipQueries(files,driver,batchSize, poolSize,attempts);
                         Map<String,Integer> ingested = displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).collect(Collectors.toUnmodifiableList()), driver);
-
                         Set<String> keys = new HashSet<>();
                         keys.addAll(planned.keySet());
                         keys.addAll(ingested.keySet());
@@ -236,11 +251,25 @@ public class ImportCSV {
                             System.out.println("For Key: "+key+" - Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
                         }
                     } else if (cmd.getOptionValue("m").equals("rm")){
-                        for(String ontology : ontologyPrefixes.split(",")){
-                            try {
-                                session.run(generateOntologyDeleteQuery(ontology));
-                            } catch (Exception e){
-                                e.printStackTrace();
+                        if (!cmd.hasOption("l") && !cmd.hasOption("lb")){
+                            for(String ontology : ontologyPrefixes.split(",")){
+                                int deletedCount = deleteFromSession(session,generateOntologyDeleteQuery(ontology));
+                                System.out.println(deletedCount+" number of nodes and respective relationships were deleted.");
+                            }
+                        } else if (cmd.hasOption("l") && !cmd.hasOption("lb")){
+                            for(String ontology : ontologyPrefixes.split(",")){
+                                int deletedCount = deleteFromSession(session,generateOntologyDeleteQuery(ontology,limit));
+                                System.out.println(deletedCount+" number of nodes and respective relationships were deleted.");
+                            }
+                        } else if (!cmd.hasOption("l") && cmd.hasOption("lb")){
+                            for(String ontology : ontologyPrefixes.split(",")){
+                                int deletedCount = deleteFromSession(session,generateOntologyDeleteQuery(ontology,label));
+                                System.out.println(deletedCount+" number of nodes and respective relationships were deleted.");
+                            }
+                        } else {
+                            for(String ontology : ontologyPrefixes.split(",")){
+                                int deletedCount = deleteFromSession(session,generateOntologyDeleteQuery(ontology,label,limit));
+                                System.out.println(deletedCount+" number of nodes and respective relationships were deleted.");
                             }
                         }
                     } else if (cmd.getOptionValue("m").equals("d")){

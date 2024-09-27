@@ -111,8 +111,8 @@ public class ImportCSV {
                     System.out.println(nodes+" classes are ingested from "+ontology);
                     var resultR = session.run(countAllRelationshipsOfOntology(ontology));
                     int relationships = resultR.next().get("relationships").asInt();
-                    countRecords.put(ontology+"_relationships.csv",relationships);
-                    System.out.println(relationships+" relationships are ingested from "+ontology);
+                    countRecords.put(ontology+"_edges.csv",relationships);
+                    System.out.println(relationships+" edges are ingested from "+ontology);
                 }
             }
 
@@ -229,11 +229,11 @@ public class ImportCSV {
                         executeBatchedRelationshipQueries(files,driver,batchSize, poolSize,attempts);
                         Map<String,Integer> ingested = displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).collect(Collectors.toUnmodifiableList()), driver);
 
-                        Set<String> keysP = planned.keySet();
-                        Set<String> keysI = ingested.keySet();
-                        keysP.addAll(keysI);
-                        for (String key : keysP){
-                            System.out.println("Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
+                        Set<String> keys = new HashSet<>();
+                        keys.addAll(planned.keySet());
+                        keys.addAll(ingested.keySet());
+                        for (String key : keys){
+                            System.out.println("For Key: "+key+" - Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
                         }
                     } else if (cmd.getOptionValue("m").equals("rm")){
                         for(String ontology : ontologyPrefixes.split(",")){

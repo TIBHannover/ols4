@@ -47,11 +47,16 @@ public class RelationShipCreationQueryTask implements Runnable {
                         }
                         return true;
                     });
-                    latch.countDown();
                 }
             } catch(Exception e){
                 System.out.println("Attempt "+i+" error: "+e.getMessage());
             }
         }
+        latch.countDown();
+        System.out.println("There are "+latch.getCount()+" remaining relationship batches.");
+        if (success)
+            System.out.println(records.size()+" relationships has been successfully added from "+file.getName());
+        else
+            System.out.println("Warning: "+records.size()+" relationships failed to be added from "+file.getName());
     }
 }

@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -80,33 +81,47 @@ public class ImportCSV {
     }
 
     /*
-     * File should be the _ontologies.csv file
+     * Files should be the _ontologies.csv files
      * */
-    public static void displayIngested(File file, Driver driver) throws IOException {
+    public static Map<String,Integer> displayIngested(List<File> files, Driver driver) throws IOException {
         System.out.println("---Ingestion Summary---");
-        long noofRelationships = 0;
-        long noofNodes = 0;
-        Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
-        org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
-        List<CSVRecord> records = csvParser.getRecords();
-        for (CSVRecord record : records){
-            try (Session session = driver.session()){
-                String ontology = record.get(0).split("\\+")[0];
-                var resultN = session.run(countAllNodesOfOntology(ontology));
-                int nodes = resultN.next().get("nodes").asInt();
-                noofNodes += nodes;
-                System.out.println("Number of nodes in ontology "+ontology+" is "+nodes);
-                var resultR = session.run(countAllRelationshipsOfOntology(ontology));
-                int relationships = resultR.next().get("relationships").asInt();
-                noofRelationships += relationships;
-                System.out.println("Number of relationships in ontology "+ontology+" is "+relationships);
+        Map<String,Integer> countRecords = new HashMap<String,Integer>();
+        for (File file : files){
+            Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+            List<CSVRecord> records = csvParser.getRecords();
+            for (CSVRecord record : records){
+                try (Session session = driver.session()){
+                    String ontology = record.get(0).split("\\+")[0];
+                    var resultN = session.run(countNodesOfOntology(ontology,"ontology"));
+                    int nodes = resultN.next().get("nodes").asInt();
+                    countRecords.put(ontology+"_ontologies.csv",nodes);
+                    System.out.println(nodes+" ontologies are ingested from "+ontology);
+                    resultN = session.run(countNodesOfOntology(ontology,"property"));
+                    nodes = resultN.next().get("nodes").asInt();
+                    countRecords.put(ontology+"_properties.csv",nodes);
+                    System.out.println(nodes+" properties are ingested from "+ontology);
+                    resultN = session.run(countNodesOfOntology(ontology,"individual"));
+                    nodes = resultN.next().get("nodes").asInt();
+                    countRecords.put(ontology+"_individuals.csv",nodes);
+                    System.out.println(nodes+" individuals are ingested from "+ontology);
+                    resultN = session.run(countNodesOfOntology(ontology,"class"));
+                    nodes = resultN.next().get("nodes").asInt();
+                    countRecords.put(ontology+"_classes.csv",nodes);
+                    System.out.println(nodes+" classes are ingested from "+ontology);
+                    var resultR = session.run(countAllRelationshipsOfOntology(ontology));
+                    int relationships = resultR.next().get("relationships").asInt();
+                    countRecords.put(ontology+"_edges.csv",relationships);
+                    System.out.println(relationships+" edges are ingested from "+ontology);
+                }
             }
+
         }
-        System.out.println("Total number of ingested nodes is "+noofNodes);
-        System.out.println("Total number of ingested nodes is "+noofRelationships);
+        return countRecords;
     }
 
-    public static void displayCSV(List<File> files) throws IOException {
+    public static Map<String,Integer> displayCSV(List<File> files) throws IOException {
+        Map<String,Integer> records = new HashMap<String, Integer>();
         System.out.println("---Ingestion Plan---");
         long noofRelationships = 0;
         long noofNodes = 0;
@@ -114,7 +129,10 @@ public class ImportCSV {
             if (file.getName().endsWith("_edges.csv")){
                 try {
                     Path path = Paths.get(file.getAbsolutePath());
-                    noofRelationships = Files.lines(path).count() -1;
+                    int noofRecords = (int) Files.lines(path).count() - 1;
+                    records.put(file.getName(),noofRecords);
+                    noofRelationships += noofRecords;
+                    System.out.println(noofRecords+" records has been identified in "+file.getName());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -124,13 +142,17 @@ public class ImportCSV {
                 org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
                 int noofRecords = csvParser.getRecords().size();
                 int noofNewLines = (int) Files.lines(path).count() -1;
+                records.put(file.getName(),noofRecords);
                 noofNodes += noofRecords;
                 if (noofRecords != noofNewLines)
                     System.out.println("Warning: "+noofRecords+" records has been identified in contrast to "+noofNewLines+" new lines in "+file.getName());
+                else
+                    System.out.println(noofRecords+" records has been identified in "+file.getName());
             }
         }
         System.out.println("Total number of nodes that will be ingested in csv: " + noofNodes);
         System.out.println("Total Number of relationships that will be ingested in csv: " + noofRelationships);
+        return records;
     }
 
     public static <T> List<List<T>> splitList(List<T> list, int batchSize) {
@@ -139,6 +161,18 @@ public class ImportCSV {
             subLists.add(new ArrayList<>(list.subList(i, Math.min(i + batchSize, list.size()))));
         }
         return subLists;
+    }
+
+    public static int deleteFromSession(Session session, String deletionQuery){
+        int deletedCount = 0;
+        try {
+            System.out.println(deletionQuery);
+            var resultN = session.run(deletionQuery);
+            deletedCount = resultN.next().get("deletedCount").asInt();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return deletedCount;
     }
 
     private static Options getOptions() {
@@ -154,6 +188,8 @@ public class ImportCSV {
         options.addOption("bs", "batch_size",true, "batch size for splitting queries into multiple transactions.");
         options.addOption("ps", "pool_size",true, "number of threads in the pool");
         options.addOption("t", "attempts",true, "number of attempts for a particular batch");
+        options.addOption("l", "limit",true, "number of nodes to be removed");
+        options.addOption("lb", "label",true, "node label filter for removal");
         return options;
     }
 
@@ -170,6 +206,8 @@ public class ImportCSV {
         final int batchSize = cmd.hasOption("bs") && Integer.parseInt(cmd.getOptionValue("bs"))>0 ? Integer.parseInt(cmd.getOptionValue("bs")) : 1000;
         final int poolSize = cmd.hasOption("ps") && Integer.parseInt(cmd.getOptionValue("ps"))>0 ? Integer.parseInt(cmd.getOptionValue("ps")) : 20;
         final int attempts = cmd.hasOption("t") ? Integer.parseInt(cmd.getOptionValue("t")) : 5;
+        final int limit = cmd.hasOption("l") ? Integer.parseInt(cmd.getOptionValue("l")) : 1000;
+        final String label = cmd.hasOption("lb") ? cmd.getOptionValue("lb") : "OntologyEntity";
 
         try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
             driver.verifyConnectivity();
@@ -202,16 +240,36 @@ public class ImportCSV {
                     if (cmd.getOptionValue("m").equals("i")){
                         File dir = new File(directory);
                         List<File> files = listFiles(dir.listFiles());
-                        displayCSV(files);
+                        Map<String,Integer> planned = displayCSV(files);
                         executeBatchedNodeQueries(files,driver,batchSize,poolSize,attempts);
                         executeBatchedRelationshipQueries(files,driver,batchSize, poolSize,attempts);
-                        displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).findFirst().get(),driver);
+                        Map<String,Integer> ingested = displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).collect(Collectors.toUnmodifiableList()), driver);
+                        Set<String> keys = new HashSet<>();
+                        keys.addAll(planned.keySet());
+                        keys.addAll(ingested.keySet());
+                        for (String key : keys){
+                            System.out.println("For Key: "+key+" - Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
+                        }
                     } else if (cmd.getOptionValue("m").equals("rm")){
-                        for(String ontology : ontologyPrefixes.split(",")){
-                            try {
-                                session.run(generateOntologyDeleteQuery(ontology));
-                            } catch (Exception e){
-                                e.printStackTrace();
+                        if (!cmd.hasOption("l") && !cmd.hasOption("lb")){
+                            for(String ontology : ontologyPrefixes.split(",")){
+                                int deletedCount = deleteFromSession(session,generateOntologyDeleteQuery(ontology));
+                                System.out.println(deletedCount+" number of nodes and respective relationships were deleted.");
+                            }
+                        } else if (cmd.hasOption("l") && !cmd.hasOption("lb")){
+                            for(String ontology : ontologyPrefixes.split(",")){
+                                int deletedCount = deleteFromSession(session,generateOntologyDeleteQuery(ontology,limit));
+                                System.out.println(deletedCount+" number of nodes and respective relationships were deleted.");
+                            }
+                        } else if (!cmd.hasOption("l") && cmd.hasOption("lb")){
+                            for(String ontology : ontologyPrefixes.split(",")){
+                                int deletedCount = deleteFromSession(session,generateOntologyDeleteQuery(ontology,label));
+                                System.out.println(deletedCount+" number of nodes and respective relationships were deleted.");
+                            }
+                        } else {
+                            for(String ontology : ontologyPrefixes.split(",")){
+                                int deletedCount = deleteFromSession(session,generateOntologyDeleteQuery(ontology,label,limit));
+                                System.out.println(deletedCount+" number of nodes and respective relationships were deleted.");
                             }
                         }
                     } else if (cmd.getOptionValue("m").equals("d")){

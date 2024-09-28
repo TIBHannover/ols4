@@ -205,8 +205,8 @@ public class OntologyGraph implements StreamRDF {
 
             logger.debug("import: {}", importUrl);
             parseRDF(importUrl, convertToRDF,config.getOrDefault("id","result").toString()+"_"+removeExtension((importUrl.substring(importUrl.lastIndexOf('/') + 1))));
-            if (importUrls.size() > 0 && importUrl.equals(importUrls.get(0)))
-                importUrls.remove(0);
+            if (importUrls.size() > 0 && importUrls.contains(importUrl))
+                importUrls.remove(importUrl);
         }
 
         // Now the imports are done, mark everything else as imported

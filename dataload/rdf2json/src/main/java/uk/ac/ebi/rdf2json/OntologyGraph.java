@@ -110,7 +110,7 @@ public class OntologyGraph implements StreamRDF {
                             url = Paths.get(resourceDirectory.resolve(id+conversion.getExtConverted()).toUri()).toString();
                             logger.info("url of the converted ontology: "+url);
                             sourceFileTimestamp = System.currentTimeMillis();
-                            createParser(null).source(url).parse(this);
+                            createParser(Lang.RDFXML).source(url).parse(this);
                         } else {
                             logger.debug("You may alternatively try to use convertToRDF mode to parse your ontology");
                             e.printStackTrace();

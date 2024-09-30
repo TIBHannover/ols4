@@ -199,14 +199,16 @@ public class OntologyGraph implements StreamRDF {
         }
 
 
+        List<String> imported = new ArrayList<>();
         while(importUrls.size() > 0) {
             String importUrl = importUrls.get(0);
             importUrls.remove(0);
+            if (imported.contains(importUrl))
+                continue;
 
             logger.debug("import: {}", importUrl);
             parseRDF(importUrl, convertToRDF,config.getOrDefault("id","result").toString()+"_"+removeExtension((importUrl.substring(importUrl.lastIndexOf('/') + 1))));
-            if (importUrls.size() > 0 && importUrls.contains(importUrl))
-                importUrls.remove(importUrl);
+            imported.add(importUrl);
         }
 
         // Now the imports are done, mark everything else as imported

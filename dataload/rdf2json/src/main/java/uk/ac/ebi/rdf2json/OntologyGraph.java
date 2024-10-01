@@ -110,7 +110,7 @@ public class OntologyGraph implements StreamRDF {
                             url = Paths.get(resourceDirectory.resolve(id+conversion.getExtConverted()).toUri()).toString();
                             logger.info("url of the converted ontology: "+url);
                             sourceFileTimestamp = System.currentTimeMillis();
-                            createParser(null).source(url).parse(this);
+                            createParser(Lang.RDFXML).source(url).parse(this);
                         } else {
                             logger.debug("You may alternatively try to use convertToRDF mode to parse your ontology");
                             e.printStackTrace();
@@ -199,12 +199,16 @@ public class OntologyGraph implements StreamRDF {
         }
 
 
+        List<String> imported = new ArrayList<>();
         while(importUrls.size() > 0) {
             String importUrl = importUrls.get(0);
             importUrls.remove(0);
+            if (imported.contains(importUrl))
+                continue;
 
             logger.debug("import: {}", importUrl);
             parseRDF(importUrl, convertToRDF,config.getOrDefault("id","result").toString()+"_"+removeExtension((importUrl.substring(importUrl.lastIndexOf('/') + 1))));
+            imported.add(importUrl);
         }
 
         // Now the imports are done, mark everything else as imported

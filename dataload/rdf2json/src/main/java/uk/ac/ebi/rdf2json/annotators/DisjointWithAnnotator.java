@@ -52,13 +52,13 @@ public class DisjointWithAnnotator {
 						}
 					}
 				}
-			
+
 			} else if (c.types.contains(OntologyNode.NodeType.ALL_DIFFERENT)) {
 
 				PropertyValue membersList  = c.properties.getPropertyValue("http://www.w3.org/2002/07/owl#distinctMembers");
-				List<PropertyValue> members = RdfListEvaluator.evaluateRdfList(graph.getNodeForPropertyValue(membersList), graph);
 				if (membersList != null) {
-				List<OntologyNode> individualNodes = members.stream()
+					List<PropertyValue> members = RdfListEvaluator.evaluateRdfList(graph.getNodeForPropertyValue(membersList), graph);
+					List<OntologyNode> individualNodes = members.stream()
 					.map(val -> graph.getNodeForPropertyValue(val))
 					.filter(val -> val != null)
 					.collect(Collectors.toList());

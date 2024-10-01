@@ -215,7 +215,8 @@ public class RelatedAnnotator {
 		List<OntologyNode> fillerIndividuals =
 				RdfListEvaluator.evaluateRdfList(fillerNode, graph)
 						.stream()
-						.map(propertyValue -> graph.nodes.get( ((PropertyValueURI) propertyValue).getUri() ))
+						.map(graph::getNodeForPropertyValue)
+						.filter(Objects::nonNull)
 						.collect(Collectors.toList());
 
 		for(OntologyNode individualNode : fillerIndividuals) {
@@ -269,7 +270,7 @@ public class RelatedAnnotator {
 			}
 
 			return;
-		} 
+		}
 
 		// TODO: what to do with data values?
 	}

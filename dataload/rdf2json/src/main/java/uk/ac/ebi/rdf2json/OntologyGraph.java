@@ -933,6 +933,10 @@ public class OntologyGraph implements StreamRDF {
                 return nodes.get( ((PropertyValueURI) value).getUri() );
             case BNODE:
                 return nodes.get( ((PropertyValueBNode) value).getId() );
+            case LITERAL:
+                return nodes.get( ((PropertyValueLiteral) value).getValue() );
+            case RELATED:
+                return ((PropertyValueRelated) value).getFiller();
             default:
                 throw new RuntimeException("not a node");
         }

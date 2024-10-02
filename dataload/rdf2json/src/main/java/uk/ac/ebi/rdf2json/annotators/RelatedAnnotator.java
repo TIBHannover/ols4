@@ -208,22 +208,36 @@ public class RelatedAnnotator {
 	private static void annotateRelated_Class_subClassOf_Restriction_someValuesFrom_oneOf(
 			OntologyNode classNode, String propertyUri, OntologyNode fillerRestriction, PropertyValue filler, Set<String> ontologyBaseUris, String preferredPrefix, OntologyGraph graph) {
 
-		// The filler is an RDF list of Individuals
-
 		OntologyNode fillerNode = graph.nodes.get( ((PropertyValueBNode) filler).getId() );
 
-		List<OntologyNode> fillerIndividuals =
-				RdfListEvaluator.evaluateRdfList(fillerNode, graph)
-						.stream()
-						.map(propertyValue -> graph.nodes.get( ((PropertyValueURI) propertyValue).getUri() ))
-						.collect(Collectors.toList());
+		logger.info("filler node uri: "+fillerNode.uri);
 
-		for(OntologyNode individualNode : fillerIndividuals) {
-			classNode.properties.addProperty("relatedTo",
-					new PropertyValueRelated(fillerNode, propertyUri, individualNode));
-			individualNode.properties.addProperty("relatedFrom",
-					new PropertyValueRelated(fillerNode, propertyUri, classNode));
+		List<OntologyNode> fillerIndividuals = new ArrayList<>();
+		if(fillerNode != null){
+			for (PropertyValue propertyValue : RdfListEvaluator.evaluateRdfList(fillerNode, graph)){
+				if (propertyValue != null){
+					OntologyNode ontologyNode = null;
+					try {
+						graph.getNodeForPropertyValue(propertyValue);
+						logger.info("success property value");
+					} catch (Exception e){
+						logger.error("fail property value");
+					}
+					if (ontologyNode != null && ontologyNode.uri != null){
+						logger.info("ontology node uri: "+ontologyNode.uri);
+						fillerIndividuals.add(ontologyNode);
+					}
+				}
+			}
+
+			for(OntologyNode individualNode : fillerIndividuals) {
+				classNode.properties.addProperty("relatedTo",
+						new PropertyValueRelated(fillerNode, propertyUri, individualNode));
+				individualNode.properties.addProperty("relatedFrom",
+						new PropertyValueRelated(fillerNode, propertyUri, classNode));
+			}
 		}
+
 	}
 
 	private static void annotateRelated_Class_subClassOf_Restriction_someValuesFrom_intersectionOf(
@@ -269,7 +283,7 @@ public class RelatedAnnotator {
 			}
 
 			return;
-		} 
+		}
 
 		// TODO: what to do with data values?
 	}

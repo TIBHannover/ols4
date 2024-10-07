@@ -2,16 +2,16 @@ package uk.ac.ebi.rdf2json;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.gson.stream.JsonWriter;
 
 public class JsonWriterWrapper {
 	private static JsonWriterWrapper single_instance = null;
 	private JsonWriter writer;
-	private String outputFilePath;
+	private ReentrantLock lock = new ReentrantLock();
 	
 	private JsonWriterWrapper(String outputFilePath) throws IOException {
-		this.outputFilePath = outputFilePath;
 		this.writer = new JsonWriter(new FileWriter(outputFilePath));
 	}
 
@@ -26,29 +26,32 @@ public class JsonWriterWrapper {
 	public JsonWriter getWriter() {
 		return writer;
 	}
-
-	public void setWriter(JsonWriter writer) {
-		this.writer = writer;
-	}
 	
 	public void initWriter() throws IOException {
-		writer = getWriter();
 		writer.setIndent("  ");
 
         writer.beginObject();
 
         writer.name("ontologies");
+        
         writer.beginArray();
-        setWriter(writer);
 	}
 	
 	public void endWriter() throws IOException {
-		writer = getWriter();
 		writer.endArray();
+		
         writer.endObject();
 
         writer.close();
-        setWriter(writer);
+	}
+	
+	public void graphWriter(OntologyGraph graph) throws Throwable {
+		lock.lock();
+		try {
+			graph.write(writer);
+		}finally {
+			lock.unlock();
+		}
 	}
 	
 	

@@ -2,7 +2,7 @@ package uk.ac.ebi.rdf2json;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ public class Worker implements Runnable {
 
 	private static final Logger logger = LoggerFactory.getLogger(Worker.class);
 
-	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	private ReentrantLock lock = new ReentrantLock();
 
 	private String ontologyId;
 	private boolean loadLocalFiles;
@@ -34,39 +34,25 @@ public class Worker implements Runnable {
 		this.ontologyId = ontologyId;
 	}
 
-	public JsonWriterWrapper getWriterWrapper() {
-		return writerWrapper;
-	}
-
-	public void setWriterWrapper(JsonWriterWrapper writerWrapper) {
-		this.writerWrapper = writerWrapper;
-	}
-
 	@Override
 	public void run() {
 		try {
-			logger.info("Ontology parsing by thread: {}", Thread.currentThread().getName());
-			//OntologyGraph graph = new OntologyGraph(config, loadLocalFiles, noDates, downloadedPath, convertToRDF);
-
-			
-			// lock.writeLock().lock();
-			synchronized (lock) {
-				OntologyGraph graph = new OntologyGraph(config, loadLocalFiles, noDates, downloadedPath, convertToRDF);
-				if (graph.ontologyNode == null) {
-					logger.error("No Ontology node found; nothing will be written");
+			OntologyGraph graph = new OntologyGraph(config, loadLocalFiles, noDates, downloadedPath, convertToRDF);
+			System.out.println("graph is ready");
+			if (graph.ontologyNode == null) {
+				logger.error("No Ontology node found; nothing will be written");
+			}else {
+				lock.lock();
+				try {
+					logger.info("Ontology {} parsing by thread: {}",ontologyId, Thread.currentThread().getName());
+					writerWrapper.graphWriter(graph);
+				} finally {
+					logger.info("Ontology {} is written by thread: {}",ontologyId, Thread.currentThread().getName());
+					lock.unlock();
 				}
-				System.out.println("Thread acquired lock: "+ Thread.currentThread().getName());
-				JsonWriter writer = writerWrapper.getWriter();
-				System.out.println(writer.toString());
-				graph.write(writer);
-				writerWrapper.setWriter(writer);
 			}
 
-			/*
-			 * }finally { lock.writeLock().unlock(); }
-			 */
 		} catch (Throwable e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

@@ -145,10 +145,8 @@ public class RDF2JSON {
         JsonWriterWrapper writerWrapper = JsonWriterWrapper.getInstance(outputFilePath);
         writerWrapper.initWriter();
 		/*
-		 * JsonWriter writer = writerWrapper.getWriter(); writer.setIndent("  ");
 		 * writer.beginObject(); writer.name("ontologies"); writer.beginArray();
 		 */        
-        //writerWrapper.setWriter(writer);
 
         Set<String> loadedOntologyIds = new HashSet<>();
         long startTime4 = System.nanoTime();
@@ -162,9 +160,10 @@ public class RDF2JSON {
 				  Worker ontologyParser = new Worker(ontoConfig, bLoadLocalFiles, bNoDates,
 				  downloadedPath, convertToRDF, ontologyId);
 				  
-				  //ontologyParser.setWriterWrapper(writerWrapper);
 				  
 				  service.execute(ontologyParser);
+				  
+				  loadedOntologyIds.add(ontologyId);
 				 
 				
 				  /*try {
@@ -255,7 +254,7 @@ public class RDF2JSON {
             logger.info("time to merge output with previous run: {} s", ((endTime - startTime) / 1000 / 1000 / 1000));
         }
 
-        //writerWrapper.endWriter();
+        writerWrapper.endWriter();
 		/*
 		 * writer.endArray(); writer.endObject();
 		 * 

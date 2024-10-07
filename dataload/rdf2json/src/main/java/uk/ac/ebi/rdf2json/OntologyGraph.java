@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.*;
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
@@ -328,7 +329,7 @@ public class OntologyGraph implements StreamRDF {
     public void write(JsonWriter writer) throws Throwable {
 
         String ontologyId = ((String) config.get("id")).toLowerCase();
-
+        
         try {
             writer.beginObject();
 

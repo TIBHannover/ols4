@@ -21,6 +21,16 @@ public class LinkerPass2 {
     public static final OboDatabaseUrlService dbUrls = new OboDatabaseUrlService();
     public static final Bioregistry bioregistry = new Bioregistry();
 
+    public static FileWriter fileWriter;
+
+    static {
+        try {
+            fileWriter = new FileWriter("plain_links.txt");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void run(String inputJsonFilename, String outputJsonFilename, LevelDB leveldb, LinkerPass1.LinkerPass1Result pass1Result) throws IOException {
 
         JsonReader jsonReader = new JsonReader(new InputStreamReader(new FileInputStream(inputJsonFilename)));
@@ -67,9 +77,12 @@ public class LinkerPass2 {
                     jsonWriter.beginArray();
                     var imports = pass1Result.ontologyIdToImportedOntologyIds.get(ontologyId);
                     if(imports != null) {
+                        fileWriter.append(ontologyId + ",importsFrom");
                         for(String ontId : imports) {
+                            fileWriter.append(","+ontId);
                             jsonWriter.value(ontId);
                         }
+                        fileWriter.append("\n");
                     }
                     jsonWriter.endArray();
 
@@ -78,9 +91,12 @@ public class LinkerPass2 {
                     jsonWriter.beginArray();
                     var importedBy = pass1Result.ontologyIdToImportingOntologyIds.get(ontologyId);
                     if(importedBy != null) {
+                        fileWriter.append(ontologyId + ",exportsTo");
                         for(String ontId : importedBy) {
+                            fileWriter.append(","+ontId);
                             jsonWriter.value(ontId);
                         }
+                        fileWriter.append("\n");
                     }
                     jsonWriter.endArray();
 
@@ -127,6 +143,7 @@ public class LinkerPass2 {
         jsonWriter.endObject();
         jsonReader.close();
         jsonWriter.close();
+        fileWriter.close();
 
         System.out.println("--- Linker Pass 2 complete");
     }
@@ -170,20 +187,26 @@ public class LinkerPass2 {
                 jsonWriter.value(defOfThisEntity.definingOntologyIds.contains(ontologyId));
 
                 if (defOfThisEntity.definingDefinitions.size() > 0) {
+                    fileWriter.append(entityIri+",definedBy");
                     jsonWriter.name("definedBy");
                     jsonWriter.beginArray();
                     for (var def : defOfThisEntity.definingDefinitions) {
+                        fileWriter.append(","+def.ontologyId);
                         jsonWriter.value(def.ontologyId);
                     }
+                    fileWriter.append("\n");
                     jsonWriter.endArray();
                 }
 
                 if (defOfThisEntity.definitions.size() > 0) {
+                    fileWriter.append(entityIri+",appearsIn");
                     jsonWriter.name("appearsIn");
                     jsonWriter.beginArray();
                     for (var def : defOfThisEntity.definitions) {
+                        fileWriter.append(","+def.ontologyId);
                         jsonWriter.value(def.ontologyId);
                     }
+                    fileWriter.append("\n");
                     jsonWriter.endArray();
                 }
             }

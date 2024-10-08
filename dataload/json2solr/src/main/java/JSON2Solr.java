@@ -182,6 +182,8 @@ public class JSON2Solr {
 
         reader.endObject();
         reader.close();
+        for (PrintStream printStream : writers.values())
+            printStream.close();
     }
 
     static private void writeEntity(String type, String ontologyId, Map<String,Object> flattenedEntity, String outPath, Map <String,PrintStream> writers) throws FileNotFoundException {

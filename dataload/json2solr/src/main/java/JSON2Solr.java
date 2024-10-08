@@ -39,24 +39,15 @@ public class JSON2Solr {
         String inputFilePath = cmd.getOptionValue("input");
         String outPath = cmd.getOptionValue("outDir");
 
-        PrintStream ontologiesWriter = null;
-        PrintStream classesWriter = null;
-        PrintStream propertiesWriter = null;
-        PrintStream individualsWriter = null;
-        PrintStream autocompleteWriter = null;
+        File file = new File(outPath);
+        try {
+            file.mkdirs();
+            file.createNewFile();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
 
-
-        String ontologiesOutName = outPath + "/ontologies.jsonl";
-        String classesOutName = outPath + "/classes.jsonl";
-        String propertiesOutName = outPath + "/properties.jsonl";
-        String individualsOutName = outPath + "/individuals.jsonl";
-        String autocompleteOutName = outPath + "/autocomplete.jsonl";
-
-        ontologiesWriter = new PrintStream(ontologiesOutName);
-        classesWriter = new PrintStream(classesOutName);
-        propertiesWriter = new PrintStream(propertiesOutName);
-        individualsWriter = new PrintStream(individualsOutName);
-        autocompleteWriter = new PrintStream(autocompleteOutName);
+        Map <String,PrintStream> writers = new HashMap<>();
 
 
         JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(inputFilePath)));
@@ -98,10 +89,9 @@ public class JSON2Solr {
                                 flattenedClass.put("id", entityId);
 
                                 flattenProperties(_class, flattenedClass);
+                                writeEntity("classes",ontologyId,flattenedClass,outPath,writers);
 
-                                classesWriter.println(gson.toJson(flattenedClass));
-
-                                writeAutocompleteEntries(ontologyId, entityId, flattenedClass, autocompleteWriter);
+                                writeAutocompleteEntries(ontologyId, entityId, flattenedClass, outPath, writers);
                             }
 
                             reader.endArray();
@@ -123,9 +113,9 @@ public class JSON2Solr {
 
                                 flattenProperties(property, flattenedProperty);
 
-                                propertiesWriter.println(gson.toJson(flattenedProperty));
+                                writeEntity("properties",ontologyId,flattenedProperty,outPath,writers);
 
-                                writeAutocompleteEntries(ontologyId, entityId, flattenedProperty, autocompleteWriter);
+                                writeAutocompleteEntries(ontologyId, entityId, flattenedProperty,outPath,writers);
                             }
 
                             reader.endArray();
@@ -147,9 +137,9 @@ public class JSON2Solr {
 
                                 flattenProperties(individual, flattenedIndividual);
 
-                                individualsWriter.println(gson.toJson(flattenedIndividual));
+                                writeEntity("individuals",ontologyId,flattenedIndividual,outPath,writers);
 
-                                writeAutocompleteEntries(ontologyId, entityId, flattenedIndividual, autocompleteWriter);
+                                writeAutocompleteEntries(ontologyId, entityId, flattenedIndividual,outPath,writers);
                             }
 
                             reader.endArray();
@@ -176,7 +166,7 @@ public class JSON2Solr {
 
                     flattenProperties(ontology, flattenedOntology);
 
-                    ontologiesWriter.println(gson.toJson(flattenedOntology));
+                    writeEntity("ontologies",ontologyId,flattenedOntology,outPath,writers);
 
                     reader.endObject(); // ontology
                 }
@@ -192,6 +182,24 @@ public class JSON2Solr {
 
         reader.endObject();
         reader.close();
+    }
+
+    static private void writeEntity(String type, String ontologyId, Map<String,Object> flattenedEntity, String outPath, Map <String,PrintStream> writers) throws FileNotFoundException {
+        if(writers.containsKey(ontologyId+"_"+type))
+            writers.get(ontologyId+"_"+type).println(gson.toJson(flattenedEntity));
+        else {
+            writers.put(ontologyId+"_"+type,new PrintStream(outPath+"/"+ontologyId+"_"+type+".jsonl"));
+            writers.get(ontologyId+"_"+type).println(gson.toJson(flattenedEntity));
+        }
+    }
+
+    static private void writeAutocomplete(String ontologyId, Map<String,String> flattenedEntity, String outPath, Map <String,PrintStream> writers) throws FileNotFoundException {
+        if(writers.containsKey(ontologyId+"_autocomplete"))
+            writers.get(ontologyId+"_autocomplete").println(gson.toJson(flattenedEntity, Map.class));
+        else {
+            writers.put(ontologyId+"_autocomplete",new PrintStream(outPath+"/"+ontologyId+"_autocomplete.jsonl"));
+            writers.get(ontologyId+"_autocomplete").println(gson.toJson(flattenedEntity, Map.class));
+        }
     }
 
     static private void flattenProperties(Map<String,Object> properties, Map<String,Object> flattened) {
@@ -233,24 +241,24 @@ public class JSON2Solr {
     //  (4) It's reification { type: reification|related, ....,  value: ... }
     //
     //  (5) it's some random json object from the ontology config
-    // 
+    //
     // In the case of (1), we discard the datatype and keep the value
     //
     // In the case of (2), we don't store anything in solr fields. Class
     // expressions should already have been evaluated into separate "related"
     // fields by the RelatedAnnotator in rdf2json.
     //
-    // In the case of (3), we create a Solr document for each language (see 
+    // In the case of (3), we create a Solr document for each language (see
     // above), and the language is passed into this function so we know which
     // language's strings to keep.
     //
     // In the case of (4), we discard any metadata (in Neo4j the metadata is
     // preserved for edges, but in Solr we don't care about it).
-    // 
+    //
     // In the case of (5) we discard it in solr because json objects won't be
     // querable anyway.
     //
-    //  
+    //
     public static Object discardMetadata(Object obj) {
 
         if (obj instanceof Map) {
@@ -283,7 +291,7 @@ public class JSON2Solr {
 	    }
 
         } else {
-	
+
 		return obj;
 	    }
     }
@@ -299,26 +307,26 @@ public class JSON2Solr {
 
 
 
-   static void writeAutocompleteEntries(String ontologyId, String entityId, Map<String,Object> flattenedEntity, PrintStream autocompleteWriter) {
+   static void writeAutocompleteEntries(String ontologyId, String entityId, Map<String,Object> flattenedEntity, String outPath, Map <String,PrintStream> writers) throws FileNotFoundException {
 
 	Object labels = flattenedEntity.get("label");
 
 	if(labels instanceof List) {
 		for(Object label : (List<Object>) labels) {
-			autocompleteWriter.println( gson.toJson(makeAutocompleteEntry(ontologyId, entityId, (String)label), Map.class) );
+            writeAutocomplete(ontologyId,makeAutocompleteEntry(ontologyId, entityId, (String)label),outPath,writers);
 		}
 	} else if(labels instanceof String) {
-			autocompleteWriter.println( gson.toJson(makeAutocompleteEntry(ontologyId, entityId, (String)labels), Map.class) );
+            writeAutocomplete(ontologyId,makeAutocompleteEntry(ontologyId, entityId, (String)labels),outPath,writers);
 	}
 
 	Object synonyms = flattenedEntity.get("synonym");
 
 	if(synonyms instanceof List) {
 		for(Object label : (List<Object>) synonyms) {
-			autocompleteWriter.println( gson.toJson(makeAutocompleteEntry(ontologyId, entityId, (String)label), Map.class) );
+            writeAutocomplete(ontologyId,makeAutocompleteEntry(ontologyId, entityId, (String)label),outPath,writers);
 		}
 	} else if(synonyms instanceof String) {
-			autocompleteWriter.println( gson.toJson(makeAutocompleteEntry(ontologyId, entityId, (String)synonyms), Map.class) );
+            writeAutocomplete(ontologyId,makeAutocompleteEntry(ontologyId, entityId, (String)synonyms),outPath,writers);
 	}
    }
 

@@ -43,6 +43,14 @@ public class JSON2CSV {
         String inputFilePath = cmd.getOptionValue("input");
         String outputFilePath = cmd.getOptionValue("outDir");
 
+        File file = new File(outputFilePath);
+        try {
+            file.mkdirs();
+            file.createNewFile();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+
         new NeoConverter(inputFilePath, outputFilePath).convert();
     }
 

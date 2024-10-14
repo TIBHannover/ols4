@@ -37,7 +37,7 @@ public class RelatedAnnotator {
 
 						// We are only looking for anonymous parents, which are either class expressions or restrictions.
 						//
-						if(parent.getType() != PropertyValue.Type.BNODE) {
+                    	if(parent.getType() != PropertyValue.Type.BNODE) {
 							continue;
 						}
 
@@ -173,10 +173,20 @@ public class RelatedAnnotator {
 					OntologyNode fillerNode = graph.nodes.get(fillerUri);
 
 					if(fillerNode != null) { // sometimes filler not included in ontology, e.g. "subClassOf some xsd:float" in cdao
-
-						  classNode.properties.addProperty("relatedTo", new PropertyValueRelated(fillerRestriction, propertyUri, fillerNode));
-						  fillerNode.properties.addProperty("relatedFrom", new PropertyValueRelated(fillerRestriction, propertyUri, classNode));
-
+						PropertyValue someClassFrom = null;
+						if(fillerRestriction != null)
+							someClassFrom = fillerRestriction.properties.getPropertyValue("http://www.w3.org/2002/07/owl#someValuesFrom");
+						
+						if(someClassFrom != null) {
+							if(!((PropertyValueURI) someClassFrom).getUri().equalsIgnoreCase(fillerUri)) {
+								classNode.properties.addProperty("relatedTo", new PropertyValueRelated(fillerRestriction, propertyUri, fillerNode));
+								fillerNode.properties.addProperty("relatedFrom", new PropertyValueRelated(fillerRestriction, propertyUri, classNode));
+							}
+						}
+						else {
+								classNode.properties.addProperty("relatedTo", new PropertyValueRelated(fillerRestriction, propertyUri, fillerNode));
+								fillerNode.properties.addProperty("relatedFrom", new PropertyValueRelated(fillerRestriction, propertyUri, classNode));
+						}
 					}
 				}
 
@@ -211,7 +221,7 @@ public class RelatedAnnotator {
 		OntologyNode fillerNode = graph.nodes.get( ((PropertyValueBNode) filler).getId() );
 
 		logger.info("filler node uri: "+fillerNode.uri);
-
+	
 		List<OntologyNode> fillerIndividuals = new ArrayList<>();
 		if(fillerNode != null){
 			for (PropertyValue propertyValue : RdfListEvaluator.evaluateRdfList(fillerNode, graph)){

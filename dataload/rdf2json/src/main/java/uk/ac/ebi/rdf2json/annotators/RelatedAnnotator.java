@@ -173,12 +173,12 @@ public class RelatedAnnotator {
 					OntologyNode fillerNode = graph.nodes.get(fillerUri);
 
 					if(fillerNode != null) { // sometimes filler not included in ontology, e.g. "subClassOf some xsd:float" in cdao
-						PropertyValue someClassFrom = null;
+						PropertyValue someValuesFrom = null;
 						if(fillerRestriction != null)
-							someClassFrom = fillerRestriction.properties.getPropertyValue("http://www.w3.org/2002/07/owl#someValuesFrom");
+							someValuesFrom = fillerRestriction.properties.getPropertyValue("http://www.w3.org/2002/07/owl#someValuesFrom");
 						
-						if(someClassFrom != null) {
-							if(!((PropertyValueURI) someClassFrom).getUri().equalsIgnoreCase(fillerUri)) {
+						if(someValuesFrom != null) {
+							if(!((PropertyValueURI) someValuesFrom).getUri().equalsIgnoreCase(fillerUri)) {
 								classNode.properties.addProperty("relatedTo", new PropertyValueRelated(fillerRestriction, propertyUri, fillerNode));
 								fillerNode.properties.addProperty("relatedFrom", new PropertyValueRelated(fillerRestriction, propertyUri, classNode));
 							}
@@ -228,7 +228,7 @@ public class RelatedAnnotator {
 				if (propertyValue != null){
 					OntologyNode ontologyNode = null;
 					try {
-						graph.getNodeForPropertyValue(propertyValue);
+						ontologyNode = graph.getNodeForPropertyValue(propertyValue);
 						logger.info("success property value");
 					} catch (Exception e){
 						logger.error("fail property value");

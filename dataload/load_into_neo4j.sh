@@ -5,17 +5,15 @@ if [ $# == 0 ]; then
     exit 1
 fi
 
+SCRIPT_PATH=$(dirname $(readlink -f $0))
+
 rm -rf $1/data/databases/neo4j
 rm -rf $1/data/transactions/neo4j
 
-$1/bin/neo4j-admin database import full \
-        --ignore-empty-strings=true \
-        --legacy-style-quoting=false \
-        --multiline-fields=true \
-        --read-buffer-size=16777216 \
-        --array-delimiter="|" \
-        --threads=16 \
-        $(./make_csv_import_cmd.sh $2)
+$1/bin/neo4j start
+echo csv2neo
+
+java -jar $SCRIPT_PATH/csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -m i -d $2 -bs 1000 -ps 20 -t 5
 
 $1/bin/neo4j-admin database info neo4j
 

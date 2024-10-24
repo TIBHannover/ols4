@@ -2,6 +2,7 @@ package uk.ac.ebi.spot.ols.repository.transforms;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import uk.ac.ebi.spot.ols.repository.transforms.helpers.JsonCollectionHelper;
@@ -16,6 +17,9 @@ public class RemoveLiteralDatatypesTransform {
         into just "Diabetes"
      */
     public static JsonElement transform(JsonElement object) {
+    	
+    	if (object == null)
+    		return JsonNull.INSTANCE;
 
         if (object.isJsonArray()) {
 

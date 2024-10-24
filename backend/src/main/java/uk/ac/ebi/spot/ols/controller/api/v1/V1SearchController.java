@@ -22,6 +22,7 @@ import org.apache.solr.client.solrj.response.FacetField.Count;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -166,7 +167,7 @@ public class V1SearchController {
 
         if (groupField != null) {
             solrQuery.addFilterQuery("{!collapse field=iri}");
-            solrQuery.add("expand=true", "true");
+            solrQuery.add("expand", "true");
             solrQuery.add("expand.rows", "100");
 
         }
@@ -231,8 +232,79 @@ public class V1SearchController {
 
         QueryResponse qr = solrClient.dispatchSearch(solrQuery, "ols4_entities");
 
-        List<Object> docs = new ArrayList<>();
-        for(SolrDocument res : qr.getResults()) {
+        List<Object> docs = parseSolrDocs(qr.getResults(), fieldList, lang);
+        
+
+        Map<String, Object> responseHeader = new HashMap<>();
+        responseHeader.put("status", 0);
+        responseHeader.put("QTime", qr.getQTime());
+
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("numFound", qr.getResults().getNumFound());
+        responseBody.put("start", start);
+        responseBody.put("docs", docs);
+
+        /*
+		 * Fix: Start issue -
+		 * https://github.com/EBISPOT/ols4/issues/613
+		 * Created facetFieldsMap: Start Gson not able to parse FacetField format -
+		 * [ontologyId:[efo (17140)] Converting FacetFied to Map format
+		 */
+		Map<String, List<String>> facetFieldsMap = parseFacetFields(qr.getFacetFields());
+		Map<String, Object> facetCounts = new HashMap<>();
+		facetCounts.put("facet_fields", facetFieldsMap);
+		/*
+		 * Fix: End
+		 */
+		
+        Map<String, Object> responseObj = new HashMap<>();
+        responseObj.put("responseHeader", responseHeader);
+        responseObj.put("response", responseBody);
+
+        /*
+		 * Fix: Start issue -
+		 * https://github.com/EBISPOT/ols4/issues/613
+		 * Added facet_counts to responseObj
+		 */
+		responseObj.put("facet_counts", facetCounts);
+		/*
+		 * Fix: End
+		 */
+		
+		/**
+		 * Fix: Start
+		 * issue - https://github.com/TIBHannover/ols4/issues/78
+		 * 
+		 */
+		if(qr.getExpandedResults() != null && qr.getExpandedResults().size() > 0)
+			responseObj.put("expanded", parseExpandedSolrResults(qr.getExpandedResults(), fieldList, lang));
+		
+		/**
+		 * Fix: End
+		 */
+		
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.getOutputStream().write(gson.toJson(responseObj).getBytes(StandardCharsets.UTF_8));
+        response.flushBuffer();
+    }
+
+    private Map<String,Object> parseExpandedSolrResults(Map<String, SolrDocumentList> expandedResults, Collection<String> fieldList,
+			String lang) {
+    	Map<String, Object> result = new HashMap<>();
+    	expandedResults.entrySet().parallelStream().forEach((entry) -> {
+    		Map<String, Object> expandedResult = new HashMap<>();
+    		expandedResult.put("numFound", entry.getValue().getNumFound());
+    		expandedResult.put("start", entry.getValue().getStart());
+    		expandedResult.put("docs", parseSolrDocs(entry.getValue(), fieldList, lang));
+    		result.put(entry.getKey(), expandedResult);
+    	});
+    	return result;
+	}
+
+	private List<Object> parseSolrDocs(SolrDocumentList results, Collection<String> fieldList, String lang) {
+    	List<Object> docs = new ArrayList<>();
+    	for(SolrDocument res : results) {
             String _json = (String)res.get("_json");
             if(_json == null) {
                 throw new RuntimeException("_json was null");
@@ -300,50 +372,10 @@ public class V1SearchController {
 
             docs.add(outDoc);
         }
+    	return docs;
+	}
 
-        Map<String, Object> responseHeader = new HashMap<>();
-        responseHeader.put("status", 0);
-        responseHeader.put("QTime", qr.getQTime());
-
-        Map<String, Object> responseBody = new HashMap<>();
-        responseBody.put("numFound", qr.getResults().getNumFound());
-        responseBody.put("start", start);
-        responseBody.put("docs", docs);
-
-        /*
-		 * Fix: Start issue -
-		 * https://github.com/EBISPOT/ols4/issues/613
-		 * Created facetFieldsMap: Start Gson not able to parse FacetField format -
-		 * [ontologyId:[efo (17140)] Converting FacetFied to Map format
-		 */
-		Map<String, List<String>> facetFieldsMap = parseFacetFields(qr.getFacetFields());
-		Map<String, Object> facetCounts = new HashMap<>();
-		facetCounts.put("facet_fields", facetFieldsMap);
-		/*
-		 * Fix: End
-		 */
-
-        Map<String, Object> responseObj = new HashMap<>();
-        responseObj.put("responseHeader", responseHeader);
-        responseObj.put("response", responseBody);
-
-        /*
-		 * Fix: Start issue -
-		 * https://github.com/EBISPOT/ols4/issues/613
-		 * Added facet_counts to responseObj
-		 */
-		responseObj.put("facet_counts", facetCounts);
-		/*
-		 * Fix: End
-		 */
-
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.getOutputStream().write(gson.toJson(responseObj).getBytes(StandardCharsets.UTF_8));
-        response.flushBuffer();
-    }
-
-    private Map<String, List<String>> parseFacetFields(List<FacetField> facetFields) {
+	private Map<String, List<String>> parseFacetFields(List<FacetField> facetFields) {
 		Map<String, List<String>> facetFieldsMap = new HashMap<>();
 		List<String> newFacetFields;
 		if (facetFields != null && facetFields.size() > 0) {

@@ -16,19 +16,19 @@ public class V1JsTreeRepository {
     @Autowired
     OlsNeo4jClient neo4jClient;
 
-    public List<Map<String,Object>> getJsTreeForClass(String iri, String ontologyId, String lang) {
-        return getJsTreeForEntity(iri, "class", "OntologyClass", ontologyId, lang);
+    public List<Map<String,Object>> getJsTreeForClass(String iri, String ontologyId, boolean siblings, String lang) {
+        return getJsTreeForEntity(iri, "class", "OntologyClass", ontologyId, siblings, lang);
     }
 
     public List<Map<String,Object>> getJsTreeForProperty(String iri, String ontologyId, String lang) {
-        return getJsTreeForEntity(iri, "property", "OntologyProperty", ontologyId, lang);
+        return getJsTreeForEntity(iri, "property", "OntologyProperty", ontologyId, false, lang);
     }
 
     public List<Map<String,Object>> getJsTreeForIndividual(String iri, String ontologyId, String lang) {
-        return getJsTreeForEntity(iri, "individual", "OntologyIndividual", ontologyId, lang);
+        return getJsTreeForEntity(iri, "individual", "OntologyIndividual", ontologyId, false, lang);
     }
 
-    private List<Map<String,Object>> getJsTreeForEntity(String iri, String type, String neo4jType, String ontologyId, String lang) {
+    private List<Map<String,Object>> getJsTreeForEntity(String iri, String type, String neo4jType, String ontologyId, boolean siblings, String lang) {
 
         List<String> parentRelationIRIs = List.of("directParent");
 
@@ -40,6 +40,18 @@ public class V1JsTreeRepository {
         List<JsonElement> ancestors =
                 neo4jClient.recursivelyTraverseOutgoingEdges(neo4jType, thisEntityId, parentRelationIRIs, Map.of(), PageRequest.ofSize(100))
                         .getContent();
+        if (siblings){
+            List<JsonElement> siblingss = new ArrayList<>();
+            for (JsonElement ancestor : ancestors) {
+                if (ancestor.isJsonObject() && ancestor.getAsJsonObject().get("iri") != null) {
+                    String iriAncestor = ancestor.getAsJsonObject().get("iri").getAsString();
+                    List<JsonElement> children = neo4jClient.traverseIncomingEdges(neo4jType,iriAncestor,parentRelationIRIs, Map.of(), PageRequest.ofSize(100)).getContent();
+                    siblingss.addAll(children);
+                }
+            }
+            ancestors.addAll(siblingss);
+        }
+
         ancestors = ancestors.stream().map(ancestor -> LocalizationTransform.transform(ancestor, lang)).collect(Collectors.toList());
 
         return (new V1AncestorsJsTreeBuilder(thisEntity, ancestors, parentRelationIRIs)).buildJsTree();

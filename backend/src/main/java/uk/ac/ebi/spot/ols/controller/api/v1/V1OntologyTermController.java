@@ -31,6 +31,8 @@ import uk.ac.ebi.spot.ols.service.Neo4jClient;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Simon Jupp
@@ -426,7 +428,10 @@ public class V1OntologyTermController {
 
         try {
             String decodedTermId = UriUtils.decode(termId, "UTF-8");
-            Object object= jsTreeRepository.getJsTreeForClass(decodedTermId, ontologyId, lang);
+            List<Map<String,Object>> object= jsTreeRepository.getJsTreeForClass(decodedTermId, ontologyId, siblings, lang);
+
+
+
             ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
             return new HttpEntity<String>(ow.writeValueAsString(object));
         } catch (JsonProcessingException e) {

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import DataTable, { Column } from "../../../components/DataTable";
 import Entity from "../../../model/Entity";
 import { getEntities } from "../ontologiesSlice";
+import Individual from "../../../model/Individual";
 
 export default function EntityList({
   ontologyId,
@@ -34,6 +35,53 @@ export default function EntityList({
   }, [entityType]);
 
   const navigate = useNavigate();
+
+  // base columns are shown for all entity types.
+  const baseColumns: readonly Column[] = [
+    {
+      name: "Name",
+      sortable: true,
+      selector: (entity: Entity) => entity.getName(),
+    },
+    {
+      name: "ID",
+      sortable: true,
+      selector: (entity: Entity) => entity.getShortForm(),
+    },
+  ];
+
+  // If the entity type is "individuals", add a "associated class" column.
+  const individualTypeColumn: Column = {
+    name: "Associated Class",
+    sortable: true,
+    selector: (entity: Entity) => {
+      if(entity instanceof Individual) {
+        const types = entity.getIndividualTypes();
+        const linkedEntities = entity.getLinkedEntities();
+        if (types && types.length > 0) {
+          // If the first type is NOT an object (or non-array object), map each IRI to its label.
+          if (!(typeof types[0] === "object" && !Array.isArray(types[0]))) {
+            // Here linkedEntities.getLabelForIri(iri) is used to fetch the label.
+            return types
+                .map((iri: string) => {
+                  return linkedEntities.getLabelForIri(iri) ||
+                      iri.split("/").pop() ||
+                      iri;
+                })
+                .join(", ");
+          }
+        }
+      }
+      return "";
+    },
+  };
+
+  // Merge columns based on the entity type.
+  const columns =
+      entityType === "individuals"
+          ? [...baseColumns, individualTypeColumn]
+          : baseColumns;
+
   return (
     <div className="mt-2">
       <DataTable
@@ -70,16 +118,3 @@ export default function EntityList({
     </div>
   );
 }
-
-const columns: readonly Column[] = [
-  {
-    name: "Name",
-    sortable: true,
-    selector: (entity: Entity) => entity.getName(),
-  },
-  {
-    name: "ID",
-    sortable: true,
-    selector: (entity: Entity) => entity.getShortForm(),
-  },
-];

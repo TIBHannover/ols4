@@ -22,15 +22,17 @@ export default function IndividualPropertyAssertionsSection({
   );
 
   let objectProperties = propertyIris.filter(
-    (k) =>
-        linkedEntities.get(k) &&
-        linkedEntities.get(k)!.type.indexOf("objectProperty") !== -1
+      (k) => {
+        const linkedEntity = linkedEntities.get(k);
+        return linkedEntity && Array.isArray(linkedEntity.type) && linkedEntity.type.indexOf("objectProperty") !== -1;
+      }
   );
 
   let dataProperties = propertyIris.filter(
-    (k) =>
-        linkedEntities.get(k) &&
-        linkedEntities.get(k)!.type.indexOf("dataProperty") !== -1
+      (k) => {
+        const linkedEntity = linkedEntities.get(k);
+        return linkedEntity && Array.isArray(linkedEntity.type) && linkedEntity.type.indexOf("dataProperty") !== -1;
+      }
   );
 
   let propertyAssertions: JSX.Element[] = [];

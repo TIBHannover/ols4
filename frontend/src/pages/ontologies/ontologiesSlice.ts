@@ -43,6 +43,7 @@ export interface TreeNode {
   expandable: boolean;
   entity: Entity;
   numDescendants: number;
+  numHierarchicalDescendants: number;
   parentRelationToChild: string | null; // if applicable, relation from the parent node to this node (e.g. has_part)
   childRelationToParent: string | null; // if applicable, relation from this node to the parent node (e.g. part_of)
 }
@@ -420,17 +421,37 @@ export const getNodeChildren = createAsyncThunk(
     const doubleEncodedUri = encodeURIComponent(encodeURIComponent(entityIri));
     var childrenPage: any;
     if (entityTypePlural === "classes") {
-      childrenPage = await getPaginated<any>(
-        `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedUri}/hierarchicalChildren?${new URLSearchParams(
-          {
-            size: "1000",
-            lang,
-            includeObsoleteEntities: showObsoleteEnabled,
-          }
-        )}`,
-        undefined,
-        apiUrl
-      );
+        const hierarchicalChildrenPromise = getPaginated<any>(
+            `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedUri}/hierarchicalChildren?${new URLSearchParams({
+                size: "1000",
+                lang,
+                includeObsoleteEntities: showObsoleteEnabled,
+            })}`,
+            undefined,
+            apiUrl
+        );
+        const directChildrenPromise = getPaginated<any>(
+            `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedUri}/children?${new URLSearchParams({
+                size: "1000",
+                lang,
+                includeObsoleteEntities: showObsoleteEnabled,
+            })}`,
+            undefined,
+            apiUrl
+        );
+
+        const [hierarchicalChildren, directChildren] = await Promise.all([
+            hierarchicalChildrenPromise,
+            directChildrenPromise,
+        ]);
+
+        // Merge the elements from both responses
+        childrenPage = {
+            elements: [
+                ...hierarchicalChildren.elements,
+                ...directChildren.elements,
+            ],
+        };
     } else if (entityTypePlural === "individuals") {
       childrenPage = await getPaginated<any>(
         `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedUri}/individuals?${new URLSearchParams(
@@ -469,8 +490,8 @@ export const getNodeChildren = createAsyncThunk(
             title: term.getName(),
             expandable: term.hasChildren(),
             entity: term,
-            numDescendants:
-              term.getNumHierarchicalDescendants() || term.getNumDescendants(),
+            numDescendants: term.getNumDescendants(),
+            numHierarchicalDescendants: term.getNumHierarchicalDescendants(),
             parentRelationToChild:
               (parenthoodMetadata &&
                 parenthoodMetadata["parentRelationToChild"]?.[0]) ||

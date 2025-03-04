@@ -277,7 +277,7 @@ export const getEntities = createAsyncThunk(
     { rejectWithValue }
   ) => {
     const path = `api/v2/ontologies/${ontologyId}/${entityType}?page=${page}&size=${rowsPerPage}${
-      search ? "&search=" + search : ""
+      search ? "&search=" + encodeURIComponent(`*${search}*`) : ""
     }`;
     try {
       const data = (await getPaginated<any>(path)).map((e) =>

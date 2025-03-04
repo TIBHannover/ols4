@@ -59,17 +59,33 @@ export default function EntityList({
         const types = entity.getIndividualTypes();
         const linkedEntities = entity.getLinkedEntities();
         if (types && types.length > 0) {
-          // If the first type is NOT an object (or non-array object), map each IRI to its label.
-          if (!(typeof types[0] === "object" && !Array.isArray(types[0]))) {
-            // Here linkedEntities.getLabelForIri(iri) is used to fetch the label.
-            return types
-                .map((iri: string) => {
-                  return linkedEntities.getLabelForIri(iri) ||
-                      iri.split("/").pop() ||
-                      iri;
-                })
-                .join(", ");
-          }
+          return types
+              .map((val: any) => {
+                if (!(typeof val === "object" && !Array.isArray(val))) {
+                  return (
+                      linkedEntities.getLabelForIri(val) ||
+                      val.split("/").pop() ||
+                      val
+                  );
+                }
+                if (typeof val === "object" && !Array.isArray(val)) {
+                  // If the object has the "someValuesFrom" property, use the custom format.
+                  if (val["http://www.w3.org/2002/07/owl#someValuesFrom"]) {
+                    const someValuesFromIri = val["http://www.w3.org/2002/07/owl#someValuesFrom"];
+                    const onPropertyIri = val["http://www.w3.org/2002/07/owl#onProperty"];
+                    const someValuesLabel =
+                        linkedEntities.getLabelForIri(someValuesFromIri) ||
+                        (typeof someValuesFromIri === "string" && someValuesFromIri.split("/").pop()) ||
+                        someValuesFromIri;
+                    const propertyLabel =
+                        linkedEntities.getLabelForIri(onPropertyIri) ||
+                        (typeof onPropertyIri === "string" && onPropertyIri.split("/").pop()) ||
+                        onPropertyIri;
+                    return `${propertyLabel} some ${someValuesLabel}`;
+                  }
+                }
+              })
+              .join(", ");
         }
       }
       return "";

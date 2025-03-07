@@ -5,6 +5,7 @@ import DataTable, { Column } from "../../../components/DataTable";
 import Entity from "../../../model/Entity";
 import { getEntities } from "../ontologiesSlice";
 import Individual from "../../../model/Individual";
+import Property from "../../../model/Property";
 
 export default function EntityList({
   ontologyId,
@@ -92,11 +93,99 @@ export default function EntityList({
     },
   };
 
+  // Define domain column for properties
+  const domainColumn: Column = {
+    name: "Domain",
+    sortable: true,
+    selector: (entity: Entity) => {
+      if(entity instanceof Property) {
+        const domains = entity.getDomain();
+        if (domains && domains.length > 0) {
+          const linkedEntities = entity.getLinkedEntities();
+          return domains
+              .map((domain: any) => {
+                if (typeof domain === "string") {
+                  return (
+                      linkedEntities.getLabelForIri(domain) ||
+                      domain.split("/").pop() ||
+                      domain
+                  );
+                }
+                return "";
+              })
+              .filter(Boolean)
+              .join(", ");
+        }
+      }
+      return "";
+    },
+  };
+
+  // Define range column for properties
+  const rangeColumn: Column = {
+    name: "Range",
+    sortable: true,
+    selector: (entity: Entity) => {
+      if(entity instanceof Property) {
+        const ranges = entity.getRange();
+        if (ranges && ranges.length > 0) {
+          const linkedEntities = entity.getLinkedEntities();
+          return ranges
+              .map((range: any) => {
+                if (typeof range === "string") {
+                  return (
+                      linkedEntities.getLabelForIri(range) ||
+                      range.split("/").pop() ||
+                      range
+                  );
+                }
+                // Handle complex range objects
+                if (typeof range === "object" && !Array.isArray(range)) {
+                  // Check for owl:intersectionOf
+                  const intersectionOf = range["http://www.w3.org/2002/07/owl#intersectionOf"];
+                  if (intersectionOf && Array.isArray(intersectionOf)) {
+                    return intersectionOf.map((item: any) => {
+                      // Handle string IRIs in the intersection
+                      if (typeof item === "string") {
+                        return (
+                            linkedEntities.getLabelForIri(item) ||
+                            item.split("/").pop() ||
+                            item
+                        );
+                      }
+
+                      // Handle objects in the intersection, particularly looking for owl:oneOf
+                      if (typeof item === "object" && !Array.isArray(item)) {
+                        const oneOf = item["http://www.w3.org/2002/07/owl#oneOf"];
+                        if (oneOf && Array.isArray(oneOf)) {
+                          // Format the oneOf elements as a comma-separated list inside curly braces
+                          return `{${oneOf.join(", ")}}`;
+                        }
+                      }
+
+                      return "";
+                    }).filter(Boolean).join(" and ");
+                  }
+                }
+                return "";
+              })
+              .filter(Boolean)
+              .join(", ");
+        }
+      }
+      return "";
+    },
+  };
+
   // Merge columns based on the entity type.
-  const columns =
-      entityType === "individuals"
-          ? [...baseColumns, individualTypeColumn]
-          : baseColumns;
+  // Merge columns based on the entity type.
+  let columns = [...baseColumns];
+
+  if (entityType === "individuals") {
+    columns.push(individualTypeColumn);
+  } else if (entityType === "properties") {
+    columns.push(domainColumn, rangeColumn);
+  }
 
   return (
     <div className="mt-2">

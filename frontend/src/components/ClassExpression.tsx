@@ -303,7 +303,10 @@ export default function ClassExpression({
     );
   }
 
-  const hasValue = asArray(expr["http://www.w3.org/2002/07/owl#hasValue"])[0];
+  let hasValue = asArray(expr["http://www.w3.org/2002/07/owl#hasValue"])[0];
+  if (typeof hasValue === "number") {
+      hasValue = hasValue.toString();
+  }
   if (hasValue) {
     return (
       <span>

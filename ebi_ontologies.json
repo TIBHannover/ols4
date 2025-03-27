@@ -752,7 +752,7 @@
         "http://purl.obolibrary.org/obo/PRIDE_"
       ],
       "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/pride_cv.obo#part_of"
+        "http://purl.obolibrary.org/obo/pride#part_of"
       ],
       "oboSlims": false,
       "ontology_purl": "https://raw.githubusercontent.com/PRIDE-Utilities/pride-ontology/master/pride_cv.owl"

@@ -24,7 +24,7 @@
         "http://purl.obolibrary.org/obo/PRIDE_0000674"
       ],
       "oboSlims": false,
-      "ontology_purl": "file:///home/henriette007/ontologies/pride_cv.owl"
+      "ontology_purl": "https://raw.githubusercontent.com/PRIDE-Utilities/pride-ontology/master/pride_cv.owl"
     }
   ]
 }

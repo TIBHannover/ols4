@@ -17,9 +17,6 @@
       "base_uri": [
         "http://purl.obolibrary.org/obo/PRIDE_"
       ],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/pride#part_of"
-      ],
       "preferred_root_term": [
         "http://purl.obolibrary.org/obo/PRIDE_0000674"
       ],

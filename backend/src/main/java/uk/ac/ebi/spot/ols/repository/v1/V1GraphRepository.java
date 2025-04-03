@@ -90,31 +90,40 @@ public class V1GraphRepository {
         }).collect(Collectors.toList());
 
 
+        Set<String> uniqueRelations = new HashSet<String>();
         List<Map<String,Object>> edges = allEdges.stream().map(result -> {
 
             Relationship relationship = (Relationship) result.get("relationship");
 
-            Map<String, Object> edgeRes = new LinkedHashMap<>();
-            edgeRes.put("source", result.get("source"));
-            edgeRes.put("target", result.get("target"));
+            
 
             JsonObject ontologyEdgeObject = getOntologyEdgeJson(relationship, lang);
 
             String uri = resolveUri(result, selectedNode, iri);
             if (uri == null) {
-                uri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+                //uri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+            	uri = relationship.type();
             }
 
-            String propertyLabel = iriToLabel.get(uri);
+            //String propertyLabel = iriToLabel.get(uri);
+            String propertyLabel = iriToLabel.computeIfAbsent(uri, key -> iriToLabel.get("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
             if(propertyLabel == null)
                 propertyLabel = "is a";
 
-            edgeRes.put("label", propertyLabel);
-            edgeRes.put("uri", uri);
+            if(isUniqueRelation(result.get("source").toString(), result.get("target").toString(), propertyLabel, uniqueRelations)) {
+            	
+            	Map<String, Object> edgeRes = new LinkedHashMap<>();
+                edgeRes.put("source", result.get("source"));
+                edgeRes.put("target", result.get("target"));
+            	edgeRes.put("label", propertyLabel);
+            	edgeRes.put("uri", uri);
 
-            return edgeRes;
+            	return edgeRes;
+            }
+            return null;
 
-        }).collect(Collectors.toList());
+        }).filter(Objects::nonNull)
+          .collect(Collectors.toList());
 
         Map<String, Object> resGraph = new LinkedHashMap<>();
         resGraph.put("nodes", nodes);
@@ -122,7 +131,12 @@ public class V1GraphRepository {
         return resGraph;
     }
 
-    Map<String,Object> getParentsAndRelatedTo(String entityId) {
+    private boolean isUniqueRelation(String source, String target, String relation, Set<String> uniqueRelations) {
+		String key = source + "|" + relation + "|" + target;
+		return uniqueRelations.add(key);
+	}
+
+	Map<String,Object> getParentsAndRelatedTo(String entityId) {
 
         String query =
                 "MATCH path = (n:OntologyClass)-[r:relatedTo|directParent]-(x)\n"

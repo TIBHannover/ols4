@@ -139,7 +139,7 @@ public class V1GraphRepository {
 	Map<String,Object> getParentsAndRelatedTo(String entityId) {
 
         String query =
-                "MATCH path = (n:OntologyClass)-[r:relatedTo|directParent]-(x)\n"
+                "MATCH path = (n:OntologyClass)-[r]-(x)\n"
                         + "WHERE n.id=\"" + entityId + "\"\n"
                         + "UNWIND nodes(path) as p\n"
                         + "UNWIND relationships(path) as r1\n"
@@ -154,7 +154,7 @@ public class V1GraphRepository {
     Map<String,Object> getRelatedFrom(String entityId) {
 
         String query =
-                "MATCH path = (x)-[r:relatedTo]->(n:OntologyClass)\n"
+                "MATCH path = (x)-[r]->(n:OntologyClass)\n"
                         + "WHERE n.id=\"" + entityId + "\"\n"
                         + "RETURN { nodes: collect(distinct x),\n"
                         + "edges: collect({ source: startNode(r).iri, target: endNode(r).iri, relationship: r })\n"

@@ -354,7 +354,7 @@ export default function EntityTree({
                 showCountsEnabled &&
                 childNode.numDescendants > 0 && (
                   <span style={{ color: "gray" }}>
-                    {" (" + childNode.numDescendants.toLocaleString() + ")"}
+                    {" (" + (getNumDescendants(childNode.numHierarchicalDescendants, childNode.numDescendants)).toLocaleString() + ")"}
                   </span>
                 )}
               {isExpanded &&
@@ -443,6 +443,16 @@ export default function EntityTree({
       </div>
     </ThemeProvider>
   );
+}
+
+function getNumDescendants(hierarchicalDescendents: number, descendents: number): number {
+    if (descendents === hierarchicalDescendents) {
+        return descendents;
+    } else if (descendents > hierarchicalDescendents) {
+        return descendents;
+    } else {
+        return hierarchicalDescendents;
+    }
 }
 
 function TreeLink({

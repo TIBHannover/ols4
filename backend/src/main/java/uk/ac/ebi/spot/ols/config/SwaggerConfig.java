@@ -4,6 +4,8 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
+
+import org.springdoc.core.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -13,7 +15,7 @@ import javax.servlet.ServletContext;
 @Configuration
 public class SwaggerConfig {
 
-    private final String OLS4_SERVER_URL = "https://www.ebi.ac.uk/ols4";
+    private final String OLS4_SERVER_URL = "http://localhost:8080";
 
     @Lazy
     @Bean
@@ -22,10 +24,10 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .addServersItem(new Server().url(serverUrl))
                 .info(new Info()
-                        .title("OLS Service")
-                        .description("REST API for OLS")
-                        .version("3.0")
-                        .termsOfService("https://www.ebi.ac.uk/about/terms-of-use/")
+                        .title("TIB Terminology Service")
+                        .description("REST API for OLS4. Please see <a href='https://www.ebi.ac.uk/ols4/defined-response-fields' target='_blank'> this page</a> for defined response field in OLS.")
+                        .version("4.0")
+                        .termsOfService("https://www.tib.eu/en/terms-of-use")
                         .license(new License()
                                 .name("CC0 1.0 Universal (CC0 1.0) Public Domain Dedication")
                                 .url("https://creativecommons.org/publicdomain/zero/1.0/")
@@ -33,4 +35,30 @@ public class SwaggerConfig {
                 );
     }
 
+    @Bean
+    public GroupedOpenApi v1Api() {
+        return GroupedOpenApi.builder()
+        		   .group("version1")
+        		   .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v1")
+        		   .build();
+    }
+
+    @Bean
+    public GroupedOpenApi v2Api() {
+        return GroupedOpenApi.builder()
+        		   .group("version2")
+        		   .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v2")
+        		   .build();
+    }
+
+    @Bean
+    public GroupedOpenApi callStatisticsApi() {
+        return GroupedOpenApi.builder()
+                .group("call_statistics")
+                .packagesToScan("uk.ac.ebi.spot.ols.reststatistics.controller")
+                .build();
+    }
+
+
 }
+

@@ -30,22 +30,26 @@ public class V1PropertyRepository {
     V1OntologyRepository ontologyRepository;
 
     public Page<V1Property> getParents(String ontologyId, String iri, String lang, Pageable pageable) {
-        return neo4jClient.traverseOutgoingEdges("OntologyProperty", ontologyId + "+property+" + iri, Arrays.asList("directParent"), Map.of(), pageable)
+        return neo4jClient.traverseOutgoingEdges("OntologyProperty", ontologyId + "+property+" + iri,
+                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), pageable)
                 .map(record -> V1PropertyMapper.mapProperty(record, lang));
     }
 
     public Page<V1Property> getChildren(String ontologyId, String iri, String lang, Pageable pageable) {
-        return this.neo4jClient.traverseIncomingEdges("OntologyProperty", ontologyId + "+property+" + iri, Arrays.asList("directParent"), Map.of(), pageable)
+        return this.neo4jClient.traverseIncomingEdges("OntologyProperty", ontologyId + "+property+" + iri,
+                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), pageable)
                 .map(record -> V1PropertyMapper.mapProperty(record, lang));
     }
 
     public Page<V1Property> getDescendants(String ontologyId, String iri, String lang, Pageable pageable)  {
-        return this.neo4jClient.recursivelyTraverseIncomingEdges("OntologyProperty", ontologyId + "+property+" + iri, Arrays.asList("directParent"), Map.of(), pageable)
+        return this.neo4jClient.recursivelyTraverseIncomingEdges("OntologyProperty", ontologyId + "+property+" + iri,
+                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), pageable)
                 .map(record -> V1PropertyMapper.mapProperty(record, lang));
     }
 
     public Page<V1Property> getAncestors(String ontologyId, String iri, String lang, Pageable pageable)  {
-        return neo4jClient.recursivelyTraverseOutgoingEdges("OntologyProperty", ontologyId + "+property+" + iri, Arrays.asList("directParent"), Map.of(), pageable)
+        return neo4jClient.recursivelyTraverseOutgoingEdges("OntologyProperty", ontologyId + "+property+" + iri,
+                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), pageable)
                 .map(record -> V1PropertyMapper.mapProperty(record, lang));
     }
 
@@ -99,6 +103,8 @@ public class V1PropertyRepository {
 
         if(!obsolete)
             query.addFilter(IS_OBSOLETE.getText(), List.of("false"), SearchType.WHOLE_FIELD);
+        else
+            query.addFilter(IS_OBSOLETE.getText(), List.of("true"), SearchType.WHOLE_FIELD);
 
         return solrClient.searchSolrPaginated(query, pageable)
                 .map(result -> V1PropertyMapper.mapProperty(result, lang));

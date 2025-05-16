@@ -23,8 +23,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 import uk.ac.ebi.spot.ols.model.v1.V1Property;
 import uk.ac.ebi.spot.ols.repository.v1.V1JsTreeRepository;
+import uk.ac.ebi.spot.ols.repository.v1.V1JsTreeRepositoryExtn;
 import uk.ac.ebi.spot.ols.repository.v1.V1PropertyRepository;
 import uk.ac.ebi.spot.ols.service.Neo4jClient;
+import uk.ac.ebi.spot.ols.service.ViewMode;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
@@ -45,6 +47,9 @@ public class V1OntologyPropertyController {
     V1JsTreeRepository jsTreeRepository;
 
     @Autowired
+    V1JsTreeRepositoryExtn jsTreeRepositoryExtn;
+
+    @Autowired
     Neo4jClient neo4jClient;
 
     @RequestMapping(path = "/{onto}/properties", produces = {MediaType.APPLICATION_JSON_VALUE, MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)
@@ -55,8 +60,8 @@ public class V1OntologyPropertyController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the property, this IRI should exist in the specified ontology by {onto} param. This value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000041") String iri,
+                    description = "The IRI of the property, this IRI should exist in the specified ontology by {onto} param.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000041") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the property, it should exist in the specified ontology by {onto} param.",
@@ -104,16 +109,16 @@ public class V1OntologyPropertyController {
                     description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
                     example = "duo") String ontologyId,
             @RequestParam(value = "includeObsoletes", defaultValue = "false", required = false)
-            @Parameter(name = "includeObsoletes",
+            @Parameter(name = "obsoletes",
                        description = "A boolean flag to get Obsolete terms",
-                       example = "true") boolean includeObsoletes,
+                       example = "true") boolean obsoletes,
             @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @Parameter(hidden = true) Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler assembler
     ) throws ResourceNotFoundException {
         ontologyId = ontologyId.toLowerCase();
 
-        Page<V1Property> roots = propertyRepository.getRoots(ontologyId, includeObsoletes, lang, pageable);
+        Page<V1Property> roots = propertyRepository.getRoots(ontologyId, obsoletes, lang, pageable);
         if (roots == null) throw  new ResourceNotFoundException();
         return new ResponseEntity<>( assembler.toModel(roots, termAssembler), HttpStatus.OK);
     }
@@ -146,7 +151,7 @@ public class V1OntologyPropertyController {
             @PathVariable("iri")
             @Parameter(name = "iri",
                     description = "The IRI of the property, this IRI should exist in the specified ontology by {onto} param. This value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000041") String termId,
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FBFO_0000179") String termId,
             @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @Parameter(hidden = true) Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler assembler) {
@@ -161,12 +166,12 @@ public class V1OntologyPropertyController {
     HttpEntity<PagedModel<V1Property>> children(
             @PathVariable("onto")
             @Parameter(name = "onto",
-                    description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
-                    example = "duo") String ontologyId,
+                    description = "The ID of the ontology.",
+                    example = "mondo") String ontologyId,
             @PathVariable("iri")
             @Parameter(name = "iri",
                     description = "The IRI of the property, this IRI should exist in the specified ontology by {onto} param. This value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000041") String termId,
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FBFO_0000051") String termId,
             @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @Parameter(hidden = true) Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler assembler) {
@@ -181,12 +186,12 @@ public class V1OntologyPropertyController {
     HttpEntity<PagedModel<V1Property>> descendants(
             @PathVariable("onto")
             @Parameter(name = "onto",
-                    description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
-                    example = "duo") String ontologyId,
+                    description = "The ID of the ontology.",
+                    example = "mondo") String ontologyId,
             @PathVariable("iri")
             @Parameter(name = "iri",
                     description = "The IRI of the property, this IRI should exist in the specified ontology by {onto} param. This value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000041") String termId,
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FBFO_0000051") String termId,
             @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @Parameter(hidden = true) Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler assembler) {
@@ -201,12 +206,12 @@ public class V1OntologyPropertyController {
     HttpEntity<PagedModel<V1Property>> ancestors(
             @PathVariable("onto")
             @Parameter(name = "onto",
-                    description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
-                    example = "duo") String ontologyId,
+                    description = "The ID of the ontology.",
+                    example = "mondo") String ontologyId,
             @PathVariable("iri")
             @Parameter(name = "iri",
                     description = "The IRI of the property, this IRI should exist in the specified ontology by {onto} param. This value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000041") String termId,
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FBFO_0000051") String termId,
             @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @Parameter(hidden = true) Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler assembler) {
@@ -269,7 +274,7 @@ public class V1OntologyPropertyController {
         try {
             String decoded = UriUtils.decode(termId, "UTF-8");
 
-            Object object= jsTreeRepository.getJsTreeForProperty(decoded, ontologyId, lang);
+            Object object= jsTreeRepositoryExtn.getJsTreeForPropertyByViewMode(decoded, ontologyId, lang, ViewMode.getFromShortName(viewMode), siblings);
             ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
             return new HttpEntity<String>(ow.writeValueAsString(object));
         } catch (JsonProcessingException e) {

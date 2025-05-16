@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
+import uk.ac.ebi.spot.ols.model.v1.V1Individual;
 import uk.ac.ebi.spot.ols.model.v1.V1Term;
 import uk.ac.ebi.spot.ols.repository.v1.V1GraphRepository;
 import uk.ac.ebi.spot.ols.repository.v1.V1JsTreeRepository;
@@ -31,6 +32,12 @@ import uk.ac.ebi.spot.ols.service.Neo4jClient;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import java.nio.charset.StandardCharsets;
+import uk.ac.ebi.spot.ols.repository.v1.V1JsTreeRepositoryExtn;
+import uk.ac.ebi.spot.ols.service.ViewMode;
 
 /**
  * @author Simon Jupp
@@ -52,10 +59,16 @@ public class V1OntologyTermController {
     V1TermAssembler termAssembler;
 
     @Autowired
+    V1IndividualAssembler individualAssembler;
+
+    @Autowired
     V1PreferredRootTermAssembler preferredRootTermAssembler;
 
     @Autowired
     V1JsTreeRepository jsTreeRepository;
+
+    @Autowired
+    V1JsTreeRepositoryExtn jsTreeRepositoryExtn;
 
     @Autowired
     V1GraphRepository graphRepository;
@@ -73,8 +86,8 @@ public class V1OntologyTermController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the term, this value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String iri,
+                    description = "The IRI of the term.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000017") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the term.",
@@ -141,15 +154,15 @@ public class V1OntologyTermController {
             @Parameter(name = "onto",
                     description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
                     example = "duo") String ontologyId,
-            @RequestParam(value = "includeObsoletes", defaultValue = "false", required = false)
-              boolean includeObsoletes,
+            @RequestParam(value = "obsoletes", defaultValue = "false", required = false)
+              boolean obsoletes,
             @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @Parameter(hidden = true) Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler assembler
     ) throws ResourceNotFoundException {
         ontologyId = ontologyId.toLowerCase();
 
-        Page<V1Term> roots = termRepository.getRoots(ontologyId, includeObsoletes, lang, pageable);
+        Page<V1Term> roots = termRepository.getRoots(ontologyId, obsoletes, lang, pageable);
         if (roots == null)
           throw new ResourceNotFoundException("No roots could be found for " + ontologyId );
         return new ResponseEntity<>( assembler.toModel(roots, termAssembler), HttpStatus.OK);
@@ -406,6 +419,139 @@ public class V1OntologyTermController {
         return new ResponseEntity<>( assembler.toModel(ancestors, termAssembler), HttpStatus.OK);
     }
 
+    @RequestMapping(path = "/{onto}/terms/{iri}/superclasses", produces = {MediaType.APPLICATION_JSON_VALUE,
+            MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)
+    HttpEntity<PagedModel<V1Term>> getSuperClasses(
+            @PathVariable("onto")
+            @Parameter(name = "onto",
+                    description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
+                    example = "duo") String ontologyId,
+            @PathVariable("iri")
+            @Parameter(name = "iri",
+                    description = "The IRI of the term, this value must be single URL encoded",
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String termId,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            @Parameter(hidden = true) Pageable pageable,
+            @Parameter(hidden = true) PagedResourcesAssembler assembler) {
+
+        ontologyId = ontologyId.toLowerCase();
+
+        String decoded = UriUtils.decode(termId, "UTF-8");
+        String entityId = ontologyId+"+class+"+decoded;
+        Page<V1Term> superClasses = graphRepository.getSuperClassPaginated(entityId, lang, pageable);
+        if (superClasses == null)
+            throw  new ResourceNotFoundException("No super classes could be found for " + ontologyId
+                    + " and " + termId);
+
+        return new ResponseEntity<>( assembler.toModel(superClasses, termAssembler), HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/{onto}/terms/{iri}/equivalentclasses", produces = {MediaType.APPLICATION_JSON_VALUE,
+            MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)
+    HttpEntity<PagedModel<V1Term>> getEquivalentClasses(
+            @PathVariable("onto")
+            @Parameter(name = "onto",
+                    description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
+                    example = "duo") String ontologyId,
+            @PathVariable("iri")
+            @Parameter(name = "iri",
+                    description = "The IRI of the term, this value must be single URL encoded",
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String termId,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            @Parameter(hidden = true) Pageable pageable,
+            @Parameter(hidden = true) PagedResourcesAssembler assembler) {
+
+        ontologyId = ontologyId.toLowerCase();
+
+        String decoded = UriUtils.decode(termId, "UTF-8");
+        String entityId = ontologyId+"+class+"+decoded;
+        Page<V1Term> equivalentClasses = graphRepository.getEquivalentClassPaginated(entityId, lang, pageable);
+        if (equivalentClasses == null)
+            throw  new ResourceNotFoundException("No equivalent classes could be found for " + ontologyId
+                    + " and " + termId);
+
+        return new ResponseEntity<>( assembler.toModel(equivalentClasses, termAssembler), HttpStatus.OK);
+    }
+
+
+    @RequestMapping(path = "/{onto}/terms/{iri}/relatedfrom", produces = {MediaType.APPLICATION_JSON_VALUE,
+            MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)
+    HttpEntity<PagedModel<V1Term>> getRelatedFrom(
+            @PathVariable("onto")
+            @Parameter(name = "onto",
+                    description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
+                    example = "duo") String ontologyId,
+            @PathVariable("iri")
+            @Parameter(name = "iri",
+                    description = "The IRI of the term, this value must be single URL encoded",
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String termId,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            @Parameter(hidden = true) Pageable pageable,
+            @Parameter(hidden = true) PagedResourcesAssembler assembler) {
+
+        ontologyId = ontologyId.toLowerCase();
+
+        String decoded = UriUtils.decode(termId, "UTF-8");
+        String entityId = ontologyId+"+class+"+decoded;
+        Page<V1Term> relatedFroms = graphRepository.getRelatedFromPaginated(entityId, lang, pageable);
+        if (relatedFroms == null)
+            throw  new ResourceNotFoundException("No related from terms could be found for " + ontologyId
+                    + " and " + termId);
+
+        return new ResponseEntity<>( assembler.toModel(relatedFroms, termAssembler), HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/{onto}/terms/{iri}/instances", produces = {MediaType.APPLICATION_JSON_VALUE,
+            MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)
+    HttpEntity<PagedModel<V1Individual>> getInstances(
+            @PathVariable("onto")
+            @Parameter(name = "onto",
+                    description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
+                    example = "duo") String ontologyId,
+            @PathVariable("iri")
+            @Parameter(name = "iri",
+                    description = "The IRI of the term, this value must be single URL encoded",
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String termId,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            @Parameter(hidden = true) Pageable pageable,
+            @Parameter(hidden = true) PagedResourcesAssembler assembler) {
+
+        ontologyId = ontologyId.toLowerCase();
+
+        String decoded = UriUtils.decode(termId, "UTF-8");
+        String entityId = ontologyId+"+class+"+decoded;
+        Page<V1Individual> instances = graphRepository.getTermInstancesPaginated(entityId, lang, pageable);
+        if (instances == null)
+            throw  new ResourceNotFoundException("No instances could be found for " + ontologyId
+                    + " and " + termId);
+
+        return new ResponseEntity<>( assembler.toModel(instances, individualAssembler), HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/{onto}/terms/{iri}/json", produces = {MediaType.APPLICATION_JSON_VALUE,
+            MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)
+    HttpEntity<String> getJson(
+            @PathVariable("onto")
+            @Parameter(name = "onto",
+                    description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",
+                    example = "duo") String ontologyId,
+            @PathVariable("iri")
+            @Parameter(name = "iri",
+                    description = "The IRI of the term, this value must be single URL encoded",
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String termId) {
+
+        ontologyId = ontologyId.toLowerCase();
+
+        String decoded = UriUtils.decode(termId, "UTF-8");
+        String entityId = ontologyId+"+class+"+decoded;
+        String json = graphRepository.getTermJson(entityId);
+        if (json == null)
+            throw  new ResourceNotFoundException("No _json could be found for " + ontologyId
+                    + " and " + termId);
+
+        return new ResponseEntity<>( json, HttpStatus.OK);
+    }
+
     @RequestMapping(path = "/{onto}/terms/{iri}/jstree",
         produces = {MediaType.APPLICATION_JSON_VALUE, MediaTypes.HAL_JSON_VALUE},
         method = RequestMethod.GET)
@@ -425,8 +571,8 @@ public class V1OntologyTermController {
         ontologyId = ontologyId.toLowerCase();
 
         try {
-            String decodedTermId = UriUtils.decode(termId, "UTF-8");
-            Object object= jsTreeRepository.getJsTreeForClass(decodedTermId, ontologyId, lang);
+        	String decodedTermId = decodeUrl(termId);
+        	Object object= jsTreeRepositoryExtn.getJsTreeForClassByViewMode(decodedTermId, ontologyId, lang, ViewMode.getFromShortName(viewMode), siblings);
             ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
             return new HttpEntity<String>(ow.writeValueAsString(object));
         } catch (JsonProcessingException e) {
@@ -444,7 +590,7 @@ public class V1OntologyTermController {
             @PathVariable("iri")
             @Parameter(name = "iri",
                     description = "The IRI of the property, this IRI should exist in the specified ontology by {onto} param. This value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FBFO_0000051") String termId,
+                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String termId,
             @PathVariable("nodeid")
             @Parameter(name = "nodeid",
                     description = "This is the id of the node in the jstree of ontology specified by {onto} parameter",
@@ -524,8 +670,8 @@ public class V1OntologyTermController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the term, this value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String iri,
+                    description = "The IRI of the term.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000017") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the term.",
@@ -562,8 +708,8 @@ public class V1OntologyTermController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the term, this value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String iri,
+                    description = "The IRI of the term.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000017") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the term.",
@@ -600,8 +746,8 @@ public class V1OntologyTermController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the term, this value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String iri,
+                    description = "The IRI of the term.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000017") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the term.",
@@ -638,8 +784,8 @@ public class V1OntologyTermController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the term, this value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String iri,
+                    description = "The IRI of the term.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000017") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the term.",
@@ -676,8 +822,8 @@ public class V1OntologyTermController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the term, this value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String iri,
+                    description = "The IRI of the term.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000017") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the term.",
@@ -714,8 +860,8 @@ public class V1OntologyTermController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the term, this value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String iri,
+                    description = "The IRI of the term.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000017") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the term.",
@@ -752,8 +898,8 @@ public class V1OntologyTermController {
                     example = "duo") String ontologyId,
             @RequestParam(value = "iri", required = false)
             @Parameter(name = "iri",
-                    description = "The IRI of the term, this value must be double URL encoded",
-                    example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FDUO_0000017") String iri,
+                    description = "The IRI of the term.",
+                    example = "http://purl.obolibrary.org/obo/DUO_0000017") String iri,
             @RequestParam(value = "short_form", required = false)
             @Parameter(name = "short_form",
                     description = "This refers to the short form of the term.",
@@ -786,6 +932,14 @@ public class V1OntologyTermController {
     @ExceptionHandler(ResourceNotFoundException.class)
     public void handleError(HttpServletRequest req, Exception exception) {
 
+    }
+
+    private static String decodeUrl(String url) {
+        if(url.contains("%") || url.contains("+"))
+        {
+           return decodeUrl(java.net.URLDecoder.decode(url, StandardCharsets.UTF_8));
+        }
+        return url;
     }
 
 }

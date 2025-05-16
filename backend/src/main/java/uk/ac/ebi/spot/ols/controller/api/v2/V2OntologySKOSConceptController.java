@@ -41,7 +41,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/v2/ontologies")
-@Tag(name = "v2-ontology-skos-controller", description = "SKOS concept hierarchies and relations extracted from individuals (instances) from a particular ontology in this service")
+@Tag(name = "V2 Ontology SKOS Concept Controller", description = "SKOS concept hierarchies and relations extracted from individuals (instances) from a particular ontology in this service")
 public class V2OntologySKOSConceptController {
 
     @Autowired

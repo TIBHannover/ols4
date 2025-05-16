@@ -42,7 +42,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/ontologies")
-@Tag(name = "v1-ontology-skos-controller", description = "SKOS concept hierarchies and relations extracted from individuals (instances) from a particular ontology in this service")
+@Tag(name = "Ontology SKOS Concept Controller", description = "SKOS concept hierarchies and relations extracted from individuals (instances) from a particular ontology in this service")
 public class V1OntologySKOSConceptController {
 
     private Logger log = LoggerFactory.getLogger(getClass());

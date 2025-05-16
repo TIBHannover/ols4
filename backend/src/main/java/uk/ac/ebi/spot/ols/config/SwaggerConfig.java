@@ -4,6 +4,8 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
+
+import org.springdoc.core.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -32,6 +34,31 @@ public class SwaggerConfig {
                         )
                 );
     }
+
+    @Bean
+    public GroupedOpenApi v1Api() {
+        return GroupedOpenApi.builder()
+        		   .group("version1")
+        		   .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v1")
+        		   .build();
+    }
+
+    @Bean
+    public GroupedOpenApi v2Api() {
+        return GroupedOpenApi.builder()
+        		   .group("version2")
+        		   .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v2")
+        		   .build();
+    }
+
+    @Bean
+    public GroupedOpenApi callStatisticsApi() {
+        return GroupedOpenApi.builder()
+                .group("call_statistics")
+                .packagesToScan("uk.ac.ebi.spot.ols.reststatistics.controller")
+                .build();
+    }
+
 
 }
 

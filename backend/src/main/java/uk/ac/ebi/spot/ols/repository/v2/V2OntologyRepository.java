@@ -23,6 +23,8 @@ import uk.ac.ebi.spot.ols.repository.v2.helpers.V2SearchFieldsParser;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.*;
 import java.io.IOException;
 
@@ -110,7 +112,10 @@ public class V2OntologyRepository {
 
     public LocalDateTime getLastLoaded(Collection<String> ontologies,String lang){
         LocalDateTime lastLoaded = LocalDateTime.MIN;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS");
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+                .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+                .toFormatter();
         for (V2Entity entity : getOntologies(lang)){
             if (ontologies.contains(entity.any().get("ontologyId").toString())){
                 LocalDateTime dateTime = entity.any().get("loaded").toString() != null ? LocalDateTime.parse(entity.any().get("loaded").toString(), formatter) : LocalDateTime.MIN;

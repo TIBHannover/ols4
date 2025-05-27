@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
+import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
 import uk.ac.ebi.spot.ols.repository.neo4j.OlsNeo4jClient;
 import uk.ac.ebi.spot.ols.repository.solr.SearchType;
@@ -23,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class V2EntityRepository {
+public class V2EntityRepository extends V2OntologyRepository {
 
     @Autowired
     OlsSolrClient solrClient;
@@ -33,7 +34,7 @@ public class V2EntityRepository {
 
 
     public OlsFacetedResultsPage<V2Entity> find(
-            Pageable pageable, String lang, String search, String searchFields, String boostFields, String facetFields, boolean exactMatch, Map<String, Collection<String>> properties) throws IOException {
+            Pageable pageable, String lang, String search, String searchFields, String boostFields, String facetFields, boolean exactMatch, Map<String, Collection<String>> properties, Collection<String> schemas, Collection<String> classifications, Collection ontologies, boolean exclusive, FilterOption filterOption) throws IOException {
 
         Validation.validateLang(lang);
 
@@ -41,6 +42,12 @@ public class V2EntityRepository {
         query.setSearchText(search);
         query.setExactMatch(exactMatch);
         query.addFilter("type", List.of("entity"), SearchType.WHOLE_FIELD);
+        Collection<String> filteredOntologies = filterOntologyIDs(schemas,classifications, ontologies, exclusive, filterOption, lang);
+        if(filteredOntologies != null){
+            for (String ontologyId : filteredOntologies)
+                Validation.validateOntologyId(ontologyId);
+            query.addFilter("ontologyId",filteredOntologies, SearchType.CASE_INSENSITIVE_TOKENS);
+        }
         V2SearchFieldsParser.addSearchFieldsToQuery(query, searchFields);
         V2SearchFieldsParser.addBoostFieldsToQuery(query, boostFields);
         V2SearchFieldsParser.addFacetFieldsToQuery(query, facetFields);

@@ -11,7 +11,8 @@ public class V2DynamicFilterParser {
 
     public static void addDynamicFiltersToQuery(OlsSolrQuery query, Map<String, Collection<String>> properties) {
         for (String k : properties.keySet()) {
-            if(k.equals("searchFields") || k.equals("boostFields") || k.equals("facetFields") || k.equals("lang")) {
+            if(k.equals("searchFields") || k.equals("boostFields") || k.equals("facetFields") || k.equals("lang")
+                    || k.equals("schema") || k.equals("classification") || k.equals("ontology") || k.equals("option") || k.equals("exclusive")){
                 continue;
             }
             for(String v : properties.get(k)) {

@@ -25,7 +25,7 @@ import static uk.ac.ebi.ols.shared.DefinedFields.*;
 public class V2IndividualRepository extends V2OntologyRepository {
 
     public OlsFacetedResultsPage<V2Entity> find(
-            Pageable pageable, String lang, String search, String searchFields, String boostFields, boolean exactMatch, Map<String,Collection<String>> properties, Collection<String> schemas, Collection<String> classifications, Collection ontologies, boolean exclusive, FilterOption filterOption) throws IOException {
+            Pageable pageable, String lang, String search, String searchFields, String boostFields, boolean exactMatch, Map<String,Collection<String>> properties, Collection<String> schemas, Collection<String> classifications, Collection<String> ontologies, boolean exclusive, FilterOption filterOption) throws IOException {
 
         Validation.validateLang(lang);
 

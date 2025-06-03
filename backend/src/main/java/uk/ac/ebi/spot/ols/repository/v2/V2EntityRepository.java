@@ -24,7 +24,7 @@ import java.util.Map;
 public class V2EntityRepository extends V2OntologyRepository {
 
     public OlsFacetedResultsPage<V2Entity> find(
-            Pageable pageable, String lang, String search, String searchFields, String boostFields, String facetFields, boolean exactMatch, Map<String, Collection<String>> properties, Collection<String> schemas, Collection<String> classifications, Collection ontologies, boolean exclusive, FilterOption filterOption) throws IOException {
+            Pageable pageable, String lang, String search, String searchFields, String boostFields, String facetFields, boolean exactMatch, Map<String, Collection<String>> properties, Collection<String> schemas, Collection<String> classifications, Collection<String> ontologies, boolean exclusive, FilterOption filterOption) throws IOException {
 
         Validation.validateLang(lang);
 

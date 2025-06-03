@@ -43,8 +43,8 @@ public class V2OntologyRepository {
     OlsNeo4jClient neo4jClient;
 
 
-    public OlsFacetedResultsPage<V2Entity> find(
-            Pageable pageable, String lang, String search, String searchFields, String boostFields, boolean exactMatch, Map<String, Collection<String>> properties, Collection<String> schemas,Collection<String> classifications,Collection ontologies,boolean exclusive,FilterOption filterOption) throws IOException {
+    public OlsFacetedResultsPage<V2Entity> findOntologies(
+            Pageable pageable, String lang, String search, String searchFields, String boostFields, boolean exactMatch, Map<String, Collection<String>> properties, Collection<String> schemas,Collection<String> classifications,Collection<String> ontologies,boolean exclusive,FilterOption filterOption) throws IOException {
 
         Validation.validateLang(lang);
 

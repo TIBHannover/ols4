@@ -45,6 +45,8 @@ public class OntologyGraph implements StreamRDF {
     public int numberOfClasses = 0;
     public int numberOfProperties = 0;
     public int numberOfIndividuals = 0;
+    
+    public Set<String> entities = new HashSet<String>();
 
     private static final Logger logger = LoggerFactory.getLogger(OntologyGraph.class);
 
@@ -773,7 +775,7 @@ public class OntologyGraph implements StreamRDF {
             case "http://www.w3.org/2000/01/rdf-schema#Class":
             case "http://www.w3.org/2004/02/skos/core#Concept":
                 subjNode.types.add(OntologyNode.NodeType.CLASS);
-                if(subjNode.uri != null) {
+                if(subjNode.uri != null && entities.add(subjNode.uri)) {
                     ++ numberOfClasses;
                 }
 
@@ -799,7 +801,7 @@ public class OntologyGraph implements StreamRDF {
             case "http://www.w3.org/2002/07/owl#NamedIndividual":
                 subjNode.types.add(OntologyNode.NodeType.INDIVIDUAL);
 
-                if(subjNode.uri != null) {
+                if(subjNode.uri != null && entities.add(subjNode.uri)) {
                     ++ numberOfIndividuals;
                 }
 
@@ -835,7 +837,7 @@ public class OntologyGraph implements StreamRDF {
     private void addAddAndCountProperties(OntologyNode subjNode) {
         subjNode.types.add(OntologyNode.NodeType.PROPERTY);
 
-        if (subjNode.uri != null) {
+        if (subjNode.uri != null && entities.add(subjNode.uri)) {
             ++numberOfProperties;
         }
     }

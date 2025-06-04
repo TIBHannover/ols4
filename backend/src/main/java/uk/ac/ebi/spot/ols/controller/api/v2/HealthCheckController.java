@@ -58,7 +58,7 @@ public class HealthCheckController {
         Pageable pageable = Pageable.ofSize(20);
         try {
             V2PagedAndFacetedResponse<V2Entity> result = new V2PagedAndFacetedResponse<>(
-                    ontologyRepository.find(pageable, "en", null, null, null,
+                    ontologyRepository.findOntologies(pageable, "en", null, null, null,
                             false, Map.of(), Collections.emptyList(),Collections.emptyList(),Collections.emptyList(),false, FilterOption.LINEAR));
             if (result.totalElements > 0) {
                 logger.info("Solr is initialized.");

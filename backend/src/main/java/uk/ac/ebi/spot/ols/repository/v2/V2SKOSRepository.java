@@ -1,6 +1,7 @@
 package uk.ac.ebi.spot.ols.repository.v2;
 
 import com.google.gson.JsonObject;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import static uk.ac.ebi.spot.ols.model.SKOSRelation.*;
  * @email giray.tuncay@tib.eu
  * TIB-Leibniz Information Center for Science and Technology
  */
+@Qualifier("V2SKOSRepository")
 @Component
 public class V2SKOSRepository extends V2ClassRepository {
 

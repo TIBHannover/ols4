@@ -16,6 +16,7 @@ import org.springframework.web.util.UriUtils;
 import uk.ac.ebi.spot.ols.controller.api.v2.helpers.DynamicQueryHelper;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedResponse;
+import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
 import uk.ac.ebi.spot.ols.repository.v2.V2PropertyRepository;
 
@@ -72,7 +73,16 @@ public class V2PropertyController {
             @RequestParam
             @Parameter(name="searchProperties",
                     description = "Specify any other search field here which are not specified by searchFields or boostFields.",
-                    example = "{}") Map<String, Collection<String>> searchProperties
+                    example = "{}") Map<String, Collection<String>> searchProperties,
+            @RequestParam(value = "schema", required = false) List<String> schemas,
+            @RequestParam(value = "classification", required = false) List<String> classifications,
+            @RequestParam(value = "ontology", required = false) List<String> ontologies,
+            @Parameter(description = "Set to true (default setting is false) for intersection (default behavior is union) of classifications.")
+            @RequestParam(value = "exclusive", required = false, defaultValue = "false") boolean exclusive,
+            @Parameter(description = "Use License option to filter based on license.label, license.logo and license.url variables. " +
+                    "Use Composite Option to filter based on the objects (i.e. collection, subject) within the classifications variable. " +
+                    "Use Linear option to filter based on String and Collection<String> based variables.")
+            @RequestParam(value = "option", required = false, defaultValue = "LINEAR") FilterOption filterOption
     ) throws ResourceNotFoundException, IOException {
 
         Map<String,Collection<String>> properties = new HashMap<>();
@@ -82,7 +92,7 @@ public class V2PropertyController {
 
         return new ResponseEntity<>(
                 new V2PagedAndFacetedResponse<>(
-                    propertyRepository.find(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties))
+                    propertyRepository.find(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption)
                 ),
                  HttpStatus.OK);
     }

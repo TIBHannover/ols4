@@ -1,19 +1,17 @@
 
 package uk.ac.ebi.spot.ols.repository.v2;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.spot.ols.controller.api.v2.helpers.DynamicQueryHelper;
+import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
-import uk.ac.ebi.spot.ols.repository.neo4j.OlsNeo4jClient;
 import uk.ac.ebi.spot.ols.repository.solr.SearchType;
 import uk.ac.ebi.spot.ols.repository.solr.OlsFacetedResultsPage;
 import uk.ac.ebi.spot.ols.repository.solr.OlsSolrQuery;
-import uk.ac.ebi.spot.ols.repository.solr.OlsSolrClient;
 import uk.ac.ebi.spot.ols.repository.Validation;
 import uk.ac.ebi.spot.ols.repository.transforms.LocalizationTransform;
 import uk.ac.ebi.spot.ols.repository.transforms.RemoveLiteralDatatypesTransform;
@@ -24,19 +22,12 @@ import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 import java.io.IOException;
 import java.util.*;
-@Primary
+@Qualifier("V2ClassRepository")
 @Component
-public class V2ClassRepository {
-
-    @Autowired
-    OlsSolrClient solrClient;
-
-    @Autowired
-    OlsNeo4jClient neo4jClient;
-
+public class V2ClassRepository extends V2OntologyRepository {
 
     public OlsFacetedResultsPage<V2Entity> find(
-            Pageable pageable, String lang, String search, String searchFields, String boostFields, boolean exactMatch, Map<String,Collection<String>> properties) throws IOException {
+            Pageable pageable, String lang, String search, String searchFields, String boostFields, boolean exactMatch, Map<String,Collection<String>> properties, Collection<String> schemas, Collection<String> classifications, Collection<String> ontologies, boolean exclusive, FilterOption filterOption) throws IOException {
 
         Validation.validateLang(lang);
 
@@ -48,6 +39,12 @@ public class V2ClassRepository {
         query.setSearchText(search);
         query.setExactMatch(exactMatch);
         query.addFilter("type", List.of("class"), SearchType.WHOLE_FIELD);
+        Collection<String> filteredOntologies = filterOntologyIDs(schemas,classifications, ontologies, exclusive, filterOption, lang);
+        if(filteredOntologies != null){
+            for (String ontologyId : filteredOntologies)
+                Validation.validateOntologyId(ontologyId);
+            query.addFilter("ontologyId",filteredOntologies, SearchType.CASE_INSENSITIVE_TOKENS);
+        }
         V2SearchFieldsParser.addSearchFieldsToQuery(query, searchFields);
         V2SearchFieldsParser.addBoostFieldsToQuery(query, boostFields);
         V2DynamicFilterParser.addDynamicFiltersToQuery(query, properties);

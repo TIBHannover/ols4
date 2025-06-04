@@ -93,7 +93,7 @@ public class V2OntologyController {
 
         return new ResponseEntity<>(
                 new V2PagedAndFacetedResponse<>(
-                    ontologyRepository.find(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption)
+                    ontologyRepository.findOntologies(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption)
                 ),
                 HttpStatus.OK);
     }

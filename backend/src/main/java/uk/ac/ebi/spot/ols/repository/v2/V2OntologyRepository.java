@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonElement;
 import com.google.gson.internal.LinkedTreeMap;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,7 @@ import java.io.IOException;
 
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
+@Primary
 @Component
 public class V2OntologyRepository {
 
@@ -41,8 +43,8 @@ public class V2OntologyRepository {
     OlsNeo4jClient neo4jClient;
 
 
-    public OlsFacetedResultsPage<V2Entity> find(
-            Pageable pageable, String lang, String search, String searchFields, String boostFields, boolean exactMatch, Map<String, Collection<String>> properties, Collection<String> schemas,Collection<String> classifications,Collection ontologies,boolean exclusive,FilterOption filterOption) throws IOException {
+    public OlsFacetedResultsPage<V2Entity> findOntologies(
+            Pageable pageable, String lang, String search, String searchFields, String boostFields, boolean exactMatch, Map<String, Collection<String>> properties, Collection<String> schemas,Collection<String> classifications,Collection<String> ontologies,boolean exclusive,FilterOption filterOption) throws IOException {
 
         Validation.validateLang(lang);
 

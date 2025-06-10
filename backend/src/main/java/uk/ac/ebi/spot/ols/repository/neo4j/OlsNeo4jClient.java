@@ -107,11 +107,15 @@ public class OlsNeo4jClient {
 		String query =
 		  "MATCH (a:" + type + ")<-[edge:" + edge + "]-(b) "
 		+ "WHERE a.id = $id "
+		+ "AND "
+		+ "a.id <> b.id "
 		+ "RETURN distinct b";
 
 		String countQuery =
 		  "MATCH (a:" + type + ")<-[edge:" + edge + "]-(b) "
 		+ "WHERE a.id = $id "
+		+ "AND "
+		+ "a.id <> b.id "
 		+ "RETURN count(distinct b)";
 
 		return neo4jClient.queryPaginated(query, "b", countQuery, parameters("type", type, "id", id), pageable);

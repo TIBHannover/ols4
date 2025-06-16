@@ -7,10 +7,12 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
@@ -208,8 +210,12 @@ public class ImportCSV {
         final int attempts = cmd.hasOption("t") ? Integer.parseInt(cmd.getOptionValue("t")) : 5;
         final int limit = cmd.hasOption("l") ? Integer.parseInt(cmd.getOptionValue("l")) : 1000;
         final String label = cmd.hasOption("lb") ? cmd.getOptionValue("lb") : "OntologyEntity";
+        Config config = Config.builder()
+                .withConnectionTimeout(360, TimeUnit.SECONDS)
+                .withMaxConnectionLifetime(7200, TimeUnit.SECONDS)
+                .build();
 
-        try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword)) : GraphDatabase.driver(dbUri)) {
+        try (var driver = cmd.hasOption("a") ? GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword), config) : GraphDatabase.driver(dbUri, config)) {
             driver.verifyConnectivity();
             try (var session = driver.session(SessionConfig.builder().withDatabase(db).build())) {
                 List<String> indexCommands = new ArrayList<>();

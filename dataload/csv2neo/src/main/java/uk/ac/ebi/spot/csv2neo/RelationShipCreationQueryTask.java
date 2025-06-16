@@ -50,6 +50,7 @@ public class RelationShipCreationQueryTask implements Runnable {
                 }
             } catch(Exception e){
                 System.out.println("Attempt "+i+" error: "+e.getMessage());
+                e.printStackTrace();
             }
         }
         latch.countDown();

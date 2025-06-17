@@ -36,11 +36,11 @@ RUN if [ ! -f "/opt/ols/dataload/solr-9.7.0.tgz" ];  \
     else mkdir /opt/solr && tar -xz -f /opt/ols/dataload/solr-9.7.0.tgz --strip-components=1 -C /opt/solr; fi
 
 RUN echo "dbms.security.auth_enabled=false" >> /opt/neo4j/conf/neo4j.conf
-RUN echo "dbms.jvm.additional=-Dorg.neo4j.kernel.impl.index.schema.GenericNativeIndexPopulator.blockBasedPopulation=true" >> /opt/neo4j/conf/neo4j.conf
-RUN echo "dbms.memory.heap.initial_size=32G" >> /opt/neo4j/conf/neo4j.conf
-RUN echo "dbms.memory.heap.max_size=48G" >> /opt/neo4j/conf/neo4j.conf
-RUN echo "dbms.memory.heap.pagecache.size=48G" >> /opt/neo4j/conf/neo4j.conf
-RUN echo "dbms.transaction.timeout=600s" >> /opt/neo4j/conf/neo4j.conf
+RUN echo "db.jvm.additional=-Dorg.neo4j.kernel.impl.index.schema.GenericNativeIndexPopulator.blockBasedPopulation=true" >> /opt/neo4j/conf/neo4j.conf
+RUN echo "server.memory.heap.initial_size=32G" >> /opt/neo4j/conf/neo4j.conf
+RUN echo "server.memory.heap.max_size=48G" >> /opt/neo4j/conf/neo4j.conf
+RUN echo "server.memory.pagecache.size=48G" >> /opt/neo4j/conf/neo4j.conf
+RUN echo "db.transaction.timeout=600s" >> /opt/neo4j/conf/neo4j.conf
 
 # Copy the OLS4 Solr config into our temporary Solr server
 #

@@ -27,6 +27,10 @@ public class Linker {
         leveldbPath.setRequired(false);
         options.addOption(leveldbPath);
 
+        Option serviceUrl = new Option(null, "serviceUrl", true, "Service url to get the entities from");
+        leveldbPath.setRequired(false);
+        options.addOption(serviceUrl);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
@@ -44,13 +48,17 @@ public class Linker {
         String inputFilePath = cmd.getOptionValue("input");
         String outputFilePath = cmd.getOptionValue("output");
         String leveldb_path = cmd.getOptionValue("leveldbPath");
+        String service_url = cmd.getOptionValue("serviceUrl");
 
         LevelDB leveldb = leveldb_path != null ? new LevelDB(leveldb_path) : null;
 
         try {
-
+            LinkerPass1.LinkerPass1Result pass1Result;
     //        LinkerPass1.LinkerPass1Result pass1Result = gson.fromJson(new InputStreamReader(new FileInputStream("/Users/james/ols4/linked.json")), LinkerPass1.LinkerPass1Result.class);
-            LinkerPass1.LinkerPass1Result pass1Result = LinkerPass1.run(inputFilePath);
+            if (service_url != null && !service_url.isEmpty()) {
+                pass1Result = LinkerPass1.runForService(service_url);
+            } else
+                pass1Result = LinkerPass1.run(inputFilePath);
 
     //        gson.toJson(pass1Result, new FileWriter(outputFilePath));
     //        Files.write(Path.of(outputFilePath), gson.toJson(pass1Result).getBytes(StandardCharsets.UTF_8));

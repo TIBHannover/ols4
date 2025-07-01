@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 public class BulkOntologyDownloader {
 
@@ -16,14 +17,16 @@ public class BulkOntologyDownloader {
     Set<String> urlsAlreadyProcessed;
     String downloadPath;
     boolean loadLocalFiles;
+    Map<String, String> fileNameForDownloadByPurl;
 
     Set<OntologyDownloaderThread> threads = new HashSet<>();
 
-    public BulkOntologyDownloader(List<String> ontologyUrls, String downloadPath, boolean loadLocalFiles) {
+    public BulkOntologyDownloader(List<String> ontologyUrls, String downloadPath, boolean loadLocalFiles, Map<String, String> fileNameForDownloadByPurl) {
         this.urlsToDownload = new LinkedHashSet<String>(ontologyUrls);
         this.urlsAlreadyProcessed = new HashSet<>();
         this.downloadPath = downloadPath;
         this.loadLocalFiles = loadLocalFiles;
+        this.fileNameForDownloadByPurl = fileNameForDownloadByPurl;
     }
 
     public void downloadAll() {

@@ -58,8 +58,9 @@ public class OntologyDownloaderThread implements Runnable {
 
     @Override
     public void run() {
+    	String fileNameToDownload = downloader.fileNameForDownloadByPurl.get(ontologyUrl);
 
-        String path = downloader.downloadPath + "/" + urlToFilename(ontologyUrl);
+        String path = downloader.downloadPath + "/" + (fileNameToDownload != null ? urlToFilename(fileNameToDownload) : urlToFilename(ontologyUrl));
 
         System.out.println(Thread.currentThread().getName() + " Starting download for " + ontologyUrl + " to " + path);
 

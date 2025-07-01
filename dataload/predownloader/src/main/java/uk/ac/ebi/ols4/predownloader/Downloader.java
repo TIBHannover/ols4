@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 public class Downloader {
 
@@ -37,6 +38,10 @@ public class Downloader {
         Option loadLocalFiles = new Option(null, "loadLocalFiles", false, "Whether or not to load local files (unsafe, for testing)");
         loadLocalFiles.setRequired(false);
         options.addOption(loadLocalFiles);
+        
+        Option optIdForDownload = new Option(null, "useIdForDownload", false, "By default, the file will be downloaded using the purl name. Pass this parameter to use the ontologyId");
+        optIdForDownload.setRequired(false);
+        options.addOption(optIdForDownload);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -55,6 +60,9 @@ public class Downloader {
         List<String> configFilePaths = Arrays.asList(cmd.getOptionValue("config").split(","));
         boolean bLoadLocalFiles = cmd.hasOption("loadLocalFiles");
         String downloadPath = cmd.getOptionValue("downloadPath");
+        boolean isDownloadById = cmd.hasOption("useIdForDownload");
+        
+        Map<String, String> fileNameForDownloadByPurl = new HashMap<String, String>();
 
 
         System.out.println("Configs: " + configFilePaths);
@@ -112,6 +120,7 @@ public class Downloader {
         for(Map<String,Object> config : mergedConfigs.values()) {
 
             String url = (String) config.get("ontology_purl");
+            String ontologyId = (String) config.get("id");
 
             if(url == null) {
 
@@ -132,12 +141,14 @@ public class Downloader {
                 }
             }
 
-            if(url != null)
+            if(url != null) {
                 ontologyUrls.add(url);
+                fileNameForDownloadByPurl.put(url, isDownloadById ? ontologyId : url);
+            }
         }
 
             
-        BulkOntologyDownloader downloader = new BulkOntologyDownloader(List.copyOf(ontologyUrls), downloadPath, bLoadLocalFiles);
+        BulkOntologyDownloader downloader = new BulkOntologyDownloader(List.copyOf(ontologyUrls), downloadPath, bLoadLocalFiles, fileNameForDownloadByPurl);
 
         downloader.downloadAll();
 

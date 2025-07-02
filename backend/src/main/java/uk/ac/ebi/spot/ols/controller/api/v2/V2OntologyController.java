@@ -1,11 +1,23 @@
 package uk.ac.ebi.spot.ols.controller.api.v2;
 
-import com.google.gson.Gson;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import static uk.ac.ebi.ols.shared.DefinedFields.IS_OBSOLETE;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -14,10 +26,20 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.gson.Gson;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import uk.ac.ebi.spot.ols.controller.api.v2.helpers.DynamicQueryHelper;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.model.FilterOption;
@@ -27,6 +49,7 @@ import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 import java.io.IOException;
 import java.util.*;
+import org.springframework.http.ContentDisposition;
 
 @Tag(name = "V2 Ontology Controller", description = "This endpoint provides access to ontology information.")
 @RestController
@@ -37,6 +60,9 @@ public class V2OntologyController {
 
     @Autowired
     V2OntologyRepository ontologyRepository;
+    
+    @Value("${ols.downloads.folder:/pre-downloaded/ontologies}")
+    private String downloadsFolder;
 
     private static final Logger logger = LoggerFactory.getLogger(V2OntologyController.class);
 
@@ -140,5 +166,34 @@ public class V2OntologyController {
         Page<String> document = new PageImpl<>(tempList.subList(start, end), pageable, tempSet.size());
         return new ResponseEntity<>(document, HttpStatus.OK);
     }
-
+    
+    @RequestMapping(path = "/{onto}/download", produces= {MediaType.APPLICATION_OCTET_STREAM_VALUE}, method = RequestMethod.GET)
+    public ResponseEntity<FileSystemResource> downloadOntology1(
+    		@PathVariable("onto")
+    		@Parameter(name = "onto",
+    					description = "Ontology Id to download.",
+    					example = "efo") String ontologyId
+    		) {
+    	String contentType = "application/octet-stream";
+    	FileSystemResource resource = null;
+    	try {
+			resource = new FileSystemResource(getDownloadFile(ontologyId));
+		} catch (FileNotFoundException e) {
+			throw new ResourceNotFoundException("This ontology is not available for download");
+		}
+    	
+    	return ResponseEntity.ok()
+    	        .contentType(MediaType.parseMediaType(contentType))
+    	        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(resource.getFilename()).build().toString())
+    	        .body(resource);
+    	
+    }
+    
+    private File getDownloadFile (String ontologyId) throws FileNotFoundException {
+        File file = new File (downloadsFolder, ontologyId.toLowerCase());
+        if (!file.exists()) {
+            throw new FileNotFoundException();
+        }
+        return file;
+    }
 }

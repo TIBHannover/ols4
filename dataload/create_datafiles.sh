@@ -18,15 +18,15 @@ rm -f $OUTDIR/*
 echo JAVA_OPTS=$JAVA_OPTS
 
 echo rdf2json
-java $JAVA_OPTS -DentityExpansionLimit=0 -DtotalEntitySizeLimit=0 -Djdk.xml.totalEntitySizeLimit=0 -Djdk.xml.entityExpansionLimit=0 -jar $SCRIPT_PATH/rdf2json/target/rdf2json-1.0-SNAPSHOT.jar --config "$CONFIG_URL" --output "$JSON_PATH" --convertToRDF "${@:3}"
+java $JAVA_OPTS -DentityExpansionLimit=0 -DtotalEntitySizeLimit=0 -Djdk.xml.totalEntitySizeLimit=0 -Djdk.xml.entityExpansionLimit=0 -Dfile.encoding=UTF-8 -jar $SCRIPT_PATH/rdf2json/target/rdf2json-1.0-SNAPSHOT.jar --config "$CONFIG_URL" --output "$JSON_PATH" --convertToRDF "${@:3}"
 
 echo linker
-java -jar $SCRIPT_PATH/linker/target/linker-1.0-SNAPSHOT.jar --input "$JSON_PATH" --output "$JSON_PATH_LINKED"
+java -Dfile.encoding=UTF-8 -jar $SCRIPT_PATH/linker/target/linker-1.0-SNAPSHOT.jar --input "$JSON_PATH" --output "$JSON_PATH_LINKED"
 
 echo json2neo
-java -jar $SCRIPT_PATH/json2neo/target/json2neo-1.0-SNAPSHOT.jar --input "$JSON_PATH_LINKED" --outDir $OUTDIR
+java -Dfile.encoding=UTF-8 -jar $SCRIPT_PATH/json2neo/target/json2neo-1.0-SNAPSHOT.jar --input "$JSON_PATH_LINKED" --outDir $OUTDIR
 
 echo json2solr
-java -jar $SCRIPT_PATH/json2solr/target/json2solr-1.0-SNAPSHOT.jar --input "$JSON_PATH_LINKED" --outDir $OUTDIR
+java -Dfile.encoding=UTF-8 -jar $SCRIPT_PATH/json2solr/target/json2solr-1.0-SNAPSHOT.jar --input "$JSON_PATH_LINKED" --outDir $OUTDIR
 
 

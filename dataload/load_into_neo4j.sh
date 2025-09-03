@@ -16,7 +16,7 @@ rm -rf $1/data/transactions/neo4j
 $1/bin/neo4j start
 sleep 20
 echo "csv2neo with batch size $bs and pool size $ps" and number of attempts $t
-java -jar $SCRIPT_PATH/csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -m i -d $2 -bs $bs -ps $ps -t $t
+java -Dfile.encoding=UTF-8 -jar $SCRIPT_PATH/csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -m i -d $2 -bs $bs -ps $ps -t $t
 
 
 

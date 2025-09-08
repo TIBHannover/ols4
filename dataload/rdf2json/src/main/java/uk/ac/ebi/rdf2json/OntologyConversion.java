@@ -93,6 +93,7 @@ public class OntologyConversion {
 
     private OWLOntology loadOntology(String url) throws IOException {
         OWLOntologyManager ontManager = OWLManager.createOWLOntologyManager();
+        ontManager.getIRIMappers().add(new RedirectingIRIMapper());
         OWLOntology ont;
         InputStream is = null;
         URLConnection con = null;

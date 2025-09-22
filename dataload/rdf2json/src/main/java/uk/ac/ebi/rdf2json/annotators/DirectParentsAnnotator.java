@@ -33,7 +33,8 @@ public class DirectParentsAnnotator {
                 if(parents != null) {
                     for(PropertyValue parent : parents) {
                         if(parent.getType() == PropertyValue.Type.URI && graph.nodes.containsKey(((PropertyValueURI) parent).getUri())) {
-                            directParents.add((PropertyValueURI) parent);
+                        	if(!((PropertyValueURI) parent).getUri().equalsIgnoreCase(id))
+                        		directParents.add((PropertyValueURI) parent);
                         }
                     }
                 }

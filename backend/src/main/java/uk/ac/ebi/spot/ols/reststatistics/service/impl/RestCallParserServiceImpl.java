@@ -27,9 +27,6 @@ public class RestCallParserServiceImpl implements RestCallParserService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final UrlCyclicDecoder decoder = new UrlCyclicDecoder();
 
-    @Value("#{'${frontends}'.split(',')}")
-    private Set<String> frontends = new HashSet<>();
-
     @Override
     public HttpServletRequestInfo parse(HttpServletRequest request) {
         String requestURI = request.getRequestURI();
@@ -64,13 +61,12 @@ public class RestCallParserServiceImpl implements RestCallParserService {
         Set<RestCallParameter> headers = new HashSet<RestCallParameter>();
         for (Enumeration<?> names = request.getHeaderNames(); names.hasMoreElements();) {
             String headerName = (String) names.nextElement();
-            if (!headerName.equals("user-agent"))
+            if (!headerName.equals("caller"))
                 continue;
 
             for(Enumeration<?> values = request.getHeaders(headerName); values.hasMoreElements();){
                 String headerValue = (String) values.nextElement();
-                if(frontends.contains(headerValue))
-                    headers.add(new RestCallParameter(headerName,headerValue, RestCallParameterType.HEADER));
+                headers.add(new RestCallParameter(headerName,headerValue, RestCallParameterType.HEADER));
             }
 
         }

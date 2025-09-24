@@ -1,6 +1,8 @@
 package uk.ac.ebi.spot.csv2neo;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,6 +28,15 @@ public class QueryGeneration {
         return sb.toString();
     }
 
+    public static String generateUpdateQuery(String[] titles, String[] values){
+        StringBuilder sb = new StringBuilder();
+        if (titles.length == values.length){
+            sb.append("MATCH (n"+idToLabel(values[0])+" {id: "+"\'"+values[0]+"\'"+"}) ")
+                    .append("SET n+= $props");
+        }
+        return sb.toString();
+    }
+
     public static Map<String,Object> generateProps(String[] titles, String[] values){
         Map<String,Object> props = new HashMap<>();
         props.put("id",values[0]);
@@ -37,6 +48,27 @@ public class QueryGeneration {
                     props.put(title[0].replaceAll("\"\"","\""),values[i].split("\\|"));
                 } else
                     props.put(title[0].replaceAll("\"\"","\""),values[i]);
+            }
+        } else {
+            System.out.println("titles and values are not equal");
+            System.out.println("titles: "+titles.length + " - values: " +values.length);
+        }
+        Map<String,Object> params = new HashMap<>();
+        params.put( "props", props );
+        return params;
+    }
+
+    public static Map<String,Object> generatePropsForUpdate(String[] titles, String[] values, List<String> subset){
+        Map<String,Object> props = new HashMap<>();
+        if (titles.length == values.length) {
+            for (int i = 3; i < values.length; i++){
+                String[] title = titles[i].split(":");
+                if(subset.contains(title[0])){
+                    if (title.length > 1 && title[1].equals("string[]")) {
+                        props.put(title[0].replaceAll("\"\"","\""),values[i].split("\\|"));
+                    } else
+                        props.put(title[0].replaceAll("\"\"","\""),values[i]);
+                }
             }
         } else {
             System.out.println("titles and values are not equal");

@@ -57,13 +57,17 @@ public class Linker {
     //        LinkerPass1.LinkerPass1Result pass1Result = gson.fromJson(new InputStreamReader(new FileInputStream("/Users/james/ols4/linked.json")), LinkerPass1.LinkerPass1Result.class);
             if (service_url != null && !service_url.isEmpty()) {
                 pass1Result = LinkerPass1.runForService(service_url);
-            } else
+                LinkerPass2FromService.run(service_url, outputFilePath, leveldb, pass1Result);
+            } else {
                 pass1Result = LinkerPass1.run(inputFilePath);
+                LinkerPass2.run(inputFilePath, outputFilePath, leveldb, pass1Result);
+            }
+
 
     //        gson.toJson(pass1Result, new FileWriter(outputFilePath));
     //        Files.write(Path.of(outputFilePath), gson.toJson(pass1Result).getBytes(StandardCharsets.UTF_8));
 
-            LinkerPass2.run(inputFilePath, outputFilePath, leveldb, pass1Result);
+
 
         } finally {
             if(leveldb != null)

@@ -60,6 +60,26 @@ public class ImportCSV {
         }
     }
 
+    public static void executeBatchedUpdateNodeQueries(List<File> files, List<String> subset, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
+        for (File file : files) {
+            if (!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
+                    || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
+                continue;
+            Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+            String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
+            List<List<CSVRecord>> splitRecords = splitList(csvParser.getRecords(),batchSize);
+            CountDownLatch latch = new CountDownLatch(splitRecords.size());
+            ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
+            for (List<CSVRecord> records : splitRecords){
+                NodeUpdateQueryTask task = new NodeUpdateQueryTask(driver,latch, records,headers,subset,file,attempts);
+                executorService.submit(task);
+            }
+            latch.await();
+            executorService.shutdown();
+        }
+    }
+
     public static void executeBatchedRelationshipQueries(List<File> files, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
         for (File file : files) {
             if ((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
@@ -250,6 +270,10 @@ public class ImportCSV {
                         for (String key : keys){
                             System.out.println("For Key: "+key+" - Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
                         }
+                    } else if (cmd.getOptionValue("m").equals("u")) {
+                        File dir = new File(directory);
+                        List<File> files = listFiles(dir.listFiles());
+                        executeBatchedUpdateNodeQueries(files,null,driver,batchSize, poolSize,attempts);
                     } else if (cmd.getOptionValue("m").equals("rm")){
                         if (!cmd.hasOption("l") && !cmd.hasOption("lb")){
                             for(String ontology : ontologyPrefixes.split(",")){

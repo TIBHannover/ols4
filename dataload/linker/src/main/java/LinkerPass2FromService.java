@@ -120,24 +120,21 @@ public class LinkerPass2FromService {
 
             Set<String> ontologyGatheredStrings = new TreeSet<>();
 
+            jsonWriter.name("classes");
+            writeEntityArray(backendUrl,numberOfTerms,jsonWriter,"classes",ontologyId,leveldb,pass1Result);
+            jsonWriter.name("properties");
+            writeEntityArray(backendUrl,numberOfTerms,jsonWriter,"properties",ontologyId,leveldb,pass1Result);
+            jsonWriter.name("individuals");
+            writeEntityArray(backendUrl,numberOfTerms,jsonWriter,"individuals",ontologyId,leveldb,pass1Result);
+
             for (Map.Entry entry : ontology.getAsJsonObject().entrySet()){
                 String key = entry.getKey().toString();
                 jsonWriter.name(key);
-
-                if(key.equals("classes")) {
-                    writeEntityArray(backendUrl,numberOfTerms,jsonWriter,"classes",ontologyId,leveldb,pass1Result);
-                    continue;
-                } else if(key.equals("properties")) {
-                    writeEntityArray(backendUrl,numberOfTerms,jsonWriter,"properties",ontologyId,leveldb,pass1Result);
-                    continue;
-                } else if(key.equals("individuals")) {
-                    writeEntityArray(backendUrl,numberOfTerms,jsonWriter,"individuals",ontologyId,leveldb,pass1Result);
-                    continue;
-                } else {
-                    JsonElement ontologyGatheredStringsElement = ontology.getAsJsonObject().get(key);
-                    ontologyGatheredStrings.add(ExtractIriFromPropertyName.extract(key));
-                    CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(ontologyGatheredStringsElement, jsonWriter, ontologyGatheredStrings);
-                }
+                JsonElement ontologyGatheredStringsElement = ontology.getAsJsonObject().get(key);
+                ontologyGatheredStrings.add(ExtractIriFromPropertyName.extract(key));
+                System.out.println("key: " + key);
+                System.out.println("1: " + ontologyGatheredStringsElement.toString());
+                CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(ontologyGatheredStringsElement, jsonWriter, ontologyGatheredStrings);
             }
 
             jsonWriter.name("linkedEntities");
@@ -177,6 +174,8 @@ public class LinkerPass2FromService {
                     processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
                 } else {
                     JsonElement gatheringStringsElement = term.getAsJsonObject().get(name);
+                    System.out.println("name: "+name);
+                    System.out.println("2: "+gatheringStringsElement.toString());
                     CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(gatheringStringsElement, jsonWriter, stringsInEntity);
                 }
             }

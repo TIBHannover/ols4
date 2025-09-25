@@ -373,12 +373,23 @@ public class LinkerPass1 {
 			System.out.println("jsonlabel: "+term.getAsJsonObject().get("label"));
 			StringBuilder sb = new StringBuilder();
 			sb.append("[");
+            boolean primitive = false;
 			for (JsonElement labelElement : term.getAsJsonObject().get("label").getAsJsonArray()){
-				sb.append("{\"type\":[\"literal\"],\"value\":\""+labelElement.getAsString()+"\"},");
+                if(labelElement.isJsonPrimitive() && labelElement.getAsJsonPrimitive().isString()){
+                    sb.append("{\"type\":[\"literal\"],\"value\":\""+labelElement.getAsString()+"\"},");
+                    primitive = true;
+                } else if(labelElement.isJsonArray()){
+                    sb.append("{\"type\":[\"literal\"],\"value\":\""+labelElement.getAsJsonArray().getAsString()+"\"},");
+                } else if (labelElement.isJsonObject()){
+                    System.out.println("label object: "+labelElement.getAsJsonObject().toString());
+                    sb.append(labelElement.getAsJsonObject().toString());
+                }
 			}
-			int last = sb.length() - 1;
-			sb.replace(last, last + 1, "");
-			sb.append("]");
+            if (primitive){
+                int last = sb.length() - 1;
+                sb.replace(last, last + 1, "");
+            }
+            sb.append("]");
 
 			label = jsonParser.parse(sb.toString());
 			System.out.println("label: "+label);

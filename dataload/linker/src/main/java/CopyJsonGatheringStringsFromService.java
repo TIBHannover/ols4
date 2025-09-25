@@ -17,43 +17,50 @@ public class CopyJsonGatheringStringsFromService {
 
     public static void copyJsonGatheringStrings(JsonElement gatheringStringsElement, JsonWriter jsonWriter, Set<String> gatheredStrings) throws IOException {
 
-        for (Map.Entry<String, JsonElement> entry : gatheringStringsElement.getAsJsonObject().entrySet()) {
-            if (entry.getValue().isJsonArray()) {
+        if (gatheringStringsElement.isJsonObject()) {
+            copyObject(gatheringStringsElement, jsonWriter, gatheredStrings);
+        } else if (gatheringStringsElement.isJsonArray()) {
+            copyArray(gatheringStringsElement, jsonWriter, gatheredStrings);
+        } else if (gatheringStringsElement.isJsonPrimitive() && gatheringStringsElement.getAsJsonPrimitive().isString()) {
+            String str = gatheringStringsElement.getAsString();
+            gatheredStrings.add(str);
 
-                jsonWriter.beginArray();
+            Matcher matcher = curiePattern.matcher(str);
 
-                for (JsonElement jsonElement : entry.getValue().getAsJsonArray()) {
-                    copyJsonGatheringStrings(jsonElement, jsonWriter, gatheredStrings);
-                }
-
-                jsonWriter.endArray();
-
-            } else if (entry.getValue().isJsonObject()) {
-
-                jsonWriter.beginObject();
-                copyJsonGatheringStrings(entry.getValue().getAsJsonObject(), jsonWriter, gatheredStrings);
-                jsonWriter.endObject();
-
-            } else if (entry.getValue().isJsonPrimitive() && entry.getValue().getAsJsonPrimitive().isString()) {
-                String str = entry.getValue().getAsString();
-                gatheredStrings.add(str);
-
-                Matcher matcher = curiePattern.matcher(str);
-
-                while (matcher.find()) {
-                    gatheredStrings.add(matcher.group());
-                }
-
-                Matcher uriMatcher = uriPattern.matcher(str);
-
-                while (uriMatcher.find()) {
-                    gatheredStrings.add(uriMatcher.group());
-                }
-
-                jsonWriter.value(str);
-            } else {
-                com.google.gson.internal.Streams.write(gatheringStringsElement, jsonWriter);
+            while (matcher.find()) {
+                gatheredStrings.add(matcher.group());
             }
+
+            Matcher uriMatcher = uriPattern.matcher(str);
+
+            while (uriMatcher.find()) {
+                gatheredStrings.add(uriMatcher.group());
+            }
+
+            jsonWriter.value(str);
+        } else {
+            com.google.gson.internal.Streams.write(gatheringStringsElement, jsonWriter);
         }
+    }
+
+    public static void copyObject(JsonElement gatheringStringsElement, JsonWriter jsonWriter, Set<String> gatheredStrings) throws IOException {
+        jsonWriter.beginObject();
+        for (Map.Entry<String, JsonElement> entry : gatheringStringsElement.getAsJsonObject().entrySet()){
+            String name = entry.getKey();
+            gatheredStrings.add(ExtractIriFromPropertyName.extract(name));
+            jsonWriter.name(name);
+            copyJsonGatheringStrings(entry.getValue(), jsonWriter, gatheredStrings);
+        }
+        jsonWriter.endObject();
+    }
+
+    public static void copyArray(JsonElement element, JsonWriter jsonWriter, Set<String> gatheredStrings) throws IOException {
+        jsonWriter.beginArray();
+
+        for (JsonElement jsonElement : element.getAsJsonArray()) {
+            copyJsonGatheringStrings(jsonElement, jsonWriter, gatheredStrings);
+        }
+
+        jsonWriter.endArray();
     }
 }

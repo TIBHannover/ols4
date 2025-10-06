@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static uk.ac.ebi.ols.shared.DefinedFields.BASE_URI;
-
 public class LinkerPass1FromService {
 
     private static final JsonParser jsonParser = new JsonParser();

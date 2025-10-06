@@ -62,7 +62,7 @@ public class LinkerPass2FromService {
 
     }
 
-    public static void run(String backendUrl, String outputJsonFilename, LevelDB leveldb, LinkerPass1.LinkerPass1Result pass1Result) throws IOException {
+    public static void run(String backendUrl, String outputJsonFilename, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
 
 
         JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/ontologies/","_embedded","ontologies");
@@ -149,7 +149,7 @@ public class LinkerPass2FromService {
         System.out.println("--- Linker Pass 2 complete");
     }
 
-    private static void writeEntityArray(String backendUrl, int noofEntities, JsonWriter jsonWriter, String entityType, String ontologyId, LevelDB leveldb, LinkerPass1.LinkerPass1Result pass1Result) throws IOException {
+    private static void writeEntityArray(String backendUrl, int noofEntities, JsonWriter jsonWriter, String entityType, String ontologyId, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
         JsonArray terms = getEntitiesAsJsonArray(backendUrl + "/api/v2/ontologies/" + ontologyId + "/" + entityType + "?size=" + noofEntities, null, "elements");
 
         jsonWriter.beginArray();
@@ -215,7 +215,7 @@ public class LinkerPass2FromService {
     }
 
 
-    private static void writeLinkedEntitiesFromGatheredStrings(JsonWriter jsonWriter, Set<String> strings, String ontologyId, String entityIri, LevelDB leveldb, LinkerPass1.LinkerPass1Result pass1Result) throws IOException {
+    private static void writeLinkedEntitiesFromGatheredStrings(JsonWriter jsonWriter, Set<String> strings, String ontologyId, String entityIri, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
 
         jsonWriter.beginObject();
 
@@ -456,7 +456,7 @@ public class LinkerPass2FromService {
         public String source;
     }
 
-    private static void processShortFormObject(JsonElement shortFormElement, JsonWriter jsonWriter, LinkerPass1.LinkerPass1Result pass1Result, String entityIri) throws IOException {
+    private static void processShortFormObject(JsonElement shortFormElement, JsonWriter jsonWriter, LinkerPass1FromService.LinkerPass1Result pass1Result, String entityIri) throws IOException {
         JsonObject shortFormObject = new JsonObject();
         JsonArray typeArray = new JsonArray();
         typeArray.add("literal");
@@ -477,7 +477,7 @@ public class LinkerPass2FromService {
         jsonWriter.endObject();
     }
 
-    private static void processCurieObject(JsonElement curieElement, JsonWriter jsonWriter, LinkerPass1.LinkerPass1Result pass1Result, String entityIri) throws IOException {
+    private static void processCurieObject(JsonElement curieElement, JsonWriter jsonWriter, LinkerPass1FromService.LinkerPass1Result pass1Result, String entityIri) throws IOException {
         JsonObject curieObject = new  JsonObject();
         JsonArray typeArray = new JsonArray();
         typeArray.add("literal");

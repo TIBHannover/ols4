@@ -54,10 +54,11 @@ public class Linker {
 
         try {
             LinkerPass1.LinkerPass1Result pass1Result;
+            LinkerPass1FromService.LinkerPass1Result pass1ResultFromService;
     //        LinkerPass1.LinkerPass1Result pass1Result = gson.fromJson(new InputStreamReader(new FileInputStream("/Users/james/ols4/linked.json")), LinkerPass1.LinkerPass1Result.class);
             if (service_url != null && !service_url.isEmpty()) {
-                pass1Result = LinkerPass1.runForService(service_url);
-                LinkerPass2FromService.run(service_url, outputFilePath, leveldb, pass1Result);
+                pass1ResultFromService = LinkerPass1FromService.run(service_url);
+                LinkerPass2FromService.run(service_url, outputFilePath, leveldb, pass1ResultFromService);
             } else {
                 pass1Result = LinkerPass1.run(inputFilePath);
                 LinkerPass2.run(inputFilePath, outputFilePath, leveldb, pass1Result);

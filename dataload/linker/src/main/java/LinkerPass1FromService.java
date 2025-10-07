@@ -89,27 +89,22 @@ public class LinkerPass1FromService {
 			System.out.println("jsoncurie: "+term.getAsJsonObject().get("curie"));
 			curie = jsonParser.parse("{\"type\":[\"literal\"],\"value\":\""+term.getAsJsonObject().get("curie").getAsString()+"\"}");
 			System.out.println("curie: "+curie);
-			System.out.println("jsonlabel: "+term.getAsJsonObject().get("label"));
-			StringBuilder sb = new StringBuilder();
-			sb.append("[");
-            boolean primitive = false;
-			for (JsonElement labelElement : term.getAsJsonObject().get("label").getAsJsonArray()){
-                if(labelElement.isJsonPrimitive() && labelElement.getAsJsonPrimitive().isString()){
-                    sb.append("{\"type\":[\"literal\"],\"value\":\""+labelElement.getAsString()+"\"},");
-                    primitive = true;
-                } else if(labelElement.isJsonArray()){
-                    sb.append("{\"type\":[\"literal\"],\"value\":\""+labelElement.getAsJsonArray().getAsString()+"\"},");
-                } else if (labelElement.isJsonObject()){
-                    System.out.println("label object: "+labelElement.getAsJsonObject().toString());
-                    sb.append(labelElement.getAsJsonObject().toString());
-                }
-			}
-            if (primitive){
+            JsonElement lelement = term.getAsJsonObject().get("label");
+            StringBuilder sb = new StringBuilder();
+            if (lelement.isJsonArray()){
+                sb.append("[");
+                lelement.getAsJsonArray().forEach(element -> {sb.append("{\"type\":[\"literal\"],\"value\":\""+element.getAsString()+"\"},");});
                 int last = sb.length() - 1;
                 sb.replace(last, last + 1, "");
+                sb.append("]");
+            } else if (lelement.isJsonPrimitive()){
+                sb.append("{\"type\":[\"literal\"],\"value\":\""+lelement.getAsString()+"\"}");
+            } else if (lelement.isJsonObject()){
+                sb.append(lelement.getAsJsonObject().toString());
+            } else {
+                sb.append(lelement.getAsJsonNull().toString());
             }
-            sb.append("]");
-
+            System.out.println("jsonlabel: "+sb);
 			label = jsonParser.parse(sb.toString());
 			System.out.println("label: "+label);
 			for (JsonElement type : term.getAsJsonObject().get("type").getAsJsonArray()){

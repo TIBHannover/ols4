@@ -200,7 +200,7 @@ public class LinkerPass1FromService {
 				ontologyId = ontology.getAsJsonObject().get("ontologyId").getAsString();
 				numberOfTerms = ontology.getAsJsonObject().get("numberOfTerms").getAsInt();
 				numberOfProperties = ontology.getAsJsonObject().get("numberOfProperties").getAsInt();
-				numberOfIndividuals = ontology.getAsJsonObject().get("numberOfTerms").getAsInt();
+				numberOfIndividuals = ontology.getAsJsonObject().get("numberOfIndividuals").getAsInt();
 
 				ontologyIri = ontology.getAsJsonObject().getAsJsonObject("config").get("fileLocation").getAsString();
 				Set<String> ids = result.ontologyIriToOntologyIds.get(ontologyIri);

@@ -93,7 +93,12 @@ public class LinkerPass1FromService {
             StringBuilder sb = new StringBuilder();
             if (lelement.isJsonArray()){
                 sb.append("[");
-                lelement.getAsJsonArray().forEach(element -> {sb.append("{\"type\":[\"literal\"],\"value\":\""+element.getAsString()+"\"},");});
+                for (JsonElement element : lelement.getAsJsonArray()){
+                    if (element.isJsonObject())
+                        sb.append("{\"type\":[\"literal\"],\"value\":\""+element.getAsJsonObject().get("value").getAsString()+"\"},");
+                    else
+                        sb.append("{\"type\":[\"literal\"],\"value\":\""+element.getAsString()+"\"},");
+                }
                 int last = sb.length() - 1;
                 sb.replace(last, last + 1, "");
                 sb.append("]");
@@ -215,8 +220,13 @@ public class LinkerPass1FromService {
 				for (JsonElement baseUri : ontology.getAsJsonObject().getAsJsonObject("config").get("baseUris").getAsJsonArray()){
 					ontologyBaseUris.add(baseUri.getAsString());
 				}
-
-				preferredPrefix = ontology.getAsJsonObject().getAsJsonObject("config").get("preferredPrefix").getAsString();
+                boolean obo = false;
+                if (ontologyIri.contains("purl.obolibrary.org"))
+                    obo = true;
+                if (obo)
+                    preferredPrefix = ontologyId;
+                else
+				    preferredPrefix = ontology.getAsJsonObject().getAsJsonObject("config").get("preferredPrefix").getAsString();
 
 				ontologyBaseUris.add("http://purl.obolibrary.org/obo/" + preferredPrefix + "_");
 

@@ -75,122 +75,129 @@ public class LinkerPass1FromService {
 
 	}
 
-	public static void parseEntitiesForService(String backendUrl, String ontologyId,  int noofEntities, Set<String> ontologyBaseUris,LinkerPass1Result result) throws IOException {
-		JsonArray terms = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies/"+ontologyId+"/entities?size="+noofEntities,null,"elements");
+    public static int numberOfPages(int noofEntities,int pageSize) {
+        if  (noofEntities % pageSize == 0)
+            return noofEntities/pageSize;
+        else
+            return (noofEntities/pageSize) + 1;
+    }
 
-		for (JsonElement term : terms){
-			String iri = null;
-			JsonElement label = null;
-			JsonElement curie = null;
-			Set<String> definedBy = new HashSet<>();
-			Set<String> types = new HashSet<>();
-			iri = term.getAsJsonObject().get("iri").getAsString();
-			System.out.println("term iri: "+iri);
-			System.out.println("jsoncurie: "+term.getAsJsonObject().get("curie"));
-			curie = jsonParser.parse("{\"type\":[\"literal\"],\"value\":\""+term.getAsJsonObject().get("curie").getAsString()+"\"}");
-			System.out.println("curie: "+curie);
-            JsonElement lelement = term.getAsJsonObject().get("label");
-            StringBuilder sb = new StringBuilder();
-            if (lelement.isJsonArray()){
-                sb.append("[");
-                for (JsonElement element : lelement.getAsJsonArray()){
-                    if (element.isJsonObject())
-                        sb.append("{\"type\":[\"literal\"],\"value\":\""+element.getAsJsonObject().get("value").getAsString()+"\"},");
-                    else
-                        sb.append("{\"type\":[\"literal\"],\"value\":\""+element.getAsString()+"\"},");
+	public static void parseEntitiesForService(String backendUrl, int pageSize, String ontologyId, int noofEntities, Set<String> ontologyBaseUris,LinkerPass1Result result) throws IOException {
+        for (int i = 0; i<numberOfPages(noofEntities, pageSize); i++){
+            JsonArray terms = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies/"+ontologyId+"/entities?size="+pageSize+"&page="+i, null,"elements");
+            for (JsonElement term : terms){
+                String iri = null;
+                JsonElement label = null;
+                JsonElement curie = null;
+                Set<String> definedBy = new HashSet<>();
+                Set<String> types = new HashSet<>();
+                iri = term.getAsJsonObject().get("iri").getAsString();
+                System.out.println("term iri: "+iri);
+                System.out.println("jsoncurie: "+term.getAsJsonObject().get("curie"));
+                curie = jsonParser.parse("{\"type\":[\"literal\"],\"value\":\""+term.getAsJsonObject().get("curie").getAsString()+"\"}");
+                System.out.println("curie: "+curie);
+                JsonElement lelement = term.getAsJsonObject().get("label");
+                StringBuilder sb = new StringBuilder();
+                if (lelement.isJsonArray()){
+                    sb.append("[");
+                    for (JsonElement element : lelement.getAsJsonArray()){
+                        if (element.isJsonObject())
+                            sb.append("{\"type\":[\"literal\"],\"value\":\""+element.getAsJsonObject().get("value").getAsString()+"\"},");
+                        else
+                            sb.append("{\"type\":[\"literal\"],\"value\":\""+element.getAsString()+"\"},");
+                    }
+                    int last = sb.length() - 1;
+                    sb.replace(last, last + 1, "");
+                    sb.append("]");
+                } else if (lelement.isJsonPrimitive()){
+                    sb.append("{\"type\":[\"literal\"],\"value\":\""+lelement.getAsString()+"\"}");
+                } else if (lelement.isJsonObject()){
+                    sb.append(lelement.getAsJsonObject().toString());
+                } else {
+                    sb.append(lelement.getAsJsonNull().toString());
                 }
-                int last = sb.length() - 1;
-                sb.replace(last, last + 1, "");
-                sb.append("]");
-            } else if (lelement.isJsonPrimitive()){
-                sb.append("{\"type\":[\"literal\"],\"value\":\""+lelement.getAsString()+"\"}");
-            } else if (lelement.isJsonObject()){
-                sb.append(lelement.getAsJsonObject().toString());
-            } else {
-                sb.append(lelement.getAsJsonNull().toString());
+                System.out.println("jsonlabel: "+sb);
+                label = jsonParser.parse(sb.toString());
+                System.out.println("label: "+label);
+                for (JsonElement type : term.getAsJsonObject().get("type").getAsJsonArray()){
+                    types.add(type.getAsString());
+                    System.out.println("type: "+type.getAsString());
+                }
+
+                JsonElement jsonDefinedBy;
+                jsonDefinedBy = term.getAsJsonObject().get("http://www.w3.org/2000/01/rdf-schema#isDefinedBy");
+                System.out.println("jsonDefinedBy: "+jsonDefinedBy);
+                for (Map.Entry entry : term.getAsJsonObject().entrySet()){
+                    if(entry.getKey().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy"))
+                        System.out.println("defBy: "+entry.getValue());
+                }
+                if(jsonDefinedBy != null && jsonDefinedBy.isJsonArray()) {
+                    JsonArray arr = jsonDefinedBy.getAsJsonArray();
+                    for(JsonElement isDefinedBy : arr) {
+                        if (isDefinedBy.isJsonObject()) {
+                            JsonObject obj = isDefinedBy.getAsJsonObject();
+                            var value = obj.get("value");
+                            if (value.isJsonObject()) {
+                                definedBy.add(value.getAsJsonObject().get("value").getAsString());
+                            } else
+                                definedBy.add(value.getAsString());
+                        } else
+                            definedBy.add( isDefinedBy.getAsString() );
+                    }
+                } else if (jsonDefinedBy != null && jsonDefinedBy.isJsonObject()) {
+                    JsonObject obj = jsonDefinedBy.getAsJsonObject();
+                    var value = obj.get("value");
+                    if (value.isJsonObject()) {
+                        definedBy.add(value.getAsJsonObject().get("value").getAsString());
+                    } else
+                        definedBy.add(value.getAsString());
+                }
+                else if (jsonDefinedBy != null){
+                    definedBy.add(jsonDefinedBy.getAsString());
+                } else {
+                    definedBy.add("");
+                }
+
+                if(iri == null) {
+                    throw new RuntimeException("entity had no IRI");
+                }
+
+                if(types == null) {
+                    throw new RuntimeException("entity had no types");
+                }
+
+                EntityDefinition entityDefinition = new EntityDefinition();
+                entityDefinition.ontologyId = ontologyId;
+                entityDefinition.entityTypes = types;
+                entityDefinition.label = label;
+                entityDefinition.curie = curie;
+
+                EntityDefinitionSet definitionSet = result.iriToDefinitions.get(iri);
+
+                if(definitionSet == null) {
+                    definitionSet = new EntityDefinitionSet();
+                    result.iriToDefinitions.put(iri, definitionSet);
+                }
+
+                definitionSet.definitions.add(entityDefinition);
+                definitionSet.ontologyIdToDefinitions.put(ontologyId, entityDefinition);
+                definitionSet.definingOntologyIris.addAll(definedBy);
+
+                for(String baseUri : ontologyBaseUris) {
+                    if(iri.startsWith(baseUri)) {
+                        definitionSet.definingOntologyIds.add(ontologyId);
+                    }
+                }
             }
-            System.out.println("jsonlabel: "+sb);
-			label = jsonParser.parse(sb.toString());
-			System.out.println("label: "+label);
-			for (JsonElement type : term.getAsJsonObject().get("type").getAsJsonArray()){
-				types.add(type.getAsString());
-				System.out.println("type: "+type.getAsString());
-			}
-
-			JsonElement jsonDefinedBy;
-			jsonDefinedBy = term.getAsJsonObject().get("http://www.w3.org/2000/01/rdf-schema#isDefinedBy");
-			System.out.println("jsonDefinedBy: "+jsonDefinedBy);
-			for (Map.Entry entry : term.getAsJsonObject().entrySet()){
-				if(entry.getKey().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy"))
-				    System.out.println("defBy: "+entry.getValue());
-			}
-			if(jsonDefinedBy != null && jsonDefinedBy.isJsonArray()) {
-				JsonArray arr = jsonDefinedBy.getAsJsonArray();
-				for(JsonElement isDefinedBy : arr) {
-					if (isDefinedBy.isJsonObject()) {
-						JsonObject obj = isDefinedBy.getAsJsonObject();
-						var value = obj.get("value");
-						if (value.isJsonObject()) {
-							definedBy.add(value.getAsJsonObject().get("value").getAsString());
-						} else
-							definedBy.add(value.getAsString());
-					} else
-						definedBy.add( isDefinedBy.getAsString() );
-				}
-			} else if (jsonDefinedBy != null && jsonDefinedBy.isJsonObject()) {
-				JsonObject obj = jsonDefinedBy.getAsJsonObject();
-				var value = obj.get("value");
-				if (value.isJsonObject()) {
-					definedBy.add(value.getAsJsonObject().get("value").getAsString());
-				} else
-					definedBy.add(value.getAsString());
-			}
-			else if (jsonDefinedBy != null){
-				definedBy.add(jsonDefinedBy.getAsString());
-			} else {
-				definedBy.add("");
-			}
-
-			if(iri == null) {
-				throw new RuntimeException("entity had no IRI");
-			}
-
-			if(types == null) {
-				throw new RuntimeException("entity had no types");
-			}
-
-			EntityDefinition entityDefinition = new EntityDefinition();
-			entityDefinition.ontologyId = ontologyId;
-			entityDefinition.entityTypes = types;
-			entityDefinition.label = label;
-			entityDefinition.curie = curie;
-
-			EntityDefinitionSet definitionSet = result.iriToDefinitions.get(iri);
-
-			if(definitionSet == null) {
-				definitionSet = new EntityDefinitionSet();
-				result.iriToDefinitions.put(iri, definitionSet);
-			}
-
-			definitionSet.definitions.add(entityDefinition);
-			definitionSet.ontologyIdToDefinitions.put(ontologyId, entityDefinition);
-			definitionSet.definingOntologyIris.addAll(definedBy);
-
-			for(String baseUri : ontologyBaseUris) {
-				if(iri.startsWith(baseUri)) {
-					definitionSet.definingOntologyIds.add(ontologyId);
-				}
-			}
-		}
+        }
 	}
 
-	public static LinkerPass1Result run(String backendUrl) throws IOException {
+	public static LinkerPass1Result run(String backendUrl, int pageSize) throws IOException {
 
 		LinkerPass1Result result = new LinkerPass1Result();
 		int nOntologies = 0;
-
 		try {
-			JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/ontologies/","_embedded","ontologies");
+			JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/ontologies?size=1000","_embedded","ontologies");
 
 			for (JsonElement ontology : ontologies){
 				String ontologyId = null;
@@ -239,7 +246,7 @@ public class LinkerPass1FromService {
 					idsp.add(ontologyId);
 				}
 
-				parseEntitiesForService(backendUrl, ontologyId, numberOfTerms+numberOfProperties+numberOfIndividuals,ontologyBaseUris,result);
+				parseEntitiesForService(backendUrl, pageSize, ontologyId, numberOfTerms+numberOfProperties+numberOfIndividuals,ontologyBaseUris,result);
 
 				result.ontologyIdToBaseUris.put(ontologyId, ontologyBaseUris);
 				System.out.println("Now have " + nOntologies + " ontologies and " + result.iriToDefinitions.size() + " distinct IRIs");

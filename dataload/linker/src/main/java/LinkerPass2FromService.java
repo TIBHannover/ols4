@@ -2,8 +2,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -62,10 +60,15 @@ public class LinkerPass2FromService {
 
     }
 
-    public static void run(String backendUrl, String outputJsonFilename, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
+    public static int numberOfPages(int noofEntities,int pageSize) {
+        if  (noofEntities % pageSize == 0)
+            return noofEntities/pageSize;
+        else
+            return (noofEntities/pageSize) + 1;
+    }
 
-
-        JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/ontologies/","_embedded","ontologies");
+    public static void run(String backendUrl, int pageSize, String outputJsonFilename, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
+        JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/ontologies?size=1000","_embedded","ontologies");
         JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream(outputJsonFilename)));
         jsonWriter.setIndent("  ");
 
@@ -121,20 +124,20 @@ public class LinkerPass2FromService {
             Set<String> ontologyGatheredStrings = new TreeSet<>();
 
             jsonWriter.name("classes");
-            writeEntityArray(backendUrl,numberOfTerms,jsonWriter,"classes",ontologyId,leveldb,pass1Result);
+            writeEntityArray(backendUrl,numberOfTerms,pageSize,jsonWriter,"classes",ontologyId,leveldb,pass1Result);
             jsonWriter.name("properties");
-            writeEntityArray(backendUrl,numberOfProperties,jsonWriter,"properties",ontologyId,leveldb,pass1Result);
+            writeEntityArray(backendUrl,numberOfProperties, pageSize, jsonWriter,"properties",ontologyId,leveldb,pass1Result);
             jsonWriter.name("individuals");
-            writeEntityArray(backendUrl,numberOfIndividuals,jsonWriter,"individuals",ontologyId,leveldb,pass1Result);
-
-            for (Map.Entry entry : ontology.getAsJsonObject().entrySet()){
+            writeEntityArray(backendUrl,numberOfIndividuals, pageSize, jsonWriter,"individuals",ontologyId,leveldb,pass1Result);
+            // can be reenabled if some fields are useful
+            /*for (Map.Entry entry : ontology.getAsJsonObject().entrySet()){
                 String key = entry.getKey().toString();
                 jsonWriter.name(key);
                 JsonElement ontologyGatheredStringsElement = ontology.getAsJsonObject().get(key);
                 ontologyGatheredStrings.add(ExtractIriFromPropertyName.extract(key));
                 System.out.println("key: "+key+" - value: " + ontologyGatheredStringsElement.toString());
                 CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(ontologyGatheredStringsElement, jsonWriter, ontologyGatheredStrings);
-            }
+            }*/
 
             jsonWriter.name("linkedEntities");
             writeLinkedEntitiesFromGatheredStrings(jsonWriter, ontologyGatheredStrings, ontologyId, null, leveldb, pass1Result);
@@ -148,66 +151,70 @@ public class LinkerPass2FromService {
         System.out.println("--- Linker Pass 2 complete");
     }
 
-    private static void writeEntityArray(String backendUrl, int noofEntities, JsonWriter jsonWriter, String entityType, String ontologyId, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
-        JsonArray terms = getEntitiesAsJsonArray(backendUrl + "/api/v2/ontologies/" + ontologyId + "/" + entityType + "?size=" + noofEntities, null, "elements");
-
+    private static void writeEntityArray(String backendUrl, int noofEntities, int pageSize, JsonWriter jsonWriter, String entityType, String ontologyId, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
         jsonWriter.beginArray();
-
-        for (JsonElement term : terms) {
-            String entityIri = term.getAsJsonObject().get("iri").getAsString();
-            Set<String> stringsInEntity = new HashSet<String>();
-            jsonWriter.beginObject();
-            for (Map.Entry entry : term.getAsJsonObject().entrySet()) {
-                String name = entry.getKey().toString();
-                String iri = entityIri;
-                stringsInEntity.add(ExtractIriFromPropertyName.extract(name));
-                jsonWriter.name(name);
-                if (name.equals("iri")) {
-                    entityIri = iri;
-                    jsonWriter.value(entityIri);
-                } else if (name.equalsIgnoreCase("curie")) {
-                    JsonElement curieElement = term.getAsJsonObject().get(name);
-                    processCurieObject(curieElement, jsonWriter, pass1Result, entityIri);
-                } else if (name.equalsIgnoreCase("shortForm")) {
-                    JsonElement shortFormElement = term.getAsJsonObject().get(name);
-                    processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
-                } else {
-                    JsonElement gatheringStringsElement = term.getAsJsonObject().get(name);
-                    System.out.println("name: "+name+" - value: "+gatheringStringsElement.toString());
-                    CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(gatheringStringsElement, jsonWriter, stringsInEntity);
-                }
-            }
-
-            EntityDefinitionSet defOfThisEntity = pass1Result.iriToDefinitions.get(entityIri);
-            if (defOfThisEntity != null) {
-
-                jsonWriter.name(IS_DEFINING_ONTOLOGY.getText());
-                jsonWriter.value(defOfThisEntity.definingOntologyIds.contains(ontologyId));
-
-                if (defOfThisEntity.definingDefinitions.size() > 0) {
-                    jsonWriter.name(DEFINED_BY.getText());
-                    jsonWriter.beginArray();
-                    for (var def : defOfThisEntity.definingDefinitions) {
-                        jsonWriter.value(def.ontologyId);
+        for (int i = 0; i<numberOfPages(noofEntities, pageSize); i++){
+            JsonArray terms = getEntitiesAsJsonArray(backendUrl + "/api/v2/ontologies/" + ontologyId + "/" + entityType + "?size=" + pageSize+"&page="+i, null, "elements");
+            for (JsonElement term : terms) {
+                String entityIri = term.getAsJsonObject().get("iri").getAsString();
+                Set<String> stringsInEntity = new HashSet<String>();
+                jsonWriter.beginObject();
+                for (Map.Entry entry : term.getAsJsonObject().entrySet()) {
+                    String name = entry.getKey().toString();
+                    String iri = entityIri;
+                    stringsInEntity.add(ExtractIriFromPropertyName.extract(name));
+                    //jsonWriter.name(name);
+                    if (name.equals("iri")) {
+                        jsonWriter.name(name);
+                        entityIri = iri;
+                        jsonWriter.value(entityIri);
+                    } else if (name.equalsIgnoreCase("curie")) {
+                        jsonWriter.name(name);
+                        JsonElement curieElement = term.getAsJsonObject().get(name);
+                        processCurieObject(curieElement, jsonWriter, pass1Result, entityIri);
+                    } else if (name.equalsIgnoreCase("shortForm")) {
+                        jsonWriter.name(name);
+                        JsonElement shortFormElement = term.getAsJsonObject().get(name);
+                        processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
+                    } else {
+                        // can be reenabled if some fields are useful
+                        //JsonElement gatheringStringsElement = term.getAsJsonObject().get(name);
+                        //System.out.println("name: "+name+" - value: "+gatheringStringsElement.toString());
+                        //CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(gatheringStringsElement, jsonWriter, stringsInEntity);
                     }
-                    jsonWriter.endArray();
                 }
 
-                if (defOfThisEntity.definitions.size() > 0) {
-                    jsonWriter.name(APPEARS_IN.getText());
-                    jsonWriter.beginArray();
-                    for (var def : defOfThisEntity.definitions) {
-                        jsonWriter.value(def.ontologyId);
+                EntityDefinitionSet defOfThisEntity = pass1Result.iriToDefinitions.get(entityIri);
+                if (defOfThisEntity != null) {
+
+                    jsonWriter.name(IS_DEFINING_ONTOLOGY.getText());
+                    jsonWriter.value(defOfThisEntity.definingOntologyIds.contains(ontologyId));
+
+                    if (defOfThisEntity.definingDefinitions.size() > 0) {
+                        jsonWriter.name(DEFINED_BY.getText());
+                        jsonWriter.beginArray();
+                        for (var def : defOfThisEntity.definingDefinitions) {
+                            jsonWriter.value(def.ontologyId);
+                        }
+                        jsonWriter.endArray();
                     }
-                    jsonWriter.endArray();
+
+                    if (defOfThisEntity.definitions.size() > 0) {
+                        jsonWriter.name(APPEARS_IN.getText());
+                        jsonWriter.beginArray();
+                        for (var def : defOfThisEntity.definitions) {
+                            jsonWriter.value(def.ontologyId);
+                        }
+                        jsonWriter.endArray();
+                    }
                 }
+
+                jsonWriter.name("linkedEntities");
+                writeLinkedEntitiesFromGatheredStrings(jsonWriter, stringsInEntity, ontologyId, entityIri, leveldb, pass1Result);
+
+                jsonWriter.endObject();
+
             }
-
-            jsonWriter.name("linkedEntities");
-            writeLinkedEntitiesFromGatheredStrings(jsonWriter, stringsInEntity, ontologyId, entityIri, leveldb, pass1Result);
-
-            jsonWriter.endObject();
-
         }
         jsonWriter.endArray();
     }

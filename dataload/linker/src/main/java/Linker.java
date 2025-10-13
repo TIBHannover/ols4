@@ -61,6 +61,7 @@ public class Linker {
             if (service_url != null && !service_url.isEmpty()) {
                 pass1ResultFromService = LinkerPass1FromService.run(service_url,pSize);
                 LinkerPass2FromService.run(service_url, pSize, outputFilePath, leveldb, pass1ResultFromService);
+                ServiceBase.httpclient.close();
             } else {
                 pass1Result = LinkerPass1.run(inputFilePath);
                 LinkerPass2.run(inputFilePath, outputFilePath, leveldb, pass1Result);

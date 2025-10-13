@@ -1,16 +1,7 @@
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonWriter;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 
 import java.io.*;
 import java.util.HashSet;
@@ -20,52 +11,10 @@ import java.util.TreeSet;
 
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
-public class LinkerPass2FromService {
-
-    private static final JsonParser jsonParser = new JsonParser();
+public class LinkerPass2FromService extends ServiceBase {
 
     public static final OboDatabaseUrlService dbUrls = new OboDatabaseUrlService();
     public static final Bioregistry bioregistry = new Bioregistry();
-
-    private static CloseableHttpClient httpclient = HttpClients.createDefault();
-    // Create a custom response handler
-    private static ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
-
-        @Override
-        public String handleResponse(
-                final HttpResponse response) throws ClientProtocolException, IOException {
-            int status = response.getStatusLine().getStatusCode();
-            if (status >= 200 && status < 300) {
-                HttpEntity entity = response.getEntity();
-                return entity != null ? EntityUtils.toString(entity) : null;
-            } else {
-                throw new ClientProtocolException("Unexpected response status: " + status);
-            }
-        }
-
-    };
-
-    public static JsonArray getEntitiesAsJsonArray(String uri, String property, String arrayName) throws IOException {
-        HttpGet httpget = new HttpGet(uri);
-        System.out.println("Executing request " + httpget.getRequestLine());
-        String responseBody = httpclient.execute(httpget, responseHandler);
-        System.out.println("----------------------------------------");
-
-        JsonElement jElement = jsonParser.parse(responseBody);
-
-        if (property == null)
-            return jElement.getAsJsonObject().getAsJsonArray(arrayName); // for v2 calls
-        else
-            return jElement.getAsJsonObject().getAsJsonObject(property).getAsJsonArray(arrayName); // for v1 calls
-
-    }
-
-    public static int numberOfPages(int noofEntities,int pageSize) {
-        if  (noofEntities % pageSize == 0)
-            return noofEntities/pageSize;
-        else
-            return (noofEntities/pageSize) + 1;
-    }
 
     public static void run(String backendUrl, int pageSize, String outputJsonFilename, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
         JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/ontologies?size=1000","_embedded","ontologies");

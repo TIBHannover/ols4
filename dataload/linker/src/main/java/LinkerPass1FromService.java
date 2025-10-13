@@ -1,14 +1,6 @@
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.gson.*;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,26 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class LinkerPass1FromService {
-
-    private static final JsonParser jsonParser = new JsonParser();
-	private static CloseableHttpClient httpclient = HttpClients.createDefault();
-	// Create a custom response handler
-	private static ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
-
-		@Override
-		public String handleResponse(
-				final HttpResponse response) throws ClientProtocolException, IOException {
-			int status = response.getStatusLine().getStatusCode();
-			if (status >= 200 && status < 300) {
-				HttpEntity entity = response.getEntity();
-				return entity != null ? EntityUtils.toString(entity) : null;
-			} else {
-				throw new ClientProtocolException("Unexpected response status: " + status);
-			}
-		}
-
-	};
+public class LinkerPass1FromService extends ServiceBase{
 
     public static class LinkerPass1Result {
 
@@ -58,28 +31,6 @@ public class LinkerPass1FromService {
 	// ontology id -> IDs of ontologies it imports at least 1 term from
 	Multimap<String, String> ontologyIdToImportedOntologyIds = LinkedHashMultimap.create();
 
-    }
-
-	public static JsonArray getEntitiesAsJsonArray(String uri, String property, String arrayName) throws IOException {
-		HttpGet httpget = new HttpGet(uri);
-		System.out.println("Executing request " + httpget.getRequestLine());
-		String responseBody = httpclient.execute(httpget, responseHandler);
-		System.out.println("----------------------------------------");
-
-		JsonElement jElement = jsonParser.parse(responseBody);
-
-		if (property == null)
-			return jElement.getAsJsonObject().getAsJsonArray(arrayName); // for v2 calls
-		else
-			return jElement.getAsJsonObject().getAsJsonObject(property).getAsJsonArray(arrayName); // for v1 calls
-
-	}
-
-    public static int numberOfPages(int noofEntities,int pageSize) {
-        if  (noofEntities % pageSize == 0)
-            return noofEntities/pageSize;
-        else
-            return (noofEntities/pageSize) + 1;
     }
 
 	public static void parseEntitiesForService(String backendUrl, int pageSize, String ontologyId, int noofEntities, Set<String> ontologyBaseUris,LinkerPass1Result result) throws IOException {
@@ -258,7 +209,7 @@ public class LinkerPass1FromService {
 		}
 
 		finally {
-			httpclient.close();
+			//httpclient.close();
 		}
 
 		System.out.println("--- Linker Pass 1: Finished scan from service. Establishing defining ontologies...");

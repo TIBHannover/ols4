@@ -106,9 +106,9 @@ public class LinkerPass1FromService extends ServiceBase{
                 else if (jsonDefinedBy != null){
                     definedBy.add(jsonDefinedBy.getAsString());
                 } else {
-                    definedBy.add("");
+                    //definedBy.add("");
                 }
-
+                System.out.println("definedBy: "+definedBy);
                 if(iri == null) {
                     throw new RuntimeException("entity had no IRI");
                 }

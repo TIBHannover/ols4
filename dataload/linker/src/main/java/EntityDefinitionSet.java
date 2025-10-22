@@ -1,7 +1,4 @@
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class EntityDefinitionSet {
     Set<EntityDefinition> definitions = new HashSet<>();
@@ -21,4 +18,19 @@ public class EntityDefinitionSet {
                 && ((EntityDefinitionSet) other).ontologyIdToDefinitions.equals(ontologyIdToDefinitions);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(definitions, definingDefinitions, definingOntologyIris, definingOntologyIds, ontologyIdToDefinitions);
+    }
+
+    @Override
+    public String toString() {
+        return "EntityDefinitionSet{" +
+                "definitions=" + definitions +
+                ", definingDefinitions=" + definingDefinitions +
+                ", definingOntologyIris=" + definingOntologyIris +
+                ", definingOntologyIds=" + definingOntologyIds +
+                ", ontologyIdToDefinitions=" + ontologyIdToDefinitions +
+                '}';
+    }
 }

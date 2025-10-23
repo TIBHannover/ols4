@@ -46,6 +46,12 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
+        <configuration>
+          <systemPropertyVariables>
+            <filePath>configs/ontologies_out.json</filePath>
+            <serviceUrl>http://localhost:8080</serviceUrl>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
     </plugins>
   </build>

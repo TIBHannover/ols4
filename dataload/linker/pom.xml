@@ -133,6 +133,12 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <version>3.2.5</version> <!-- Ensure it's 2.22.0+ for JUnit 5 -->
+            <configuration>
+                <systemPropertyVariables>
+                    <filePath>configs/ontologies_out.json</filePath>
+                    <serviceUrl>http://localhost:8080</serviceUrl>
+                </systemPropertyVariables>
+            </configuration>
         </plugin>
     </plugins>
     </build>

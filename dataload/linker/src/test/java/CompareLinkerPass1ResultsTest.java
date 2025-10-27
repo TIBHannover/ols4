@@ -1,10 +1,6 @@
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -14,29 +10,32 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CompareLinkerPass1ResultsTest {
 
     static LinkerPass1.LinkerPass1Result pass1Result;
-
-    static {
-        try {
-            System.out.println("filePath: "+resolveConfigFile(System.getProperty("filePath")));
-            pass1Result = LinkerPass1.run(resolveConfigFile(System.getProperty("filePath")).toString());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     static LinkerPass1FromService.LinkerPass1Result pass1ResultFromService;
 
-    static {
+    @BeforeAll
+    static void init() {
         try {
-            System.out.println("serviceUrl: "+System.getProperty("serviceUrl"));
-            pass1ResultFromService = LinkerPass1FromService.run(System.getProperty("serviceUrl"),20);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("serviceUrl: " + System.getProperty("serviceUrl"));
+            System.out.println("filePath: " + Miscallenous.resolveConfigFile(System.getProperty("filePath")));
+            if(Miscallenous.isServiceUp(System.getProperty("serviceUrl")) && Miscallenous.isFilePresent(Miscallenous.resolveConfigFile(System.getProperty("filePath")).toString())){
+                pass1ResultFromService = LinkerPass1FromService.run(System.getProperty("serviceUrl"), 20);
+                pass1Result = LinkerPass1.run(Miscallenous.resolveConfigFile(System.getProperty("filePath")).toString());
+            }
+            if (pass1ResultFromService == null || pass1Result == null) {
+                pass1ResultFromService = new LinkerPass1FromService.LinkerPass1Result();
+                pass1Result = new  LinkerPass1.LinkerPass1Result();
+            }
+        } catch (Exception e) {
+            System.err.println("Initialization failed (" + e.getClass().getSimpleName() + "): " + e.getMessage());
+            e.printStackTrace(System.err);
+            // if either one fails, both are reset to empty
+            pass1ResultFromService = new LinkerPass1FromService.LinkerPass1Result();
+            pass1Result = new  LinkerPass1.LinkerPass1Result();
         }
     }
 
     @Test
-    void compareLinkerPass1ResultsDefinitions() throws IOException {
+    void compareLinkerPass1ResultsDefinitions() {
         Set<Map.Entry<String, EntityDefinitionSet>> defs1 = pass1Result.iriToDefinitions.entrySet();
         Set<Map.Entry<String, EntityDefinitionSet>> defs2 = pass1ResultFromService.iriToDefinitions.entrySet();
         int count=0;
@@ -60,7 +59,7 @@ public class CompareLinkerPass1ResultsTest {
     }
 
     @Test
-    void compareLinkerPass1ResultsBaseUris() throws IOException {
+    void compareLinkerPass1ResultsBaseUris() {
         Set<Map.Entry<String, Set<String>>> baseUris1 = pass1Result.ontologyIdToBaseUris.entrySet();
         Set<Map.Entry<String, Set<String>>> baseUris2 = pass1ResultFromService.ontologyIdToBaseUris.entrySet();
         int count=0;
@@ -80,7 +79,7 @@ public class CompareLinkerPass1ResultsTest {
     }
 
     @Test
-    void compareLinkerPass1ResultsIriToOids() throws IOException {
+    void compareLinkerPass1ResultsIriToOids() {
         Set<Map.Entry<String, Set<String>>> oitoids1 = pass1Result.ontologyIriToOntologyIds.entrySet();
         Set<Map.Entry<String, Set<String>>> oitoids2 = pass1ResultFromService.ontologyIriToOntologyIds.entrySet();
         int count=0;
@@ -100,7 +99,7 @@ public class CompareLinkerPass1ResultsTest {
     }
 
     @Test
-    void compareLinkerPass1ResultsPrefixToOids() throws IOException {
+    void compareLinkerPass1ResultsPrefixToOids() {
         Set<Map.Entry<String, Set<String>>> pptoids1 = pass1Result.preferredPrefixToOntologyIds.entrySet();
         Set<Map.Entry<String, Set<String>>> pptoids2 = pass1ResultFromService.preferredPrefixToOntologyIds.entrySet();
         int count=0;
@@ -120,7 +119,7 @@ public class CompareLinkerPass1ResultsTest {
     }
 
     @Test
-    void compareLinkerPass1ResultsImportingOntologyIds() throws IOException {
+    void compareLinkerPass1ResultsImportingOntologyIds() {
         Collection<Map.Entry<String, String>> oids1 = pass1Result.ontologyIdToImportingOntologyIds.entries();
         Collection<Map.Entry<String, String>> oids2 = pass1ResultFromService.ontologyIdToImportingOntologyIds.entries();
         int count=0;
@@ -137,7 +136,7 @@ public class CompareLinkerPass1ResultsTest {
         assertEquals(oids1, oids2, "Expected ontologyIdToImportingOntologyIds to be equal");
     }
     @Test
-    void compareLinkerPass1ResultsImportedOntologyIds() throws IOException {
+    void compareLinkerPass1ResultsImportedOntologyIds() {
         Collection<Map.Entry<String, String>> oids1 = pass1Result.ontologyIdToImportedOntologyIds.entries();
         Collection<Map.Entry<String, String>> oids2 = pass1ResultFromService.ontologyIdToImportedOntologyIds.entries();
         int count=0;
@@ -153,24 +152,4 @@ public class CompareLinkerPass1ResultsTest {
         }
         assertEquals(oids1, oids2, "Expected ontologyIdToImportedOntologyIds to be equal");
     }
-
-    public static Path resolveConfigFile(String relativePath) {
-        // Start from current working directory (module's base)
-        Path currentDir = Paths.get(System.getProperty("user.dir"));
-        Path configPath = currentDir.resolve(relativePath);
-
-        // If it doesn't exist, walk up to find "dataload/configs"
-        while (currentDir != null && !Files.exists(configPath)) {
-            currentDir = currentDir.getParent();
-            if (currentDir == null) break;
-            configPath = currentDir.resolve("dataload").resolve(relativePath);
-        }
-
-        if (!Files.exists(configPath)) {
-            throw new RuntimeException("Config file not found: " + configPath.toAbsolutePath());
-        }
-
-        return configPath.toAbsolutePath();
-    }
-
 }

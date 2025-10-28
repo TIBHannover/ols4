@@ -148,7 +148,7 @@ public class LinkerPass1FromService extends ServiceBase{
 		LinkerPass1Result result = new LinkerPass1Result();
 		int nOntologies = 0;
 		try {
-			JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/ontologies?size=1000","_embedded","ontologies");
+			JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000",null,"elements");
 
 			for (JsonElement ontology : ontologies){
 				String ontologyId = null;
@@ -161,11 +161,11 @@ public class LinkerPass1FromService extends ServiceBase{
 				int numberOfIndividuals = 0;
 
 				ontologyId = ontology.getAsJsonObject().get("ontologyId").getAsString();
-				numberOfTerms = ontology.getAsJsonObject().get("numberOfTerms").getAsInt();
+				numberOfTerms = ontology.getAsJsonObject().get("numberOfClasses").getAsInt();
 				numberOfProperties = ontology.getAsJsonObject().get("numberOfProperties").getAsInt();
 				numberOfIndividuals = ontology.getAsJsonObject().get("numberOfIndividuals").getAsInt();
 
-				ontologyIri = ontology.getAsJsonObject().getAsJsonObject("config").get("fileLocation").getAsString();
+				ontologyIri = ontology.getAsJsonObject().get("iri").getAsString();
 				Set<String> ids = result.ontologyIriToOntologyIds.get(ontologyIri);
 				if(ids == null) {
 					ids = new HashSet<>();
@@ -175,16 +175,14 @@ public class LinkerPass1FromService extends ServiceBase{
 					ids.add(ontologyId);
 				}
 
-				for (JsonElement baseUri : ontology.getAsJsonObject().getAsJsonObject("config").get("baseUris").getAsJsonArray()){
+				for (JsonElement baseUri : ontology.getAsJsonObject().get("baseUri").getAsJsonArray()){
 					ontologyBaseUris.add(baseUri.getAsString());
 				}
-                boolean obo = false;
-                if (ontologyIri.contains("purl.obolibrary.org"))
-                    obo = true;
-                if (obo)
+                boolean obo = ontologyIri.contains("purl.obolibrary.org");
+                if (obo && !ontology.getAsJsonObject().has("preferredPrefix"))
                     preferredPrefix = ontologyId;
                 else
-				    preferredPrefix = ontology.getAsJsonObject().getAsJsonObject("config").get("preferredPrefix").getAsString();
+				    preferredPrefix = ontology.getAsJsonObject().get("preferredPrefix").getAsString();
 
 				ontologyBaseUris.add("http://purl.obolibrary.org/obo/" + preferredPrefix + "_");
 

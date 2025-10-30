@@ -4,10 +4,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.*;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
@@ -15,9 +13,10 @@ public class LinkerPass2FromService extends ServiceBase {
 
     public static final OboDatabaseUrlService dbUrls = new OboDatabaseUrlService();
     public static final Bioregistry bioregistry = new Bioregistry();
+    public static final String[] LINKER_KEYS = new String[] { "numAppearsIn", "linkedEntities", "importsFrom", "exportsTo", "definedBy", "appearsIn", "isDefiningOntology", "hasLocalDefinition" };
 
     public static void run(String backendUrl, int pageSize, String outputJsonFilename, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
-        JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/ontologies?size=1000","_embedded","ontologies");
+        JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000",null,"elements");
         JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream(outputJsonFilename)));
         jsonWriter.setIndent("  ");
 
@@ -36,7 +35,7 @@ public class LinkerPass2FromService extends ServiceBase {
             jsonWriter.beginObject();
             String ontologyId = ontology.getAsJsonObject().get("ontologyId").getAsString();
 
-            numberOfTerms = ontology.getAsJsonObject().get("numberOfTerms").getAsInt();
+            numberOfTerms = ontology.getAsJsonObject().get("numberOfClasses").getAsInt();
             numberOfProperties = ontology.getAsJsonObject().get("numberOfProperties").getAsInt();
             numberOfIndividuals = ontology.getAsJsonObject().get("numberOfIndividuals").getAsInt();
 
@@ -79,16 +78,16 @@ public class LinkerPass2FromService extends ServiceBase {
             jsonWriter.name("individuals");
             writeEntityArray(backendUrl,numberOfIndividuals, pageSize, jsonWriter,"individuals",ontologyId,leveldb,pass1Result);
             // can be reenabled if some fields are useful
-            /*for (Map.Entry entry : ontology.getAsJsonObject().entrySet()){
-                String key = entry.getKey().toString();
-                jsonWriter.name(key);
-                JsonElement ontologyGatheredStringsElement = ontology.getAsJsonObject().get(key);
-                ontologyGatheredStrings.add(ExtractIriFromPropertyName.extract(key));
-                System.out.println("key: "+key+" - value: " + ontologyGatheredStringsElement.toString());
-                CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(ontologyGatheredStringsElement, jsonWriter, ontologyGatheredStrings);
-            }*/
+            for (Map.Entry<String, com.google.gson.JsonElement> entry : ontology.getAsJsonObject().entrySet()){
+                jsonWriter.name(entry.getKey());
+                extractGatheredStrings(entry,ontologyGatheredStrings);
+                CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(entry.getValue(), jsonWriter, ontologyGatheredStrings);
+            }
 
             jsonWriter.name("linkedEntities");
+            filter(ontologyGatheredStrings);
+
+            System.out.println("Ontology linkedEntities: ontologyGatheredStrings=" + ontologyGatheredStrings+" ontologyId=" + ontologyId+" leveldb: "+leveldb);
             writeLinkedEntitiesFromGatheredStrings(jsonWriter, ontologyGatheredStrings, ontologyId, null, leveldb, pass1Result);
             jsonWriter.endObject();
 
@@ -100,6 +99,53 @@ public class LinkerPass2FromService extends ServiceBase {
         System.out.println("--- Linker Pass 2 complete");
     }
 
+    private static void extractGatheredStrings(Map.Entry<String, com.google.gson.JsonElement> entry, Set<String> ontologyGatheredStrings){
+        // skip the curies, curie like strings (AEON_0000026), ORCID numbers in curie form or only in number form, etc
+        String key = entry.getKey();
+        JsonElement value = entry.getValue();
+        ontologyGatheredStrings.add(ExtractIriFromPropertyName.extract(key));
+        if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()) {
+            ontologyGatheredStrings.add(ExtractIriFromPropertyName.extract(value.getAsString()));
+        } else if (value instanceof JsonArray) {
+            for (JsonElement elem :value.getAsJsonArray()){
+                extractGatheredStrings(new AbstractMap.SimpleEntry<String, com.google.gson.JsonElement>(key, elem), ontologyGatheredStrings);
+            }
+        } else if (value instanceof JsonObject) {
+            for (Map.Entry<String, JsonElement> e : value.getAsJsonObject().entrySet()){
+                extractGatheredStrings(e, ontologyGatheredStrings);
+            }
+        }
+    }
+
+    // Updated pattern:
+    // 1. Prefix must be letters, digits, underscore, hyphen, or dot.
+    // 2. Must contain a single colon.
+    // 3. Must NOT start with URI schemes like http:, https:, ftp:, urn:, etc.
+    private static final Pattern CURIE_PATTERN = Pattern.compile(
+            "^(?!https?:)(?!ftp:)(?!urn:)(?!file:)(?!mailto:)([A-Za-z_][A-Za-z0-9_.-]*):([^\\s:][^\\s]*)$"
+    );
+
+    /**
+     * Checks whether a string is a valid CURIE (Compact URI), not a full URI.
+     * Examples: foaf:Person, AEON:0000084, GO:0008150
+     */
+    public static boolean isCURIE(String input) {
+        if (input == null) return false;
+        return CURIE_PATTERN.matcher(input).matches();
+    }
+
+    public static void filter(Set<String> ontologyGatheredStrings) {
+        Set<String> filtered = new HashSet<>(ontologyGatheredStrings);
+        for (String s : filtered) {
+            for (String linkerKey : LINKER_KEYS) {
+                if (s.equals(linkerKey) )
+                    ontologyGatheredStrings.remove(s);
+            }
+            if (isCURIE(s))
+                ontologyGatheredStrings.remove(s);
+        }
+    }
+
     private static void writeEntityArray(String backendUrl, int noofEntities, int pageSize, JsonWriter jsonWriter, String entityType, String ontologyId, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
         jsonWriter.beginArray();
         for (int i = 0; i<numberOfPages(noofEntities, pageSize); i++){
@@ -108,28 +154,25 @@ public class LinkerPass2FromService extends ServiceBase {
                 String entityIri = term.getAsJsonObject().get("iri").getAsString();
                 Set<String> stringsInEntity = new HashSet<String>();
                 jsonWriter.beginObject();
-                for (Map.Entry entry : term.getAsJsonObject().entrySet()) {
+                for (Map.Entry<String, com.google.gson.JsonElement> entry : term.getAsJsonObject().entrySet()) {
                     String name = entry.getKey().toString();
                     String iri = entityIri;
-                    stringsInEntity.add(ExtractIriFromPropertyName.extract(name));
-                    //jsonWriter.name(name);
+                    extractGatheredStrings(entry, stringsInEntity);
+                    //stringsInEntity.add(ExtractIriFromPropertyName.extract(name));
+                    jsonWriter.name(name);
                     if (name.equals("iri")) {
-                        jsonWriter.name(name);
                         entityIri = iri;
                         jsonWriter.value(entityIri);
                     } else if (name.equalsIgnoreCase("curie")) {
-                        jsonWriter.name(name);
                         JsonElement curieElement = term.getAsJsonObject().get(name);
                         processCurieObject(curieElement, jsonWriter, pass1Result, entityIri);
                     } else if (name.equalsIgnoreCase("shortForm")) {
-                        jsonWriter.name(name);
                         JsonElement shortFormElement = term.getAsJsonObject().get(name);
                         processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
                     } else {
                         // can be reenabled if some fields are useful
-                        //JsonElement gatheringStringsElement = term.getAsJsonObject().get(name);
-                        //System.out.println("name: "+name+" - value: "+gatheringStringsElement.toString());
-                        //CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(gatheringStringsElement, jsonWriter, stringsInEntity);
+                        JsonElement gatheringStringsElement = term.getAsJsonObject().get(name);
+                        CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(gatheringStringsElement, jsonWriter, stringsInEntity);
                     }
                 }
 
@@ -158,7 +201,9 @@ public class LinkerPass2FromService extends ServiceBase {
                     }
                 }
 
+                filter(stringsInEntity);
                 jsonWriter.name("linkedEntities");
+                System.out.println("Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb);
                 writeLinkedEntitiesFromGatheredStrings(jsonWriter, stringsInEntity, ontologyId, entityIri, leveldb, pass1Result);
 
                 jsonWriter.endObject();

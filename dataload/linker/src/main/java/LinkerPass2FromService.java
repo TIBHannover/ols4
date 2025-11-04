@@ -151,8 +151,7 @@ public class LinkerPass2FromService extends ServiceBase {
                 if (s.equals(linkerKey) )
                     ontologyGatheredStrings.remove(s);
             }
-            if (isCURIE(s))
-                ontologyGatheredStrings.remove(s);
+            if (isCURIE(s)) ontologyGatheredStrings.remove(s);
         }
     }
 
@@ -167,18 +166,20 @@ public class LinkerPass2FromService extends ServiceBase {
                 for (Map.Entry<String, com.google.gson.JsonElement> entry : term.getAsJsonObject().entrySet()) {
                     String name = entry.getKey().toString();
                     String iri = entityIri;
-                    extractGatheredStrings(entry, stringsInEntity);
                     //stringsInEntity.add(ExtractIriFromPropertyName.extract(name));
 
                     if (name.equals("iri")) {
+                        extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         entityIri = iri;
                         jsonWriter.value(entityIri);
                     } else if (name.equalsIgnoreCase("curie")) {
+                        extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement curieElement = term.getAsJsonObject().get(name);
                         processCurieObject(curieElement, jsonWriter, pass1Result, entityIri);
                     } else if (name.equalsIgnoreCase("shortForm")) {
+                        extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement shortFormElement = term.getAsJsonObject().get(name);
                         processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
@@ -186,6 +187,7 @@ public class LinkerPass2FromService extends ServiceBase {
                         continue;
                     } else {
                         // can be reenabled if some fields are useful
+                        extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement gatheringStringsElement = term.getAsJsonObject().get(name);
                         CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(gatheringStringsElement, jsonWriter, stringsInEntity);

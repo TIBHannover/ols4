@@ -125,13 +125,23 @@ public class LinkerPass2FromService extends ServiceBase {
             "^(?!https?:)(?!ftp:)(?!urn:)(?!file:)(?!mailto:)([A-Za-z_][A-Za-z0-9_.-]*):([^\\s:][^\\s]*)$"
     );
 
+    // Regex for underscore CURIEs (e.g., AEON_0000084)
+    private static final Pattern UNDERSCORE_CURIE_PATTERN = Pattern.compile(
+            "^[A-Za-z_][A-Za-z0-9.-]*_[0-9A-Za-z_.-]+$"
+    );
+
+    // 3️⃣ ORCID-like pattern (e.g., 0000-0002-1595-3213)
+    private static final Pattern ORCID_PATTERN = Pattern.compile(
+            "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$"
+    );
+
     /**
      * Checks whether a string is a valid CURIE (Compact URI), not a full URI.
      * Examples: foaf:Person, AEON:0000084, GO:0008150
      */
     public static boolean isCURIE(String input) {
         if (input == null) return false;
-        return CURIE_PATTERN.matcher(input).matches();
+        return CURIE_PATTERN.matcher(input).matches() || UNDERSCORE_CURIE_PATTERN.matcher(input).matches() || ORCID_PATTERN.matcher(input).matches();
     }
 
     public static void filter(Set<String> ontologyGatheredStrings) {

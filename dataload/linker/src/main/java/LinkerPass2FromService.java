@@ -16,7 +16,7 @@ public class LinkerPass2FromService extends ServiceBase {
     public static final String[] LINKER_KEYS = new String[] { "numAppearsIn", "linkedEntities", "importsFrom", "exportsTo", "definedBy", "appearsIn", "isDefiningOntology", "hasLocalDefinition" };
 
     public static void run(String backendUrl, int pageSize, String outputJsonFilename, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
-        JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000",null,"elements");
+        JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000&includeObsoleteEntities=true",null,"elements");
         JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream(outputJsonFilename)));
         jsonWriter.setIndent("  ");
 
@@ -149,7 +149,7 @@ public class LinkerPass2FromService extends ServiceBase {
     private static void writeEntityArray(String backendUrl, int noofEntities, int pageSize, JsonWriter jsonWriter, String entityType, String ontologyId, LevelDB leveldb, LinkerPass1FromService.LinkerPass1Result pass1Result) throws IOException {
         jsonWriter.beginArray();
         for (int i = 0; i<numberOfPages(noofEntities, pageSize); i++){
-            JsonArray terms = getEntitiesAsJsonArray(backendUrl + "/api/v2/ontologies/" + ontologyId + "/" + entityType + "?size=" + pageSize+"&page="+i, null, "elements");
+            JsonArray terms = getEntitiesAsJsonArray(backendUrl + "/api/v2/ontologies/" + ontologyId + "/" + entityType + "?size=" + pageSize+"&includeObsoleteEntities=true&page="+i, null, "elements");
             for (JsonElement term : terms) {
                 String entityIri = term.getAsJsonObject().get("iri").getAsString();
                 Set<String> stringsInEntity = new HashSet<String>();
@@ -159,18 +159,24 @@ public class LinkerPass2FromService extends ServiceBase {
                     String iri = entityIri;
                     extractGatheredStrings(entry, stringsInEntity);
                     //stringsInEntity.add(ExtractIriFromPropertyName.extract(name));
-                    jsonWriter.name(name);
+
                     if (name.equals("iri")) {
+                        jsonWriter.name(name);
                         entityIri = iri;
                         jsonWriter.value(entityIri);
                     } else if (name.equalsIgnoreCase("curie")) {
+                        jsonWriter.name(name);
                         JsonElement curieElement = term.getAsJsonObject().get(name);
                         processCurieObject(curieElement, jsonWriter, pass1Result, entityIri);
                     } else if (name.equalsIgnoreCase("shortForm")) {
+                        jsonWriter.name(name);
                         JsonElement shortFormElement = term.getAsJsonObject().get(name);
                         processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
+                    } else if (List.of(LINKER_KEYS).contains(name)) {
+                        continue;
                     } else {
                         // can be reenabled if some fields are useful
+                        jsonWriter.name(name);
                         JsonElement gatheringStringsElement = term.getAsJsonObject().get(name);
                         CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(gatheringStringsElement, jsonWriter, stringsInEntity);
                     }

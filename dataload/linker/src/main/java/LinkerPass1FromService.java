@@ -35,7 +35,7 @@ public class LinkerPass1FromService extends ServiceBase{
 
 	public static void parseEntitiesForService(String backendUrl, int pageSize, String ontologyId, int noofEntities, Set<String> ontologyBaseUris,LinkerPass1Result result) throws IOException {
         for (int i = 0; i<numberOfPages(noofEntities, pageSize); i++){
-            JsonArray terms = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies/"+ontologyId+"/entities?size="+pageSize+"&page="+i, null,"elements");
+            JsonArray terms = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies/"+ontologyId+"/entities?size="+pageSize+"&includeObsoleteEntities=true&page="+i, null,"elements");
             for (JsonElement term : terms){
                 String iri = null;
                 JsonElement label = null;
@@ -43,10 +43,10 @@ public class LinkerPass1FromService extends ServiceBase{
                 Set<String> definedBy = new HashSet<>();
                 Set<String> types = new HashSet<>();
                 iri = term.getAsJsonObject().get("iri").getAsString();
-                System.out.println("term iri: "+iri);
-                System.out.println("jsoncurie: "+term.getAsJsonObject().get("curie"));
+                //System.out.println("term iri: "+iri);
+                //System.out.println("jsoncurie: "+term.getAsJsonObject().get("curie"));
                 curie = jsonParser.parse("{\"type\":[\"literal\"],\"value\":\""+term.getAsJsonObject().get("curie").getAsString()+"\"}");
-                System.out.println("curie: "+curie);
+                //System.out.println("curie: "+curie);
                 JsonElement lelement = term.getAsJsonObject().get("label");
                 StringBuilder sb = new StringBuilder();
                 if (lelement.isJsonArray()){
@@ -67,21 +67,21 @@ public class LinkerPass1FromService extends ServiceBase{
                 } else {
                     sb.append(lelement.getAsJsonNull().toString());
                 }
-                System.out.println("jsonlabel: "+sb);
+                //System.out.println("jsonlabel: "+sb);
                 label = jsonParser.parse(sb.toString());
-                System.out.println("label: "+label);
+                //System.out.println("label: "+label);
                 for (JsonElement type : term.getAsJsonObject().get("type").getAsJsonArray()){
                     types.add(type.getAsString());
-                    System.out.println("type: "+type.getAsString());
+                    //System.out.println("type: "+type.getAsString());
                 }
 
                 JsonElement jsonDefinedBy;
                 jsonDefinedBy = term.getAsJsonObject().get("http://www.w3.org/2000/01/rdf-schema#isDefinedBy");
-                System.out.println("jsonDefinedBy: "+jsonDefinedBy);
-                for (Map.Entry entry : term.getAsJsonObject().entrySet()){
+                //System.out.println("jsonDefinedBy: "+jsonDefinedBy);
+                /*for (Map.Entry entry : term.getAsJsonObject().entrySet()){
                     if(entry.getKey().equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy"))
                         System.out.println("defBy: "+entry.getValue());
-                }
+                }*/
                 if(jsonDefinedBy != null && jsonDefinedBy.isJsonArray()) {
                     JsonArray arr = jsonDefinedBy.getAsJsonArray();
                     for(JsonElement isDefinedBy : arr) {
@@ -108,7 +108,7 @@ public class LinkerPass1FromService extends ServiceBase{
                 } else {
                     //definedBy.add("");
                 }
-                System.out.println("definedBy: "+definedBy);
+                //System.out.println("definedBy: "+definedBy);
                 if(iri == null) {
                     throw new RuntimeException("entity had no IRI");
                 }
@@ -148,7 +148,7 @@ public class LinkerPass1FromService extends ServiceBase{
 		LinkerPass1Result result = new LinkerPass1Result();
 		int nOntologies = 0;
 		try {
-			JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000",null,"elements");
+			JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000&includeObsoleteEntities=true",null,"elements");
 
 			for (JsonElement ontology : ontologies){
 				String ontologyId = null;

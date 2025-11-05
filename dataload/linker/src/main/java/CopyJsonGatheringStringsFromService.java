@@ -7,6 +7,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * @author Erhun Giray TUNCAY
+ * @email giray.tuncay@tib.eu
+ * TIB-Leibniz Information Center for Science and Technology
+ */
+
 public class CopyJsonGatheringStringsFromService {
 
     private static final Pattern curiePattern = Pattern.compile("[A-Z]+:[0-9A-z]+");

@@ -9,6 +9,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * @author Erhun Giray TUNCAY
+ * @email giray.tuncay@tib.eu
+ * TIB-Leibniz Information Center for Science and Technology
+ */
+
 public class LinkerPass1FromService extends ServiceBase{
 
     public static class LinkerPass1Result {

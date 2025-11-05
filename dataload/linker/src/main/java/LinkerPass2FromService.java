@@ -9,6 +9,12 @@ import java.util.regex.Pattern;
 
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
+/**
+ * @author Erhun Giray TUNCAY
+ * @email giray.tuncay@tib.eu
+ * TIB-Leibniz Information Center for Science and Technology
+ */
+
 public class LinkerPass2FromService extends ServiceBase {
 
     public static final OboDatabaseUrlService dbUrls = new OboDatabaseUrlService();

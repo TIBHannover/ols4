@@ -93,7 +93,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
             }
 
             jsonWriter.name("linkedEntities");
-            filter(ontologyGatheredStrings);
+            filter(ontologyGatheredStrings,null);
 
             System.out.println("Ontology linkedEntities: ontologyGatheredStrings=" + ontologyGatheredStrings+" ontologyId=" + ontologyId+" leveldb: "+leveldb);
             writeLinkedEntitiesFromGatheredStrings(jsonWriter, ontologyGatheredStrings, ontologyId, null, leveldb, pass1Result);
@@ -149,18 +149,43 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
      */
     public static boolean isCURIE(String input) {
         if (input == null) return false;
-        return CURIE_PATTERN.matcher(input).matches() || UNDERSCORE_CURIE_PATTERN.matcher(input).matches() || ORCID_PATTERN.matcher(input).matches();
+        return CURIE_PATTERN.matcher(input).matches() || UNDERSCORE_CURIE_PATTERN.matcher(input).matches();
     }
 
-    public static void filter(Set<String> ontologyGatheredStrings) {
+    public static boolean isORCID(String input) {
+        if (input == null) return false;
+        return ORCID_PATTERN.matcher(input).matches();
+    }
+
+    public static void filter(Set<String> ontologyGatheredStrings, String iri) {
         Set<String> filtered = new HashSet<>(ontologyGatheredStrings);
-        for (String s : filtered) {
-            for (String linkerKey : LINKER_KEYS) {
-                if (s.equals(linkerKey) )
-                    ontologyGatheredStrings.remove(s);
+        if (iri == null) {
+            for (String s : filtered) {
+                for (String linkerKey : LINKER_KEYS) {
+                    if (s.equals(linkerKey) )
+                        ontologyGatheredStrings.remove(s);
+                }
+                if (isCURIE(s) || isORCID(s)) ontologyGatheredStrings.remove(s);
             }
-            if (isCURIE(s)) ontologyGatheredStrings.remove(s);
+        } else {
+            String curie = iri.split("/")[iri.split("/").length - 1];
+            String[] curieComponents = curie.split("_");
+            for (String s : filtered) {
+                for (String linkerKey : LINKER_KEYS) {
+                    if (s.equals(linkerKey) )
+                        ontologyGatheredStrings.remove(s);
+                }
+                if (isCURIE(s) && curieComponents.length == 2) {
+                    if (s.startsWith(curieComponents[0]) && s.endsWith(curieComponents[1])) {
+                        ontologyGatheredStrings.remove(s);
+                        continue;
+                    }
+                }
+                if (isORCID(s)) ontologyGatheredStrings.remove(s);
+
+            }
         }
+
     }
 
     private static void writeEntityArray(String backendUrl, int noofEntities, int pageSize, JsonWriter jsonWriter, String entityType, String ontologyId, LevelDB leveldb, LinkerPass1FromServiceJSON.LinkerPass1Result pass1Result) throws IOException {
@@ -229,8 +254,8 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                         jsonWriter.endArray();
                     }
                 }
-
-                filter(stringsInEntity);
+                stringsInEntity.remove(entityIri);
+                filter(stringsInEntity,entityIri);
                 jsonWriter.name("linkedEntities");
                 System.out.println("Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb);
                 writeLinkedEntitiesFromGatheredStrings(jsonWriter, stringsInEntity, ontologyId, entityIri, leveldb, pass1Result);

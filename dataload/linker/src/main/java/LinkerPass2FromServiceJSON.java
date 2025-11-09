@@ -197,6 +197,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                 String entityIri = entity.get("iri").getAsString();
                 Set<String> stringsInEntity = new HashSet<String>();
                 jsonWriter.beginObject();
+                String curie = "none";
                 for (Map.Entry<String, JsonElement> entry : entity.entrySet()) {
                     String name = entry.getKey().toString();
                     String iri = entityIri;
@@ -211,6 +212,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                         extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement curieElement = entity.get(name);
+                        curie = curieElement.getAsJsonObject().get("value").getAsString();
                         com.google.gson.internal.Streams.write(curieElement, jsonWriter);
                         //processCurieObject(curieElement, jsonWriter, pass1Result, entityIri);
                     } else if (name.equalsIgnoreCase("shortForm")) {
@@ -256,6 +258,9 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                 }
                 stringsInEntity.remove(entityIri);
                 filter(stringsInEntity,entityIri);
+                for (Map.Entry<String, JsonElement> entry : entity.get("linkedEntities").getAsJsonObject().entrySet())
+                    if (entry.getKey().equals(curie))
+                        stringsInEntity.add(curie);
                 jsonWriter.name("linkedEntities");
                 System.out.println("Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb);
                 writeLinkedEntitiesFromGatheredStrings(jsonWriter, stringsInEntity, ontologyId, entityIri, leveldb, pass1Result);

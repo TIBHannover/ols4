@@ -130,12 +130,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
     // 2. Must contain a single colon.
     // 3. Must NOT start with URI schemes like http:, https:, ftp:, urn:, etc.
     private static final Pattern CURIE_PATTERN = Pattern.compile(
-            "^(?!https?:)(?!ftp:)(?!urn:)(?!file:)(?!mailto:)([A-Za-z_][A-Za-z0-9_.-]*):([^\\s:][^\\s]*)$"
-    );
-
-    // Regex for underscore CURIEs (e.g., AEON_0000084)
-    private static final Pattern UNDERSCORE_CURIE_PATTERN = Pattern.compile(
-            "^[A-Za-z_][A-Za-z0-9.-]*_[0-9A-Za-z_.-]+$"
+            "^(?!https?:)(?!ftp:)(?!urn:)(?!file:)(?!mailto:)([A-Za-z][A-Za-z0-9_.-]*)([:_][A-Za-z0-9_.-]+)+$"
     );
 
     // 3️⃣ ORCID-like pattern (e.g., 0000-0002-1595-3213)
@@ -149,7 +144,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
      */
     public static boolean isCURIE(String input) {
         if (input == null) return false;
-        return CURIE_PATTERN.matcher(input).matches() || UNDERSCORE_CURIE_PATTERN.matcher(input).matches();
+        return CURIE_PATTERN.matcher(input).matches();
     }
 
     public static boolean isORCID(String input) {
@@ -168,7 +163,8 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                 if (isCURIE(s) || isORCID(s)) ontologyGatheredStrings.remove(s);
             }
         } else {
-            String curie = iri.split("/")[iri.split("/").length - 1];
+            String curieWithTag = iri.split("/")[iri.split("/").length - 1];
+            String curie = curieWithTag.split("#")[curieWithTag.split("#").length - 1];
             String[] curieComponents = curie.split("_");
             for (String s : filtered) {
                 for (String linkerKey : LINKER_KEYS) {
@@ -180,9 +176,13 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                         ontologyGatheredStrings.remove(s);
                         continue;
                     }
+                } else if (isCURIE(s) && curieComponents.length == 3) {
+                    if (s.startsWith(curieComponents[0]+"_"+curieComponents[1]) && s.endsWith(curieComponents[2])) {
+                        ontologyGatheredStrings.remove(s);
+                        continue;
+                    }
                 }
                 if (isORCID(s)) ontologyGatheredStrings.remove(s);
-
             }
         }
 

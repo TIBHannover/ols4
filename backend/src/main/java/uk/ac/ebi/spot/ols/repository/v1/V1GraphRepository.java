@@ -219,7 +219,9 @@ public class V1GraphRepository {
 
     public String getEntityJson(String entityId, String ontologyId, EntityType entityType) {
         String query;
-        if (ontologyId != null && entityId != null)
+        if (entityType.equals(EntityType.ONTOLOGY)){
+            query = "MATCH (a:"+entityType.getPropertyName()+") WHERE a.ontologyId = ['"+ontologyId+"'] RETURN a._json AS result";
+        } else if (ontologyId != null && entityId != null)
             query = "MATCH (a:"+entityType.getPropertyName()+") WHERE a.id = '"+entityId+"'  and a.ontologyId = ['"+ontologyId+"'] RETURN a._json AS result";
         else
             query = "MATCH (a:"+entityType.getPropertyName()+") WHERE a.id = '"+entityId+"'  RETURN a._json AS result";

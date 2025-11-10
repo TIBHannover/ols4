@@ -24,7 +24,8 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
     public static final String[] LINKER_KEYS = new String[] { "numAppearsIn", "linkedEntities", "importsFrom", "exportsTo", "definedBy", "appearsIn", "isDefiningOntology", "hasLocalDefinition" };
 
     public static void run(String backendUrl, int pageSize, String outputJsonFilename, LevelDB leveldb, LinkerPass1FromServiceJSON.LinkerPass1Result pass1Result) throws IOException {
-        JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000&includeObsoleteEntities=true",null,"elements");
+        JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/fulljson/entities?entity_type=ONTOLOGY&size=1000", null,"content");
+        //JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000&includeObsoleteEntities=true",null,"elements");
         JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream(outputJsonFilename)));
         jsonWriter.setIndent("  ");
 
@@ -34,8 +35,8 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
         jsonWriter.beginObject();
         jsonWriter.name("ontologies");
         jsonWriter.beginArray();
-        for (JsonElement ontology : ontologies){
-
+        for (JsonElement ont : ontologies){
+            JsonObject ontology = jsonParser.parse(ont.getAsString()).getAsJsonObject();
             int numberOfTerms = 0;
             int numberOfProperties = 0;
             int numberOfIndividuals = 0;
@@ -43,9 +44,9 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
             jsonWriter.beginObject();
             String ontologyId = ontology.getAsJsonObject().get("ontologyId").getAsString();
 
-            numberOfTerms = ontology.getAsJsonObject().get("numberOfClasses").getAsInt();
-            numberOfProperties = ontology.getAsJsonObject().get("numberOfProperties").getAsInt();
-            numberOfIndividuals = ontology.getAsJsonObject().get("numberOfIndividuals").getAsInt();
+            numberOfTerms = ontology.getAsJsonObject().get("numberOfClasses").getAsJsonObject().get("value").getAsInt();
+            numberOfProperties = ontology.getAsJsonObject().get("numberOfProperties").getAsJsonObject().get("value").getAsInt();
+            numberOfIndividuals = ontology.getAsJsonObject().get("numberOfIndividuals").getAsJsonObject().get("value").getAsInt();
 
             ++ nOntologies;
             System.out.println("Writing ontology " + ontologyId + " (" + nOntologies + ")");
@@ -86,7 +87,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
             jsonWriter.name("individuals");
             writeEntityArray(backendUrl,numberOfIndividuals, pageSize, jsonWriter,"INDIVIDUAL",ontologyId,leveldb,pass1Result);
             // can be reenabled if some fields are useful
-            for (Map.Entry<String, JsonElement> entry : ontology.getAsJsonObject().entrySet()){
+            for (Map.Entry<String, JsonElement> entry : ontology.entrySet()){
                 jsonWriter.name(entry.getKey());
                 extractGatheredStrings(entry,ontologyGatheredStrings);
                 CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(entry.getValue(), jsonWriter, ontologyGatheredStrings);

@@ -2,6 +2,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.util.*;
@@ -164,23 +165,16 @@ public class LinkerPass2FromService extends ServiceBase {
             String curieWithTag = iri.split("/")[iri.split("/").length - 1];
             String curie = curieWithTag.split("#")[curieWithTag.split("#").length - 1];
             String[] curieComponents = curie.split("_");
+            String modifiedCurie = StringUtils.join(curieComponents,"_");
             for (String s : filtered) {
                 for (String linkerKey : LINKER_KEYS) {
                     if (s.equals(linkerKey) )
                         ontologyGatheredStrings.remove(s);
                 }
-                if (isCURIE(s) && curieComponents.length == 2) {
-                    if (s.startsWith(curieComponents[0]) && s.endsWith(curieComponents[1])) {
+                if (isCURIE(s)){
+                    if (s.replace(":","_").equalsIgnoreCase(modifiedCurie))
                         ontologyGatheredStrings.remove(s);
-                        continue;
-                    }
-                } else if (isCURIE(s) && curieComponents.length == 3) {
-                    if (s.startsWith(curieComponents[0]+"_"+curieComponents[1]) && s.endsWith(curieComponents[2])) {
-                        ontologyGatheredStrings.remove(s);
-                        continue;
-                    }
-                }
-                if (isORCID(s)) ontologyGatheredStrings.remove(s);
+                } else if (isORCID(s)) ontologyGatheredStrings.remove(s);
             }
         }
 

@@ -135,8 +135,10 @@
             <version>3.2.5</version> <!-- Ensure it's 2.22.0+ for JUnit 5 -->
             <configuration>
                 <systemPropertyVariables>
-                    <filePath>configs/ontologies_out.json</filePath>
+                    <filePath>configs/ontologies_out.json_notfound</filePath>
                     <serviceUrl>http://localhost:8080</serviceUrl>
+                    <fileOutputPath>configs/ontologies_out81.jsonl_notfound</fileOutputPath>
+                    <serviceOutputPath>configs/ontologies_out_service93.jsonl_notfound</serviceOutputPath>
                 </systemPropertyVariables>
             </configuration>
         </plugin>

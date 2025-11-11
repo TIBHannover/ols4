@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CompareLinkerPass1ResultsTest {
 
     static LinkerPass1.LinkerPass1Result pass1Result;
-    static LinkerPass1FromService.LinkerPass1Result pass1ResultFromService;
+    static LinkerPass1FromServiceJSON.LinkerPass1Result pass1ResultFromService;
 
     @BeforeAll
     static void init() {
@@ -18,18 +18,18 @@ public class CompareLinkerPass1ResultsTest {
             System.out.println("serviceUrl: " + System.getProperty("serviceUrl"));
             System.out.println("filePath: " + Miscallenous.resolveConfigFile(System.getProperty("filePath")));
             if(Miscallenous.isServiceUp(System.getProperty("serviceUrl")) && Miscallenous.isFilePresent(Miscallenous.resolveConfigFile(System.getProperty("filePath")).toString())){
-                pass1ResultFromService = LinkerPass1FromService.run(System.getProperty("serviceUrl"), 20);
+                pass1ResultFromService = LinkerPass1FromServiceJSON.run(System.getProperty("serviceUrl"), 20);
                 pass1Result = LinkerPass1.run(Miscallenous.resolveConfigFile(System.getProperty("filePath")).toString());
             }
             if (pass1ResultFromService == null || pass1Result == null) {
-                pass1ResultFromService = new LinkerPass1FromService.LinkerPass1Result();
+                pass1ResultFromService = new LinkerPass1FromServiceJSON.LinkerPass1Result();
                 pass1Result = new  LinkerPass1.LinkerPass1Result();
             }
         } catch (Exception e) {
             System.err.println("Initialization failed (" + e.getClass().getSimpleName() + "): " + e.getMessage());
             e.printStackTrace(System.err);
             // if either one fails, both are reset to empty
-            pass1ResultFromService = new LinkerPass1FromService.LinkerPass1Result();
+            pass1ResultFromService = new LinkerPass1FromServiceJSON.LinkerPass1Result();
             pass1Result = new  LinkerPass1.LinkerPass1Result();
         }
     }
@@ -42,6 +42,7 @@ public class CompareLinkerPass1ResultsTest {
         for (Map.Entry<String, EntityDefinitionSet> def1 : defs1){
             for (Map.Entry<String, EntityDefinitionSet> def2 : defs2){
                 if(def1.getKey().equals(def2.getKey())){
+                    System.out.println("def1: "+def1 + " - def2: "+def2);
                     EntityDefinitionSet i1 = def1.getValue();
                     EntityDefinitionSet i2 = def2.getValue();
                     count+=1;
@@ -49,7 +50,7 @@ public class CompareLinkerPass1ResultsTest {
                     System.out.println("count: "+count);
                     assertEquals(i1.definitions,i2.definitions,"definitions1: "+i1.definitions+" and definitions2: "+i2.definitions);
                     assertEquals(i1.definingDefinitions,i2.definingDefinitions,"definingDefinitions1: "+i1.definingDefinitions+" and definingDefinitions2: "+i2.definingDefinitions);
-                    assertEquals(i1.definingOntologyIris,i2.definingOntologyIris,"definingOntologyIris1: "+i1.definingOntologyIris+" and definingOntologyIris2: "+i2.definingOntologyIris);
+                    assertEquals(i1.definingOntologyIris,i2.definingOntologyIris,"def1: "+def1 + " - def2: "+def2+" - definingOntologyIris1: "+i1.definingOntologyIris+" and definingOntologyIris2: "+i2.definingOntologyIris);
                     assertEquals(i1.definingOntologyIds,i2.definingOntologyIds,"definingOntologyIds1: "+i1.definingOntologyIds+" and definingOntologyIds2: "+i2.definingOntologyIds);
                     assertEquals(i1.ontologyIdToDefinitions,i2.ontologyIdToDefinitions,"ontologyIdToDefinitions1: "+i1.ontologyIdToDefinitions+" and ontologyIdToDefinitions2: "+i2.ontologyIdToDefinitions);
                 }
@@ -82,6 +83,7 @@ public class CompareLinkerPass1ResultsTest {
     void compareLinkerPass1ResultsIriToOids() {
         Set<Map.Entry<String, Set<String>>> oitoids1 = pass1Result.ontologyIriToOntologyIds.entrySet();
         Set<Map.Entry<String, Set<String>>> oitoids2 = pass1ResultFromService.ontologyIriToOntologyIds.entrySet();
+        System.out.println("oitoids1: "+oitoids1 + " - oitoids2: "+oitoids2);
         int count=0;
         for (Map.Entry<String, Set<String>> oitoid1 : oitoids1){
             for (Map.Entry<String, Set<String>> oitoid2 : oitoids2){
@@ -102,6 +104,7 @@ public class CompareLinkerPass1ResultsTest {
     void compareLinkerPass1ResultsPrefixToOids() {
         Set<Map.Entry<String, Set<String>>> pptoids1 = pass1Result.preferredPrefixToOntologyIds.entrySet();
         Set<Map.Entry<String, Set<String>>> pptoids2 = pass1ResultFromService.preferredPrefixToOntologyIds.entrySet();
+        System.out.println("pptoids1: "+pptoids1 + " - pptoids2: "+pptoids2);
         int count=0;
         for (Map.Entry<String, Set<String>> pptoid1 : pptoids1){
             for (Map.Entry<String, Set<String>> pptoid2 : pptoids2){
@@ -122,6 +125,7 @@ public class CompareLinkerPass1ResultsTest {
     void compareLinkerPass1ResultsImportingOntologyIds() {
         Collection<Map.Entry<String, String>> oids1 = pass1Result.ontologyIdToImportingOntologyIds.entries();
         Collection<Map.Entry<String, String>> oids2 = pass1ResultFromService.ontologyIdToImportingOntologyIds.entries();
+        System.out.println("oids1: "+oids1 + " - oids2: "+oids2);
         int count=0;
         for (Map.Entry<String, String> oid1 : oids1){
             for (Map.Entry<String, String> oid2 : oids2){
@@ -139,6 +143,7 @@ public class CompareLinkerPass1ResultsTest {
     void compareLinkerPass1ResultsImportedOntologyIds() {
         Collection<Map.Entry<String, String>> oids1 = pass1Result.ontologyIdToImportedOntologyIds.entries();
         Collection<Map.Entry<String, String>> oids2 = pass1ResultFromService.ontologyIdToImportedOntologyIds.entries();
+        System.out.println("oids1: "+oids1 + " - oids2: "+oids2);
         int count=0;
         for (Map.Entry<String, String> oid1 : oids1){
             for (Map.Entry<String, String> oid2 : oids2){

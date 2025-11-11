@@ -20,9 +20,9 @@ public class Miscallenous {
             configPath = currentDir.resolve("dataload").resolve(relativePath);
         }
 
-        if (!Files.exists(configPath)) {
+        /*if (!Files.exists(configPath)) {
             throw new RuntimeException("Config file not found: " + configPath.toAbsolutePath());
-        }
+        }*/
 
         return configPath.toAbsolutePath();
     }

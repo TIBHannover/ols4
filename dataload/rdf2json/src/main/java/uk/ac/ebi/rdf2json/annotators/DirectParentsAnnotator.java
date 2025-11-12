@@ -24,7 +24,7 @@ public class DirectParentsAnnotator {
             // skip bnodes
             if(c.uri == null)
                 continue;
-
+            
             if (c.types.contains(OntologyNode.NodeType.CLASS)) {
 
                 List<PropertyValue> parents = c.properties.getPropertyValues("http://www.w3.org/2000/01/rdf-schema#subClassOf");
@@ -32,7 +32,8 @@ public class DirectParentsAnnotator {
 
                 if(parents != null) {
                     for(PropertyValue parent : parents) {
-                        if(parent.getType() == PropertyValue.Type.URI && graph.nodes.containsKey(((PropertyValueURI) parent).getUri())) {
+                        if(parent.getType() == PropertyValue.Type.URI && graph.nodes.containsKey(((PropertyValueURI) parent).getUri())
+                        		&& !c.uri.equalsIgnoreCase(((PropertyValueURI) parent).getUri())) {
                             directParents.add((PropertyValueURI) parent);
                         }
                     }

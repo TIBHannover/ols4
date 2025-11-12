@@ -100,6 +100,26 @@ public class ImportCSV {
         }
     }
 
+    public static void executeBatchedRelationshipMergeQueries(List<File> files, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
+        for (File file : files) {
+            if ((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
+                continue;
+
+            Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+            String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
+            List<List<CSVRecord>> splitRecords = splitList(csvParser.getRecords(), batchSize);
+            CountDownLatch latch = new CountDownLatch(splitRecords.size());
+            ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
+            for (List<CSVRecord> records : splitRecords){
+                RelationShipMergeQueryTask task = new RelationShipMergeQueryTask(driver,latch,records,headers,file, attempts);
+                executorService.submit(task);
+            }
+            latch.await();
+            executorService.shutdown();
+        }
+    }
+
     /*
      * Files should be the _ontologies.csv files
      * */
@@ -273,7 +293,16 @@ public class ImportCSV {
                     } else if (cmd.getOptionValue("m").equals("u")) {
                         File dir = new File(directory);
                         List<File> files = listFiles(dir.listFiles());
+                        Map<String,Integer> planned = displayCSV(files);
                         executeBatchedUpdateNodeQueries(files,null,driver,batchSize, poolSize,attempts);
+                        executeBatchedRelationshipMergeQueries(files,driver,batchSize, poolSize,attempts);
+                        Map<String,Integer> ingested = displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).collect(Collectors.toUnmodifiableList()), driver);
+                        Set<String> keys = new HashSet<>();
+                        keys.addAll(planned.keySet());
+                        keys.addAll(ingested.keySet());
+                        for (String key : keys){
+                            System.out.println("For Key: "+key+" - Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
+                        }
                     } else if (cmd.getOptionValue("m").equals("rm")){
                         if (!cmd.hasOption("l") && !cmd.hasOption("lb")){
                             for(String ontology : ontologyPrefixes.split(",")){

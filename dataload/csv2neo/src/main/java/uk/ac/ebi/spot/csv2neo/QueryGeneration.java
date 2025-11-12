@@ -58,27 +58,6 @@ public class QueryGeneration {
         return params;
     }
 
-    public static Map<String,Object> generatePropsForUpdate(String[] titles, String[] values, List<String> subset){
-        Map<String,Object> props = new HashMap<>();
-        if (titles.length == values.length) {
-            for (int i = 3; i < values.length; i++){
-                String[] title = titles[i].split(":");
-                if(subset.contains(title[0])){
-                    if (title.length > 1 && title[1].equals("string[]")) {
-                        props.put(title[0].replaceAll("\"\"","\""),values[i].split("\\|"));
-                    } else
-                        props.put(title[0].replaceAll("\"\"","\""),values[i]);
-                }
-            }
-        } else {
-            System.out.println("titles and values are not equal");
-            System.out.println("titles: "+titles.length + " - values: " +values.length);
-        }
-        Map<String,Object> params = new HashMap<>();
-        params.put( "props", props );
-        return params;
-    }
-
     public static String generateRelationCreationQuery(String[] titles, String[] values){
         StringBuilder sb = new StringBuilder();
 
@@ -88,6 +67,25 @@ public class QueryGeneration {
                     .append("WHERE n.id STARTS WITH '"+values[0].split("\\+")[0]+"' AND m.id STARTS WITH '"+values[2].split("\\+")[0]+"' ")
                     .append("AND '"+values[0].split("\\+")[0]+"' IN n.ontologyId AND '"+values[2].split("\\+")[0]+"' IN m.ontologyId ")
                     .append("CREATE (n)-[:")
+                    .append("`"+values[1].replace("|","`:`")+"`")
+                    .append("]->(m)");
+        } else {
+            System.out.println("titles and values are not equal");
+            System.out.println("titles: "+titles.length + " - values: " +values.length);
+        }
+
+        return sb.toString();
+    }
+
+    public static String generateRelationMergeQuery(String[] titles, String[] values){
+        StringBuilder sb = new StringBuilder();
+
+        if (titles.length == values.length){
+            sb.append("MATCH (n"+idToLabel(values[0])+" {id: "+"\'"+values[0]+"\'"+"}),")
+                    .append("(m"+idToLabel(values[2])+" {id: "+"\'"+values[2]+"\'"+"}) ")
+                    .append("WHERE n.id STARTS WITH '"+values[0].split("\\+")[0]+"' AND m.id STARTS WITH '"+values[2].split("\\+")[0]+"' ")
+                    .append("AND '"+values[0].split("\\+")[0]+"' IN n.ontologyId AND '"+values[2].split("\\+")[0]+"' IN m.ontologyId ")
+                    .append("MERGE (n)-[:")
                     .append("`"+values[1].replace("|","`:`")+"`")
                     .append("]->(m)");
         } else {

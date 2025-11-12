@@ -1,8 +1,6 @@
 package uk.ac.ebi.spot.csv2neo;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**

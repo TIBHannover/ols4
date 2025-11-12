@@ -26,7 +26,6 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
 
     public static void run(String backendUrl, int pageSize, String outputJsonFilename, LevelDB leveldb, LinkerPass1FromServiceJSON.LinkerPass1Result pass1Result) throws IOException {
         JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/fulljson/entities?entity_type=ONTOLOGY&size=1000", null,"content");
-        //JsonArray ontologies = getEntitiesAsJsonArray(backendUrl+"/api/v2/ontologies?size=1000&includeObsoleteEntities=true",null,"elements");
         JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream(outputJsonFilename)));
         jsonWriter.setIndent("  ");
 
@@ -87,7 +86,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
             writeEntityArray(backendUrl,numberOfProperties, pageSize, jsonWriter,"PROPERTY",ontologyId,leveldb,pass1Result);
             jsonWriter.name("individuals");
             writeEntityArray(backendUrl,numberOfIndividuals, pageSize, jsonWriter,"INDIVIDUAL",ontologyId,leveldb,pass1Result);
-            // can be reenabled if some fields are useful
+
             for (Map.Entry<String, JsonElement> entry : ontology.entrySet()){
                 jsonWriter.name(entry.getKey());
                 extractGatheredStrings(entry,ontologyGatheredStrings);
@@ -194,7 +193,6 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                 for (Map.Entry<String, JsonElement> entry : entity.entrySet()) {
                     String name = entry.getKey().toString();
                     String iri = entityIri;
-                    //stringsInEntity.add(ExtractIriFromPropertyName.extract(name));
 
                     if (name.equals("iri")) {
                         extractGatheredStrings(entry, stringsInEntity);
@@ -207,17 +205,14 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                         JsonElement curieElement = entity.get(name);
                         curie = curieElement.getAsJsonObject().get("value").getAsString();
                         com.google.gson.internal.Streams.write(curieElement, jsonWriter);
-                        //processCurieObject(curieElement, jsonWriter, pass1Result, entityIri);
                     } else if (name.equalsIgnoreCase("shortForm")) {
                         extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement shortFormElement = entity.get(name);
                         com.google.gson.internal.Streams.write(shortFormElement, jsonWriter);
-                        //processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
                     } else if (List.of(LINKER_KEYS).contains(name)) {
                         continue;
                     } else {
-                        // can be reenabled if some fields are useful
                         extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement gatheringStringsElement = entity.get(name);
@@ -525,37 +520,5 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
         jsonWriter.endArray();
         jsonWriter.name("value").value(shortFormObject.get("value").getAsString());
         jsonWriter.endObject();
-    }
-
-    private static void processCurieObject(JsonElement curieElement, JsonWriter jsonWriter, LinkerPass1FromServiceJSON.LinkerPass1Result pass1Result, String entityIri) throws IOException {
-        JsonObject curieObject = new  JsonObject();
-        JsonArray typeArray = new JsonArray();
-        typeArray.add("literal");
-        curieObject.add("type", typeArray);
-        String curieValue = curieElement.getAsString();
-        //curieValue = getProcessedCurieValue(pass1Result, entityIri);
-        curieObject.addProperty("value", curieValue);
-
-        // Write the modified curie object
-        jsonWriter.beginObject();
-        jsonWriter.name("type");
-        jsonWriter.beginArray();
-        for (JsonElement typeElement : curieObject.getAsJsonArray("type")) {
-            jsonWriter.value(typeElement.getAsString());
-        }
-        jsonWriter.endArray();
-        jsonWriter.name("value").value(curieObject.get("value").getAsString());
-        jsonWriter.endObject();
-    }
-
-    private static String getProcessedCurieValue(LinkerPass1.LinkerPass1Result pass1Result, String entityIri) {
-        var def = pass1Result.iriToDefinitions.get(entityIri);
-        if (def!= null && def.definitions.iterator().hasNext()) {
-            JsonObject defCurieObject = def.definitions.iterator().next().curie.getAsJsonObject();
-            if (defCurieObject.has("value")) {
-                return defCurieObject.get("value").getAsString();
-            }
-        }
-        return "";
     }
 }

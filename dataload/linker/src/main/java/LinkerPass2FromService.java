@@ -84,7 +84,7 @@ public class LinkerPass2FromService extends ServiceBase {
             writeEntityArray(backendUrl,numberOfProperties, pageSize, jsonWriter,"properties",ontologyId,leveldb,pass1Result);
             jsonWriter.name("individuals");
             writeEntityArray(backendUrl,numberOfIndividuals, pageSize, jsonWriter,"individuals",ontologyId,leveldb,pass1Result);
-            // can be reenabled if some fields are useful
+
             for (Map.Entry<String, com.google.gson.JsonElement> entry : ontology.getAsJsonObject().entrySet()){
                 jsonWriter.name(entry.getKey());
                 extractGatheredStrings(entry,ontologyGatheredStrings);
@@ -93,8 +93,7 @@ public class LinkerPass2FromService extends ServiceBase {
 
             jsonWriter.name("linkedEntities");
             filter(ontologyGatheredStrings,null);
-
-            System.out.println("Ontology linkedEntities: ontologyGatheredStrings=" + ontologyGatheredStrings+" ontologyId=" + ontologyId+" leveldb: "+leveldb);
+            //System.out.println("Ontology linkedEntities: ontologyGatheredStrings=" + ontologyGatheredStrings+" ontologyId=" + ontologyId+" leveldb: "+leveldb);
             writeLinkedEntitiesFromGatheredStrings(jsonWriter, ontologyGatheredStrings, ontologyId, null, leveldb, pass1Result);
             jsonWriter.endObject();
 
@@ -191,7 +190,6 @@ public class LinkerPass2FromService extends ServiceBase {
                 for (Map.Entry<String, com.google.gson.JsonElement> entry : term.getAsJsonObject().entrySet()) {
                     String name = entry.getKey().toString();
                     String iri = entityIri;
-                    //stringsInEntity.add(ExtractIriFromPropertyName.extract(name));
 
                     if (name.equals("iri")) {
                         extractGatheredStrings(entry, stringsInEntity);
@@ -211,7 +209,6 @@ public class LinkerPass2FromService extends ServiceBase {
                     } else if (List.of(LINKER_KEYS).contains(name)) {
                         continue;
                     } else {
-                        // can be reenabled if some fields are useful
                         extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement gatheringStringsElement = term.getAsJsonObject().get(name);
@@ -246,7 +243,7 @@ public class LinkerPass2FromService extends ServiceBase {
                 stringsInEntity.remove(entityIri);
                 filter(stringsInEntity,entityIri);
                 jsonWriter.name("linkedEntities");
-                System.out.println("Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb);
+                //System.out.println("Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb);
                 writeLinkedEntitiesFromGatheredStrings(jsonWriter, stringsInEntity, ontologyId, entityIri, leveldb, pass1Result);
 
                 jsonWriter.endObject();
@@ -538,16 +535,5 @@ public class LinkerPass2FromService extends ServiceBase {
         jsonWriter.endArray();
         jsonWriter.name("value").value(curieObject.get("value").getAsString());
         jsonWriter.endObject();
-    }
-
-    private static String getProcessedCurieValue(LinkerPass1.LinkerPass1Result pass1Result, String entityIri) {
-        var def = pass1Result.iriToDefinitions.get(entityIri);
-        if (def!= null && def.definitions.iterator().hasNext()) {
-            JsonObject defCurieObject = def.definitions.iterator().next().curie.getAsJsonObject();
-            if (defCurieObject.has("value")) {
-                return defCurieObject.get("value").getAsString();
-            }
-        }
-        return "";
     }
 }

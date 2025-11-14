@@ -12,7 +12,7 @@ public class Linker {
 
         Options options = new Options();
 
-        Option input = new Option(null, "input", true, "unlinked ontologies JSON input filename");
+        Option input = new Option(null, "input", true, "unlinked ontologies JSON input filename or service url to get the entities from. Service mode is activated by the service parameter");
         input.setRequired(true);
         options.addOption(input);
 
@@ -24,15 +24,15 @@ public class Linker {
         leveldbPath.setRequired(false);
         options.addOption(leveldbPath);
 
-        Option serviceUrl = new Option(null, "serviceUrl", true, "Service url to get the entities from");
+        Option service = new Option(null, "service", false, "Activates the service input mode. If not activated, the default mode is file input mode.");
         leveldbPath.setRequired(false);
-        options.addOption(serviceUrl);
+        options.addOption(service);
 
         Option pageSize = new Option(null, "pageSize", true, "Page size for each call of the Service url");
         pageSize.setRequired(false);
         options.addOption(pageSize);
 
-        Option json = new Option(null, "json", false, "json");
+        Option json = new Option(null, "json", false, "fully linked json calls are used instead of the native v2 calls");
         json.setRequired(false);
         options.addOption(json);
 
@@ -50,10 +50,10 @@ public class Linker {
             return;
         }
 
-        String inputFilePath = cmd.getOptionValue("input");
+        String inputPath = cmd.getOptionValue("input");
         String outputFilePath = cmd.getOptionValue("output");
         String leveldb_path = cmd.getOptionValue("leveldbPath");
-        String service_url = cmd.getOptionValue("serviceUrl");
+        boolean serviceMode = cmd.hasOption("service");
         boolean JSON = cmd.hasOption("json");
         int pSize = cmd.hasOption("pageSize") ? Integer.parseInt(cmd.getOptionValue("pageSize")) : 20;
 
@@ -64,17 +64,17 @@ public class Linker {
             LinkerPass1FromServiceJSON.LinkerPass1Result pass1ResultFromServiceJSON;
             LinkerPass1FromService.LinkerPass1Result pass1ResultFromService;
     //        LinkerPass1.LinkerPass1Result pass1Result = gson.fromJson(new InputStreamReader(new FileInputStream("/Users/james/ols4/linked.json")), LinkerPass1.LinkerPass1Result.class);
-            if (service_url != null && !service_url.isEmpty() && JSON) {
-                pass1ResultFromServiceJSON = LinkerPass1FromServiceJSON.run(service_url,pSize);
-                LinkerPass2FromServiceJSON.run(service_url, pSize, outputFilePath, leveldb, pass1ResultFromServiceJSON);
+            if (serviceMode && JSON) {
+                pass1ResultFromServiceJSON = LinkerPass1FromServiceJSON.run(inputPath,pSize);
+                LinkerPass2FromServiceJSON.run(inputPath, pSize, outputFilePath, leveldb, pass1ResultFromServiceJSON);
                 ServiceBase.httpclient.close();
-            } else if (service_url != null && !service_url.isEmpty()) {
-                pass1ResultFromService = LinkerPass1FromService.run(service_url,pSize);
-                LinkerPass2FromService.run(service_url, pSize, outputFilePath, leveldb, pass1ResultFromService);
+            } else if (serviceMode) {
+                pass1ResultFromService = LinkerPass1FromService.run(inputPath,pSize);
+                LinkerPass2FromService.run(inputPath, pSize, outputFilePath, leveldb, pass1ResultFromService);
                 ServiceBase.httpclient.close();
             } else {
-                pass1Result = LinkerPass1.run(inputFilePath);
-                LinkerPass2.run(inputFilePath, outputFilePath, leveldb, pass1Result);
+                pass1Result = LinkerPass1.run(inputPath);
+                LinkerPass2.run(inputPath, outputFilePath, leveldb, pass1Result);
             }
 
 

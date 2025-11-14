@@ -55,8 +55,38 @@ The module is flexible and enables you to perform multiple ingestions on a live 
 
 ## Step 5: JSON to JSON *for Solr*
 
-Similar to how the Neo4j CSV was generated, you can also generate JSON files ready for uploading to SOLR using `json2solr` which can also be performed on a live Solr instance.
+Similar to how the Neo4j CSV was generated, you can also generate JSON files ready for uploading to SOLR using `json2solr` which can also be performed on a live Solr instance. The output files should later be uploaded to solr with the commands in `load_into_solr.sh`
 
     java -jar json2solr/target/json2solr-1.0-SNAPSHOT.jar --input foundry_out.jsonl --outDir output_csv
 
+
+
+
+# Multi Shot Ingestion
+The fields "numAppearsIn", "linkedEntities", "importsFrom", "exportsTo", "definedBy", "appearsIn", "isDefiningOntology", "hasLocalDefinition" have to be recalculated when the ontology ingestion procedure is triggered multiple times without resetting neo4j and solr.
+
+## Step 1: Relink
+
+The recalculation is performed by repeating the linker stage. This time the input of the command is the existing service with missing links rather than the rdf2json output file.
+
+    java -Dfile.encoding=UTF-8 -jar linker/target/linker-1.0-SNAPSHOT.jar --input  http://localhost:8080 --output configs/ontologies_out_service.jsonl --service --json --pageSize 1000
+
+## Step 2: JSON to CSV *for Neo4j*
+
+You can now convert this huge JSON file to a CSV file ready for Neo4j, using json2neo:
+
+    rm -rf output_csv_update && mkdir output_csv_update
+    java -jar json2neo/target/json2neo-1.0-SNAPSHOT.jar --input ontologies_out_service.jsonl --outDir output_csv_update
+
+## Step 3: JSON to JSON *for Solr*
+
+Similar to how the Neo4j CSV was generated, you can also generate JSON files ready for uploading to SOLR using `json2solr` which can also be performed on a live Solr instance. The output files should later be uploaded to solr with the commands in `load_into_solr.sh`
+
+    java -jar json2solr/target/json2solr-1.0-SNAPSHOT.jar --input ontologies_out_service.jsonl --outDir output_csv_update
+
+## Step 4: CSV to Neo4J Module:
+
+The csv2neo module should now be executed in update mode. It can be triggered with the following command:
+
+    java -jar csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -m u -d output_csv_update
 

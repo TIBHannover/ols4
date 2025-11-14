@@ -51,7 +51,7 @@ Now you should have a Neo4j database ready to start!
 
 The module is flexible and enables you to perform multiple ingestions on a live database. It can be triggered with the following command:
 
-    java -jar csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -i -d output_csv
+    java -jar csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -m i -d output_csv -bs 1000 -ps 20 -t 5
 
 ## Step 5: JSON to JSON *for Solr*
 
@@ -88,5 +88,5 @@ Similar to how the Neo4j CSV was generated, you can also generate JSON files rea
 
 The csv2neo module should now be executed in update mode. It can be triggered with the following command:
 
-    java -jar csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -m u -d output_csv_update
+    java -jar csv2neo/target/csv2neo-1.0-SNAPSHOT.jar -m u -d output_csv_update -bs 1000 -ps 20 -t 5
 

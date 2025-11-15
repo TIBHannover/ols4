@@ -88,6 +88,8 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
             writeEntityArray(backendUrl,numberOfIndividuals, pageSize, jsonWriter,"INDIVIDUAL",ontologyId,leveldb,pass1Result);
 
             for (Map.Entry<String, JsonElement> entry : ontology.entrySet()){
+                if (List.of(LINKER_KEYS).contains(entry.getKey()))
+                    continue;
                 jsonWriter.name(entry.getKey());
                 extractGatheredStrings(entry,ontologyGatheredStrings);
                 CopyJsonGatheringStringsFromService.copyJsonGatheringStrings(entry.getValue(), jsonWriter, ontologyGatheredStrings);

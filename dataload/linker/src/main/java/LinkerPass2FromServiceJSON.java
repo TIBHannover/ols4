@@ -192,26 +192,35 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                 Set<String> stringsInEntity = new HashSet<String>();
                 jsonWriter.beginObject();
                 String curie = "none";
-                for (Map.Entry<String, JsonElement> entry : entity.entrySet()) {
-                    String name = entry.getKey().toString();
-                    String iri = entityIri;
 
+                for (Map.Entry<String, JsonElement> entry : entity.entrySet()){
+                    String name = entry.getKey();
                     if (name.equals("iri")) {
                         extractGatheredStrings(entry, stringsInEntity);
+                        stringsInEntity.remove(entityIri);
                         jsonWriter.name(name);
-                        entityIri = iri;
                         jsonWriter.value(entityIri);
                     } else if (name.equalsIgnoreCase("curie")) {
                         extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement curieElement = entity.get(name);
                         curie = curieElement.getAsJsonObject().get("value").getAsString();
+                        stringsInEntity.remove(curie);
                         com.google.gson.internal.Streams.write(curieElement, jsonWriter);
                     } else if (name.equalsIgnoreCase("shortForm")) {
                         extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement shortFormElement = entity.get(name);
+                        stringsInEntity.remove(shortFormElement.getAsJsonObject().get("value").getAsString());
                         com.google.gson.internal.Streams.write(shortFormElement, jsonWriter);
+                    }
+                }
+
+                for (Map.Entry<String, JsonElement> entry : entity.entrySet()) {
+                    String name = entry.getKey();
+
+                    if (name.equals("iri") || name.equalsIgnoreCase("curie") || name.equalsIgnoreCase("shortForm")) {
+                        continue;
                     } else if (List.of(LINKER_KEYS).contains(name)) {
                         continue;
                     } else {
@@ -246,7 +255,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                         jsonWriter.endArray();
                     }
                 }
-                stringsInEntity.remove(entityIri);
+
                 filter(stringsInEntity,entityIri);
                 for (Map.Entry<String, JsonElement> entry : entity.get("linkedEntities").getAsJsonObject().entrySet())
                     if (entry.getKey().equals(curie))

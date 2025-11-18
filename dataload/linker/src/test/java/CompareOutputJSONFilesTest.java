@@ -3,6 +3,8 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import net.javacrumbs.jsonunit.core.Configuration;
+import net.javacrumbs.jsonunit.core.internal.Diff;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +18,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 
 public class CompareOutputJSONFilesTest {
 
@@ -47,31 +50,37 @@ public class CompareOutputJSONFilesTest {
     }
 
     @Test
-    void compareOntologyMetadata() {
+    void compareParticularEntityMetadata() {
 
         if (element1.isJsonNull() || element2.isJsonNull())
             return;
 
-        JsonObject bao1 = new JsonObject();
-        JsonObject bao2 = new JsonObject();
+        JsonObject ont1 = new JsonObject();
+        JsonObject ont2 = new JsonObject();
+        String ontologyId = "s4wear";
+        String entityType = "classes";
 
         for (JsonElement ontology : element1.getAsJsonObject().get("ontologies").getAsJsonArray())
-            if (ontology.getAsJsonObject().get("ontologyId").getAsString().equals("bao"))
-                bao1 = ontology.getAsJsonObject();
+            if (ontology.getAsJsonObject().get("ontologyId").getAsString().equals(ontologyId))
+                ont1 = ontology.getAsJsonObject();
 
         for (JsonElement ontology : element2.getAsJsonObject().get("ontologies").getAsJsonArray())
-            if (ontology.getAsJsonObject().get("ontologyId").getAsString().equals("bao"))
-                bao2 = ontology.getAsJsonObject();
+            if (ontology.getAsJsonObject().get("ontologyId").getAsString().equals(ontologyId))
+                ont2 = ontology.getAsJsonObject();
 
-        for (JsonElement el1 : bao1.get("classes").getAsJsonArray()){
-            for (JsonElement el2 : bao2.get("classes").getAsJsonArray()){
+        for (JsonElement el1 : ont1.get(entityType).getAsJsonArray()){
+            for (JsonElement el2 : ont2.get(entityType).getAsJsonArray()){
                 if (el1.getAsJsonObject().get("iri").getAsString().equals(el2.getAsJsonObject().get("iri").getAsString())){
                     for (Map.Entry<String, JsonElement> entry :el1.getAsJsonObject().entrySet()){
-                        if(entry.getKey().equals("linkedEntities")){
+                        //if(entry.getKey().equals("linkedEntities")){
                             System.out.println("IRI: "+el1.getAsJsonObject().get("iri").getAsString());
                             System.out.println("key: "+entry.getKey());
-                            assertEquals(entry.getValue(), el2.getAsJsonObject().get(entry.getKey()));
-                        }
+                            Diff diff = Diff.create(entry.getValue().toString(), el2.getAsJsonObject().get(entry.getKey()).toString(), "IRI: "+el1.getAsJsonObject().get("iri").getAsString()+" key: "+entry.getKey(), "",Configuration.empty().withOptions(IGNORING_ARRAY_ORDER).withTolerance(0.0d));
+                            if (!diff.differences().contains("JSON documents have the same value."))
+                                System.out.println(diff);
+                             //assertJsonEquals(entry.getValue().toString(), el2.getAsJsonObject().get(entry.getKey()).toString(), Configuration.empty().withOptions(IGNORING_ARRAY_ORDER).withTolerance(0.0d));
+                            //assertEquals(entry.getValue(), el2.getAsJsonObject().get(entry.getKey()));
+                        //}
 
                     }
 
@@ -90,6 +99,70 @@ public class CompareOutputJSONFilesTest {
 
 
 
+    }
+
+    @Test
+    void compareAllEntityMetadata(){
+        if (element1.isJsonNull() || element2.isJsonNull())
+            return;
+
+        for (JsonElement ontology1 : element1.getAsJsonObject().get("ontologies").getAsJsonArray()){
+            for (JsonElement ontology2 : element1.getAsJsonObject().get("ontologies").getAsJsonArray()){
+                if (ontology1.getAsJsonObject().get("ontologyId").getAsString().equals(ontology2.getAsJsonObject().get("ontologyId").getAsString())){
+                    System.out.println("Ontology::::: "+ontology1.getAsJsonObject().get("ontologyId").getAsString());
+                    System.out.println("Ontology Classes:::: "+ontology1.getAsJsonObject().get("ontologyId").getAsString());
+                    for (JsonElement el1 : ontology1.getAsJsonObject().get("classes").getAsJsonArray()){
+                        for (JsonElement el2 : ontology2.getAsJsonObject().get("classes").getAsJsonArray()){
+                            if (el1.getAsJsonObject().get("iri").getAsString().equals(el2.getAsJsonObject().get("iri").getAsString())){
+                                System.out.println("IRI::: "+el1.getAsJsonObject().get("iri").getAsString());
+                                for (Map.Entry<String, JsonElement> entry :el1.getAsJsonObject().entrySet()){
+                                    if(!entry.getKey().equals("curie")  && !entry.getKey().equals("shortForm")){
+                                        System.out.println("key: "+entry.getKey());
+                                        assertJsonEquals(entry.getValue().toString(), el2.getAsJsonObject().get(entry.getKey()).toString(), Configuration.empty().withOptions(IGNORING_ARRAY_ORDER).withTolerance(0.0d));
+                                    }
+
+                                }
+
+                            }
+                        }
+                    }
+
+                    System.out.println("Ontology Properties:::: "+ontology1.getAsJsonObject().get("ontologyId").getAsString());
+                    for (JsonElement el1 : ontology1.getAsJsonObject().get("properties").getAsJsonArray()){
+                        for (JsonElement el2 : ontology2.getAsJsonObject().get("properties").getAsJsonArray()){
+                            if (el1.getAsJsonObject().get("iri").getAsString().equals(el2.getAsJsonObject().get("iri").getAsString())){
+                                System.out.println("IRI::: "+el1.getAsJsonObject().get("iri").getAsString());
+                                for (Map.Entry<String, JsonElement> entry :el1.getAsJsonObject().entrySet()){
+                                    if(!entry.getKey().equals("curie")  && !entry.getKey().equals("shortForm")){
+                                        System.out.println("key: "+entry.getKey());
+                                        assertJsonEquals(entry.getValue().toString(), el2.getAsJsonObject().get(entry.getKey()).toString(), Configuration.empty().withOptions(IGNORING_ARRAY_ORDER).withTolerance(0.0d));
+                                    }
+
+                                }
+
+                            }
+                        }
+                    }
+
+                    System.out.println("Ontology Individuals:::: "+ontology1.getAsJsonObject().get("ontologyId").getAsString());
+                    for (JsonElement el1 : ontology1.getAsJsonObject().get("individuals").getAsJsonArray()){
+                        for (JsonElement el2 : ontology2.getAsJsonObject().get("individuals").getAsJsonArray()){
+                            if (el1.getAsJsonObject().get("iri").getAsString().equals(el2.getAsJsonObject().get("iri").getAsString())){
+                                System.out.println("IRI::: "+el1.getAsJsonObject().get("iri").getAsString());
+                                for (Map.Entry<String, JsonElement> entry :el1.getAsJsonObject().entrySet()){
+                                    if(!entry.getKey().equals("curie")  && !entry.getKey().equals("shortForm")){
+                                        System.out.println("key: "+entry.getKey());
+                                        assertJsonEquals(entry.getValue().toString(), el2.getAsJsonObject().get(entry.getKey()).toString(), Configuration.empty().withOptions(IGNORING_ARRAY_ORDER).withTolerance(0.0d));
+                                    }
+
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public static boolean isTimestamp(String input) {

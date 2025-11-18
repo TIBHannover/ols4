@@ -189,14 +189,13 @@ public class LinkerPass2FromService extends ServiceBase {
                 String entityIri = term.getAsJsonObject().get("iri").getAsString();
                 Set<String> stringsInEntity = new HashSet<String>();
                 jsonWriter.beginObject();
-                for (Map.Entry<String, com.google.gson.JsonElement> entry : term.getAsJsonObject().entrySet()) {
-                    String name = entry.getKey().toString();
-                    String iri = entityIri;
 
+                for (Map.Entry<String, JsonElement> entry : term.getAsJsonObject().entrySet()){
+                    String name = entry.getKey();
                     if (name.equals("iri")) {
                         extractGatheredStrings(entry, stringsInEntity);
+                        stringsInEntity.remove(entityIri);
                         jsonWriter.name(name);
-                        entityIri = iri;
                         jsonWriter.value(entityIri);
                     } else if (name.equalsIgnoreCase("curie")) {
                         extractGatheredStrings(entry, stringsInEntity);
@@ -208,6 +207,15 @@ public class LinkerPass2FromService extends ServiceBase {
                         jsonWriter.name(name);
                         JsonElement shortFormElement = term.getAsJsonObject().get(name);
                         processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
+                    }
+                }
+
+
+                for (Map.Entry<String, com.google.gson.JsonElement> entry : term.getAsJsonObject().entrySet()) {
+                    String name = entry.getKey();
+
+                    if (name.equals("iri") || name.equalsIgnoreCase("curie") || name.equalsIgnoreCase("shortForm")) {
+                        continue;
                     } else if (List.of(LINKER_KEYS).contains(name)) {
                         continue;
                     } else {
@@ -242,7 +250,7 @@ public class LinkerPass2FromService extends ServiceBase {
                         jsonWriter.endArray();
                     }
                 }
-                stringsInEntity.remove(entityIri);
+
                 filter(stringsInEntity,entityIri);
                 jsonWriter.name("linkedEntities");
                 //System.out.println("Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb);

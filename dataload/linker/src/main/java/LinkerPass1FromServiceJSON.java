@@ -54,6 +54,9 @@ public class LinkerPass1FromServiceJSON extends ServiceBase{
                 iri = entity.get("iri").getAsString();
                 //System.out.println("term iri: "+iri);
                 //System.out.println("jsoncurie: "+term.getAsJsonObject().get("curie"));
+                String shortForm = extractShortFormFromAllOntologies(result.ontologyIdToBaseUris,result.preferredPrefixToOntologyIds, iri);
+                String extractedCurie = extractCurieFromAllOntologies(shortForm,result.preferredPrefixToOntologyIds);
+                entity.getAsJsonObject("curie").addProperty("value", extractedCurie);
                 curie = entity.get("curie");
                 //System.out.println("curie: "+curie);
                 label = entity.get("label");
@@ -172,6 +175,7 @@ public class LinkerPass1FromServiceJSON extends ServiceBase{
 				    preferredPrefix = ontology.getAsJsonObject().get("preferredPrefix").getAsString();
 
 				ontologyBaseUris.add("http://purl.obolibrary.org/obo/" + preferredPrefix + "_");
+                result.ontologyIdToBaseUris.put(ontologyId, ontologyBaseUris);
 
 				Set<String> idsp = result.preferredPrefixToOntologyIds.get(preferredPrefix);
 				if(idsp == null) {
@@ -186,7 +190,6 @@ public class LinkerPass1FromServiceJSON extends ServiceBase{
                 parseEntitiesForService(backendUrl, pageSize, ontologyId, "PROPERTY", numberOfProperties,ontologyBaseUris,result);
                 parseEntitiesForService(backendUrl, pageSize, ontologyId, "INDIVIDUAL",numberOfTerms+numberOfProperties+numberOfIndividuals,ontologyBaseUris,result);
 
-				result.ontologyIdToBaseUris.put(ontologyId, ontologyBaseUris);
 				System.out.println("Now have " + nOntologies + " ontologies and " + result.iriToDefinitions.size() + " distinct IRIs");
 			}
 		}

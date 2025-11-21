@@ -77,15 +77,14 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
             }
             jsonWriter.endArray();
 
-
             Set<String> ontologyGatheredStrings = new TreeSet<>();
 
             jsonWriter.name("classes");
-            writeEntityArray(backendUrl,numberOfTerms,pageSize,jsonWriter,"TERM",ontologyId,leveldb,pass1Result);
+            writeEntityArray(backendUrl,numberOfTerms,pageSize,jsonWriter,"TERM",ontologyId, leveldb,pass1Result);
             jsonWriter.name("properties");
-            writeEntityArray(backendUrl,numberOfProperties, pageSize, jsonWriter,"PROPERTY",ontologyId,leveldb,pass1Result);
+            writeEntityArray(backendUrl,numberOfProperties, pageSize, jsonWriter,"PROPERTY",ontologyId, leveldb,pass1Result);
             jsonWriter.name("individuals");
-            writeEntityArray(backendUrl,numberOfIndividuals, pageSize, jsonWriter,"INDIVIDUAL",ontologyId,leveldb,pass1Result);
+            writeEntityArray(backendUrl,numberOfIndividuals, pageSize, jsonWriter,"INDIVIDUAL",ontologyId, leveldb,pass1Result);
 
             for (Map.Entry<String, JsonElement> entry : ontology.entrySet()){
                 if (List.of(LINKER_KEYS).contains(entry.getKey()))
@@ -97,6 +96,9 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
 
             jsonWriter.name("linkedEntities");
             filter(ontologyGatheredStrings,null);
+            String le = "Ontology linkedEntities: ontologyGatheredStrings=" + ontologyGatheredStrings+" ontologyId=" + ontologyId+" leveldb: "+leveldb;
+            //System.out.println("Ontology ID: "+ontologyId+" - NoofChars: "+le.length());
+            System.out.println(le);
             writeLinkedEntitiesFromGatheredStrings(jsonWriter, ontologyGatheredStrings, ontologyId, null, leveldb, pass1Result);
             jsonWriter.endObject();
 
@@ -189,6 +191,10 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
             for (JsonElement term : terms) {
                 JsonObject entity = jsonParser.parse(term.getAsString()).getAsJsonObject();
                 String entityIri = entity.get("iri").getAsString();
+                String shortForm = extractShortFormFromAllOntologies(pass1Result.ontologyIdToBaseUris,pass1Result.preferredPrefixToOntologyIds, entityIri);
+                String extractedCurie = extractCurieFromAllOntologies(shortForm,pass1Result.preferredPrefixToOntologyIds);
+
+                System.out.println("ontologyId: "+ontologyId+" entityIri: "+entityIri+" shortForm: "+shortForm+" extractedCurie: "+extractedCurie);
                 Set<String> stringsInEntity = new HashSet<String>();
                 jsonWriter.beginObject();
                 String curie = "none";
@@ -204,6 +210,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                         extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement curieElement = entity.get(name);
+                        curieElement.getAsJsonObject().addProperty("value", extractedCurie);
                         curie = curieElement.getAsJsonObject().get("value").getAsString();
                         stringsInEntity.remove(curie);
                         com.google.gson.internal.Streams.write(curieElement, jsonWriter);
@@ -211,6 +218,7 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                         extractGatheredStrings(entry, stringsInEntity);
                         jsonWriter.name(name);
                         JsonElement shortFormElement = entity.get(name);
+                        shortFormElement.getAsJsonObject().addProperty("value", shortForm);
                         stringsInEntity.remove(shortFormElement.getAsJsonObject().get("value").getAsString());
                         com.google.gson.internal.Streams.write(shortFormElement, jsonWriter);
                     }
@@ -261,6 +269,9 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                     if (entry.getKey().equals(curie))
                         stringsInEntity.add(curie);
                 jsonWriter.name("linkedEntities");
+                String le = "Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb;
+                System.out.println("Ontology Id: "+ontologyId+" Entity IRI: "+entityIri+" - NoofChars: "+le.length());
+                System.out.println(le);
                 writeLinkedEntitiesFromGatheredStrings(jsonWriter, stringsInEntity, ontologyId, entityIri, leveldb, pass1Result);
 
                 jsonWriter.endObject();
@@ -510,26 +521,5 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
     private static class CurieMapResult {
         public String url;
         public String source;
-    }
-
-    private static void processShortFormObject(JsonElement shortFormElement, JsonWriter jsonWriter, LinkerPass1FromServiceJSON.LinkerPass1Result pass1Result, String entityIri) throws IOException {
-        JsonObject shortFormObject = new JsonObject();
-        JsonArray typeArray = new JsonArray();
-        typeArray.add("literal");
-        shortFormObject.add("type", typeArray);
-        String shortFormValue = shortFormElement.getAsString();
-        // shortFormValue = getProcessedCurieValue(pass1Result, entityIri).replace(":", "_");
-        shortFormObject.addProperty("value",shortFormValue);
-
-        // Write the modified short form object
-        jsonWriter.beginObject();
-        jsonWriter.name("type");
-        jsonWriter.beginArray();
-        for (JsonElement typeElement : shortFormObject.getAsJsonArray("type")) {
-            jsonWriter.value(typeElement.getAsString());
-        }
-        jsonWriter.endArray();
-        jsonWriter.name("value").value(shortFormObject.get("value").getAsString());
-        jsonWriter.endObject();
     }
 }

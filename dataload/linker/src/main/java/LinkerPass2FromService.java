@@ -187,6 +187,8 @@ public class LinkerPass2FromService extends ServiceBase {
             JsonArray terms = getEntitiesAsJsonArray(backendUrl + "/api/v2/ontologies/" + ontologyId + "/" + entityType + "?size=" + pageSize+"&includeObsoleteEntities=true&page="+i, null, "elements");
             for (JsonElement term : terms) {
                 String entityIri = term.getAsJsonObject().get("iri").getAsString();
+                String shortForm = extractShortFormFromAllOntologies(pass1Result.ontologyIdToBaseUris,pass1Result.preferredPrefixToOntologyIds, entityIri);
+                String extractedCurie = extractCurieFromAllOntologies(shortForm,pass1Result.preferredPrefixToOntologyIds);
                 Set<String> stringsInEntity = new HashSet<String>();
                 jsonWriter.beginObject();
 
@@ -199,14 +201,14 @@ public class LinkerPass2FromService extends ServiceBase {
                         jsonWriter.value(entityIri);
                     } else if (name.equalsIgnoreCase("curie")) {
                         extractGatheredStrings(entry, stringsInEntity);
+                        stringsInEntity.remove(extractedCurie);
                         jsonWriter.name(name);
-                        JsonElement curieElement = term.getAsJsonObject().get(name);
-                        processCurieObject(curieElement, jsonWriter, pass1Result, entityIri);
+                        processCurieObject(extractedCurie, jsonWriter, pass1Result, entityIri);
                     } else if (name.equalsIgnoreCase("shortForm")) {
                         extractGatheredStrings(entry, stringsInEntity);
+                        stringsInEntity.remove(shortForm);
                         jsonWriter.name(name);
-                        JsonElement shortFormElement = term.getAsJsonObject().get(name);
-                        processShortFormObject(shortFormElement, jsonWriter, pass1Result, entityIri);
+                        processShortFormObject(shortForm, jsonWriter, pass1Result, entityIri);
                     }
                 }
 
@@ -505,13 +507,11 @@ public class LinkerPass2FromService extends ServiceBase {
         public String source;
     }
 
-    private static void processShortFormObject(JsonElement shortFormElement, JsonWriter jsonWriter, LinkerPass1FromService.LinkerPass1Result pass1Result, String entityIri) throws IOException {
+    private static void processShortFormObject(String shortFormValue, JsonWriter jsonWriter, LinkerPass1FromService.LinkerPass1Result pass1Result, String entityIri) throws IOException {
         JsonObject shortFormObject = new JsonObject();
         JsonArray typeArray = new JsonArray();
         typeArray.add("literal");
         shortFormObject.add("type", typeArray);
-        String shortFormValue = shortFormElement.getAsString();
-        // shortFormValue = getProcessedCurieValue(pass1Result, entityIri).replace(":", "_");
         shortFormObject.addProperty("value",shortFormValue);
 
         // Write the modified short form object
@@ -526,13 +526,11 @@ public class LinkerPass2FromService extends ServiceBase {
         jsonWriter.endObject();
     }
 
-    private static void processCurieObject(JsonElement curieElement, JsonWriter jsonWriter, LinkerPass1FromService.LinkerPass1Result pass1Result, String entityIri) throws IOException {
+    private static void processCurieObject(String curieValue, JsonWriter jsonWriter, LinkerPass1FromService.LinkerPass1Result pass1Result, String entityIri) throws IOException {
         JsonObject curieObject = new  JsonObject();
         JsonArray typeArray = new JsonArray();
         typeArray.add("literal");
         curieObject.add("type", typeArray);
-        String curieValue = curieElement.getAsString();
-        //curieValue = getProcessedCurieValue(pass1Result, entityIri);
         curieObject.addProperty("value", curieValue);
 
         // Write the modified curie object

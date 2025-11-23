@@ -96,9 +96,9 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
 
             jsonWriter.name("linkedEntities");
             filter(ontologyGatheredStrings,null);
-            String le = "Ontology linkedEntities: ontologyGatheredStrings=" + ontologyGatheredStrings+" ontologyId=" + ontologyId+" leveldb: "+leveldb;
+            //String le = "Ontology linkedEntities: ontologyGatheredStrings=" + ontologyGatheredStrings+" ontologyId=" + ontologyId+" leveldb: "+leveldb;
             //System.out.println("Ontology ID: "+ontologyId+" - NoofChars: "+le.length());
-            System.out.println(le);
+            //System.out.println(le);
             writeLinkedEntitiesFromGatheredStrings(jsonWriter, ontologyGatheredStrings, ontologyId, null, leveldb, pass1Result);
             jsonWriter.endObject();
 
@@ -269,9 +269,9 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                     if (entry.getKey().equals(curie))
                         stringsInEntity.add(curie);
                 jsonWriter.name("linkedEntities");
-                String le = "Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb;
-                System.out.println("Ontology Id: "+ontologyId+" Entity IRI: "+entityIri+" - NoofChars: "+le.length());
-                System.out.println(le);
+                //String le = "Entity linkedEntities: ontologyGatheredStrings=" + stringsInEntity+" ontologyId=" + ontologyId+" entityIri: "+entityIri+" leveldb: "+leveldb;
+                //System.out.println("Ontology Id: "+ontologyId+" Entity IRI: "+entityIri+" - NoofChars: "+le.length());
+                //System.out.println(le);
                 writeLinkedEntitiesFromGatheredStrings(jsonWriter, stringsInEntity, ontologyId, entityIri, leveldb, pass1Result);
 
                 jsonWriter.endObject();

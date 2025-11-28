@@ -154,12 +154,11 @@ public class OntologyConversion {
                 }
             }
 
-            // The loaded ontology will contain the import declarations
             OWLDataFactory df = ontManager.getOWLDataFactory();
             for (OWLImportsDeclaration declaration : ontology.getImportsDeclarations()){
                 IRI modifiedIri = IRI.create(urlConverter(declaration.getIRI().toString()));
                 OWLImportsDeclaration modifiedDeclaration = df.getOWLImportsDeclaration(modifiedIri);
-                logger.info("original iri {} being replaced with {}", declaration.getIRI(), modifiedIri);
+                logger.info("original imports iri {} being replaced with {}", declaration.getIRI(), modifiedIri);
                 ontManager.applyChange(new RemoveImport(ontology, declaration));
                 ontManager.applyChange(new AddImport(ontology, modifiedDeclaration));
             }
@@ -180,7 +179,6 @@ public class OntologyConversion {
 
             return ontology;
         } catch (OWLOntologyCreationException e) {
-            // Handle exceptions like file not found or parsing errors
             e.printStackTrace();
         }
         return null;
@@ -197,7 +195,7 @@ public class OntologyConversion {
             con.setInstanceFollowRedirects(true);
             con.setRequestMethod("HEAD");
         }
-        logger.info("url: {}", con.getURL().toExternalForm());
+        logger.info("redirected url: {}", con.getURL().toExternalForm());
         return con.getURL();
     }
 

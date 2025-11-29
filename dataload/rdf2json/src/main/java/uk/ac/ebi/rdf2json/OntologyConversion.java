@@ -155,10 +155,10 @@ public class OntologyConversion {
             }
 
             OWLDataFactory df = ontManager.getOWLDataFactory();
+            logger.info("imports being updated: ");
             for (OWLImportsDeclaration declaration : ontology.getImportsDeclarations()){
                 IRI modifiedIri = IRI.create(urlConverter(declaration.getIRI().toString()));
                 OWLImportsDeclaration modifiedDeclaration = df.getOWLImportsDeclaration(modifiedIri);
-                logger.info("original imports iri {} being replaced with {}", declaration.getIRI(), modifiedIri);
                 ontManager.applyChange(new RemoveImport(ontology, declaration));
                 ontManager.applyChange(new AddImport(ontology, modifiedDeclaration));
             }
@@ -168,11 +168,10 @@ public class OntologyConversion {
             if (format != null && format.isPrefixOWLOntologyFormat()) {
                 PrefixDocumentFormat pdf = format.asPrefixOWLOntologyFormat();
                 Map<String, String> map = pdf.getPrefixName2PrefixMap();
-                map.forEach((p, iri) -> logger.info("original {} = {}", p, iri));
+                logger.info("prefixes being updated: ");
                 for (Map.Entry<String,String> entry : map.entrySet()){
                     pdf.setPrefix(entry.getKey(), urlConverter(entry.getValue()).toExternalForm());
                 }
-                map.forEach((p, iri) -> logger.info("corrected {} = {}", p, iri));
             } else {
                 logger.info("Ontology format has no prefixes to be redirected.");
             }
@@ -185,8 +184,13 @@ public class OntologyConversion {
     }
 
     public static URL urlConverter(String url) throws IOException {
-        HttpURLConnection con =
-                (HttpURLConnection) new URL(url).openConnection();
+        if (url.startsWith("file:")) {
+            URL fbURL = new URL(url);
+            logger.info("file based url: {}", fbURL.toExternalForm());
+            return fbURL;
+        }
+        HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+        logger.info("original url: {}", con.getURL().toExternalForm());
         con.setInstanceFollowRedirects(true);
         con.setRequestMethod("HEAD");
 

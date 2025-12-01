@@ -60,6 +60,26 @@ public class ImportCSV {
         }
     }
 
+    public static void executeBatchedUpdateNodeQueries(List<File> files, List<String> subset, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
+        for (File file : files) {
+            if (!(file.getName().contains("_ontologies") || file.getName().contains("_properties")
+                    || file.getName().contains("_individuals") || file.getName().contains("_classes")) || !file.getName().endsWith(".csv"))
+                continue;
+            Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+            String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
+            List<List<CSVRecord>> splitRecords = splitList(csvParser.getRecords(),batchSize);
+            CountDownLatch latch = new CountDownLatch(splitRecords.size());
+            ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
+            for (List<CSVRecord> records : splitRecords){
+                NodeUpdateQueryTask task = new NodeUpdateQueryTask(driver,latch, records,headers,subset,file,attempts);
+                executorService.submit(task);
+            }
+            latch.await();
+            executorService.shutdown();
+        }
+    }
+
     public static void executeBatchedRelationshipQueries(List<File> files, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
         for (File file : files) {
             if ((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
@@ -73,6 +93,26 @@ public class ImportCSV {
             ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
             for (List<CSVRecord> records : splitRecords){
                 RelationShipCreationQueryTask task = new RelationShipCreationQueryTask(driver,latch,records,headers,file, attempts);
+                executorService.submit(task);
+            }
+            latch.await();
+            executorService.shutdown();
+        }
+    }
+
+    public static void executeBatchedRelationshipMergeQueries(List<File> files, Driver driver, int batchSize, int poolSize, int attempts) throws IOException, InterruptedException {
+        for (File file : files) {
+            if ((!file.getName().contains("_edges")) || !file.getName().endsWith(".csv"))
+                continue;
+
+            Reader reader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()));
+            org.apache.commons.csv.CSVParser csvParser = new org.apache.commons.csv.CSVParser(reader, CSVFormat.POSTGRESQL_CSV.withFirstRecordAsHeader().withTrim());
+            String[] headers = csvParser.getHeaderNames().toArray(String[]::new);
+            List<List<CSVRecord>> splitRecords = splitList(csvParser.getRecords(), batchSize);
+            CountDownLatch latch = new CountDownLatch(splitRecords.size());
+            ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
+            for (List<CSVRecord> records : splitRecords){
+                RelationShipMergeQueryTask task = new RelationShipMergeQueryTask(driver,latch,records,headers,file, attempts);
                 executorService.submit(task);
             }
             latch.await();
@@ -243,6 +283,19 @@ public class ImportCSV {
                         Map<String,Integer> planned = displayCSV(files);
                         executeBatchedNodeQueries(files,driver,batchSize,poolSize,attempts);
                         executeBatchedRelationshipQueries(files,driver,batchSize, poolSize,attempts);
+                        Map<String,Integer> ingested = displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).collect(Collectors.toUnmodifiableList()), driver);
+                        Set<String> keys = new HashSet<>();
+                        keys.addAll(planned.keySet());
+                        keys.addAll(ingested.keySet());
+                        for (String key : keys){
+                            System.out.println("For Key: "+key+" - Planned: "+planned.getOrDefault(key,Integer.valueOf(-1))+" and Ingested: "+ingested.getOrDefault(key,Integer.valueOf(-1)));
+                        }
+                    } else if (cmd.getOptionValue("m").equals("u")) {
+                        File dir = new File(directory);
+                        List<File> files = listFiles(dir.listFiles());
+                        Map<String,Integer> planned = displayCSV(files);
+                        executeBatchedUpdateNodeQueries(files,null,driver,batchSize, poolSize,attempts);
+                        executeBatchedRelationshipMergeQueries(files,driver,batchSize, poolSize,attempts);
                         Map<String,Integer> ingested = displayIngested(files.stream().filter(f -> f.getName().endsWith("_ontologies.csv")).collect(Collectors.toUnmodifiableList()), driver);
                         Set<String> keys = new HashSet<>();
                         keys.addAll(planned.keySet());

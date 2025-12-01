@@ -26,6 +26,15 @@ public class QueryGeneration {
         return sb.toString();
     }
 
+    public static String generateUpdateQuery(String[] titles, String[] values){
+        StringBuilder sb = new StringBuilder();
+        if (titles.length == values.length){
+            sb.append("MATCH (n"+idToLabel(values[0])+" {id: "+"\'"+values[0]+"\'"+"}) ")
+                    .append("SET n+= $props");
+        }
+        return sb.toString();
+    }
+
     public static Map<String,Object> generateProps(String[] titles, String[] values){
         Map<String,Object> props = new HashMap<>();
         props.put("id",values[0]);
@@ -56,6 +65,25 @@ public class QueryGeneration {
                     .append("WHERE n.id STARTS WITH '"+values[0].split("\\+")[0]+"' AND m.id STARTS WITH '"+values[2].split("\\+")[0]+"' ")
                     .append("AND '"+values[0].split("\\+")[0]+"' IN n.ontologyId AND '"+values[2].split("\\+")[0]+"' IN m.ontologyId ")
                     .append("CREATE (n)-[:")
+                    .append("`"+values[1].replace("|","`:`")+"`")
+                    .append("]->(m)");
+        } else {
+            System.out.println("titles and values are not equal");
+            System.out.println("titles: "+titles.length + " - values: " +values.length);
+        }
+
+        return sb.toString();
+    }
+
+    public static String generateRelationMergeQuery(String[] titles, String[] values){
+        StringBuilder sb = new StringBuilder();
+
+        if (titles.length == values.length){
+            sb.append("MATCH (n"+idToLabel(values[0])+" {id: "+"\'"+values[0]+"\'"+"}),")
+                    .append("(m"+idToLabel(values[2])+" {id: "+"\'"+values[2]+"\'"+"}) ")
+                    .append("WHERE n.id STARTS WITH '"+values[0].split("\\+")[0]+"' AND m.id STARTS WITH '"+values[2].split("\\+")[0]+"' ")
+                    .append("AND '"+values[0].split("\\+")[0]+"' IN n.ontologyId AND '"+values[2].split("\\+")[0]+"' IN m.ontologyId ")
+                    .append("MERGE (n)-[:")
                     .append("`"+values[1].replace("|","`:`")+"`")
                     .append("]->(m)");
         } else {

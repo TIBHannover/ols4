@@ -1,10 +1,13 @@
 package uk.ac.ebi.spot.ols.repository.v1;
 
 import com.google.gson.*;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Relationship;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.spot.ols.model.v1.V1Individual;
@@ -214,10 +217,62 @@ public class V1GraphRepository {
         return neo4jClient.queryPaginated(query, "b", countQuery, parameters("id", entityId), pageable).map(record -> V1IndividualMapper.mapIndividual(record, lang));
     }
 
-    public String getTermJson(String entityId) {
-        String query = "MATCH (a:OntologyClass) WHERE a.id = '"+entityId+"' RETURN a._json AS result";
+    public String getEntityJson(String entityId, String ontologyId, EntityType entityType) {
+        String query;
+        if (entityType.equals(EntityType.ONTOLOGY)){
+            query = "MATCH (a:"+entityType.getPropertyName()+") WHERE a.ontologyId = ['"+ontologyId+"'] RETURN a._json AS result";
+        } else if (ontologyId != null && entityId != null)
+            query = "MATCH (a:"+entityType.getPropertyName()+") WHERE a.id = '"+entityId+"'  and a.ontologyId = ['"+ontologyId+"'] RETURN a._json AS result";
+        else
+            query = "MATCH (a:"+entityType.getPropertyName()+") WHERE a.id = '"+entityId+"'  RETURN a._json AS result";
         List<Map<String,Object>> results = neo4jClient.rawQuery(query);
         return results.get(0).get("result").toString();
+    }
+
+    public Page<String> getEntitiesJson(String ontologyId, EntityType entityType, Pageable pageable) {
+        String query;
+        String countQuery;
+
+        if (entityType.equals(EntityType.ONTOLOGY)) {
+            query = "MATCH (a:Ontology) RETURN a._json AS a SKIP $skip LIMIT $limit";
+            countQuery = "MATCH (a:Ontology) RETURN count(a)";
+        } else if (ontologyId != null) {
+            query = "MATCH (a:" + entityType.getPropertyName() + ") WHERE a.ontologyId = [$ontologyId] RETURN a._json AS a SKIP $skip LIMIT $limit";
+            countQuery = "MATCH (a:" + entityType.getPropertyName() + ") WHERE a.ontologyId = [$ontologyId] RETURN count(a)";
+        } else {
+            query = "MATCH (a:" + entityType.getPropertyName() + ") RETURN a._json AS a SKIP $skip LIMIT $limit";
+            countQuery = "MATCH (a:" + entityType.getPropertyName() + ") RETURN count(a)";
+        }
+        System.out.println("query: " + query);
+        System.out.println("countQuery: " + countQuery);
+
+        List<String> content = new ArrayList<>();
+        long total = 0;
+
+        try (Session session = neo4jClient.getSession()) {
+            // Fetch paginated data
+            var result = session.run(query,
+                    org.neo4j.driver.Values.parameters(
+                            "ontologyId", ontologyId,
+                            "skip", pageable.getOffset(),
+                            "limit", pageable.getPageSize()
+                    ));
+
+            for (Record record : result.list()) {
+                String json = record.get("a").asString();
+                content.add(json);
+            }
+
+            // Fetch total count
+            var countResult = session.run(countQuery,
+                    org.neo4j.driver.Values.parameters(
+                            "ontologyId", ontologyId
+                    ));
+            total = countResult.single().get(0).asLong();
+            System.out.println("count: " + total);
+        }
+
+        return new PageImpl<>(content, pageable, total);
     }
 
     JsonObject getOntologyNodeJson(Node node, String lang) {

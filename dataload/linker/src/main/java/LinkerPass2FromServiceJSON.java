@@ -193,8 +193,6 @@ public class LinkerPass2FromServiceJSON extends ServiceBase {
                 String entityIri = entity.get("iri").getAsString();
                 String shortForm = extractShortFormFromAllOntologies(pass1Result.ontologyIdToBaseUris,pass1Result.preferredPrefixToOntologyIds, entityIri);
                 String extractedCurie = extractCurieFromAllOntologies(shortForm,pass1Result.preferredPrefixToOntologyIds);
-
-                System.out.println("ontologyId: "+ontologyId+" entityIri: "+entityIri+" shortForm: "+shortForm+" extractedCurie: "+extractedCurie);
                 Set<String> stringsInEntity = new HashSet<String>();
                 jsonWriter.beginObject();
                 String curie = "none";

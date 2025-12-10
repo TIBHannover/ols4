@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-backend
+  name: {{ .Release.Name }}-mcp
   labels:
-    app: {{ .Release.Name }}-backend
+    app: {{ .Release.Name }}-mcp
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-backend
+      app: {{ .Release.Name }}-mcp
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-backend
+        app: {{ .Release.Name }}-mcp
     spec:
       containers:
         - name: web

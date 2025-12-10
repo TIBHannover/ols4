@@ -11,8 +11,9 @@ import org.springframework.http.HttpStatus;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
+import uk.ac.ebi.spot.ols.repository.OntologyRepository;
 import uk.ac.ebi.spot.ols.repository.neo4j.OlsNeo4jClient;
-import uk.ac.ebi.spot.ols.repository.v2.V2OntologyRepository;
+import uk.ac.ebi.spot.ols.repository.transforms.JsonTransformOptions;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -22,7 +23,7 @@ import java.util.Map;
 @RequestMapping("/api/v2")
 public class HealthCheckController {
     @Autowired
-    V2OntologyRepository ontologyRepository;
+    OntologyRepository ontologyRepository;
 
     @Autowired
     OlsNeo4jClient neo4jClient;
@@ -42,7 +43,7 @@ public class HealthCheckController {
     private boolean checkNeo4j() {
         try {
             if (neo4jClient.getDatabaseNodeCount() > 0) {
-                logger.info("Neo4J is initialized.");
+                logger.debug("Neo4J is initialized.");
                 return true;
             } else {
                 logger.error("Neo4J is not initialized yet as Neo4J node elements were less than 1.");
@@ -57,11 +58,13 @@ public class HealthCheckController {
     private boolean checkSolr() {
         Pageable pageable = Pageable.ofSize(20);
         try {
-            V2PagedAndFacetedResponse<V2Entity> result = new V2PagedAndFacetedResponse<>(
-                    ontologyRepository.findOntologies(pageable, "en", null, null, null,
-                            false, Map.of(), Collections.emptyList(),Collections.emptyList(),Collections.emptyList(),false, FilterOption.LINEAR));
+            V2PagedAndFacetedResponse<V2Entity> result = new V2PagedAndFacetedResponse<V2Entity>(
+                    ontologyRepository.find(pageable, "en", null, null, null,
+                            false, Map.of(), Collections.emptyList(),Collections.emptyList(),Collections.emptyList(),false, FilterOption.LINEAR, new JsonTransformOptions())
+                    .map(V2Entity::new)
+                            );
             if (result.totalElements > 0) {
-                logger.info("Solr is initialized.");
+                logger.debug("Solr is initialized.");
                 return true;
             } else {
                 logger.error("Solr is not initialized yet as 'totalElements' in jsonResponse not found or less than 1.");

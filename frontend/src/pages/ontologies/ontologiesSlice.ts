@@ -27,6 +27,12 @@ export interface OntologiesState {
   loadingEntity: boolean;
   classInstances: Page<Entity> | null;
   loadingClassInstances: boolean;
+  relatedFrom: Entity[] | null;
+  loadingRelatedFrom: boolean;
+  directChildrenCounts: { [key: string]: number };
+  directChildrenEntities: Entity[];
+  totalDirectChildrenEntities: number;
+  loadingDirectChildrenEntities: boolean;
   automaticallyExpandedNodes: string[];
   manuallyExpandedNodes: string[];
   preferredRoots: boolean;
@@ -65,6 +71,12 @@ const initialState: OntologiesState = {
   loadingEntity: false,
   classInstances: null,
   loadingClassInstances: false,
+  relatedFrom: null,
+  loadingRelatedFrom: false,
+  directChildrenCounts: {},
+  directChildrenEntities: [],
+  totalDirectChildrenEntities: 0,
+  loadingDirectChildrenEntities: false,
   automaticallyExpandedNodes: [],
   manuallyExpandedNodes: [],
   preferredRoots: false,
@@ -234,6 +246,72 @@ export const getClassInstances = createAsyncThunk(
     }
   }
 );
+
+export const getRelatedFrom = createAsyncThunk(
+  "ontologies_entity_related_from",
+  async (
+    {
+      ontologyId,
+      classIri,
+      searchParams,
+    }: {
+      ontologyId: string;
+      classIri: string;
+      searchParams: URLSearchParams;
+    },
+    { rejectWithValue }
+  ) => {
+    let path = "";
+    try {
+      if (classIri) {
+        const apiSearchParams = mapToApiParams(searchParams);
+        const doubleEncodedTermUri = encodeURIComponent(
+          encodeURIComponent(classIri)
+        );
+
+        // Fetch first page to get total pages
+        path = `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedTermUri}/relatedFrom?${new URLSearchParams(
+          apiSearchParams
+        )}`;
+        const firstPage = await get<any>(path);
+
+        // Collect all elements
+        let allElements = firstPage.elements || [];
+        const totalPages = firstPage.totalPages || 1;
+
+        // Fetch remaining pages if there are more than 1 page
+        if (totalPages > 1) {
+          const pagePromises = [];
+          for (let page = 1; page < totalPages; page++) {
+            const pageParams = new URLSearchParams(apiSearchParams);
+            pageParams.set("page", page.toString());
+            const pagePath = `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedTermUri}/relatedFrom?${pageParams}`;
+            pagePromises.push(get<any>(pagePath));
+          }
+
+          // Wait for all pages to complete
+          const remainingPages = await Promise.all(pagePromises);
+
+          // Combine all elements
+          remainingPages.forEach((page) => {
+            if (page.elements) {
+              allElements = allElements.concat(page.elements);
+            }
+          });
+        }
+
+        // Transform to entities and return array
+        return allElements.map((i) => thingFromJsonProperties(i));
+      } else {
+        return rejectWithValue(
+          `Warning accessing: ${path}; Class IRI not provided`
+        );
+      }
+    } catch (error: any) {
+      return rejectWithValue(`Error accessing: ${path}; ${error.message}`);
+    }
+  }
+);
 export const getOntologies = createAsyncThunk(
   "ontologies_ontologies",
   async ({ page, rowsPerPage, search }: any, { rejectWithValue }) => {
@@ -277,7 +355,7 @@ export const getEntities = createAsyncThunk(
     { rejectWithValue }
   ) => {
     const path = `api/v2/ontologies/${ontologyId}/${entityType}?page=${page}&size=${rowsPerPage}${
-      search ? "&search=" + search : ""
+      search ? "&search=" + encodeURIComponent(`*${search}*`) : ""
     }`;
     try {
       const data = (await getPaginated<any>(path)).map((e) =>
@@ -407,6 +485,118 @@ export const getRootEntities = createAsyncThunk(
     }
   }
 );
+export const getDirectChildrenEntities = createAsyncThunk(
+  "ontologies_direct_children_entities",
+  async ({
+    ontologyId,
+    entityIri,
+    entityType,
+    lang,
+    showObsoleteEnabled,
+    apiUrl,
+    page,
+    size,
+    search,
+  }: any) => {
+    console.log('getDirectChildrenEntities called with:', {
+      ontologyId,
+      entityIri: entityIri?.substring(0, 50) + '...',
+      entityType,
+      page,
+      size,
+      search
+    });
+    
+    const doubleEncodedUri = encodeURIComponent(encodeURIComponent(entityIri));
+    let response: any;
+    
+    const searchParams = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+      lang: lang || "en",
+      includeObsoleteEntities: showObsoleteEnabled?.toString() || "false",
+    });
+    
+    if (search) {
+      searchParams.set("searchQuery", `${search}`);
+    }
+    
+    if (entityType === "classes") {
+      response = await getPaginated<any>(
+        `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedUri}/children?${searchParams}`,
+        undefined,
+        apiUrl
+      );
+    } else if (entityType === "individuals") {
+      response = await getPaginated<any>(
+        `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedUri}/individuals?${searchParams}`,
+        undefined,
+        apiUrl
+      );
+    } else {
+      response = await getPaginated<any>(
+        `api/v2/ontologies/${ontologyId}/${entityType}/${doubleEncodedUri}/children?${searchParams}`,
+        undefined,
+        apiUrl
+      );
+    }
+    
+    return response.map((obj: any) => thingFromJsonProperties(obj));
+  }
+);
+
+export const getDirectChildrenCount = createAsyncThunk(
+  "ontologies_direct_children_count",
+  async ({
+    ontologyId,
+    entityIri,
+    entityType,
+    lang,
+    showObsoleteEnabled,
+    apiUrl,
+  }: any) => {
+    const doubleEncodedUri = encodeURIComponent(encodeURIComponent(entityIri));
+    let response: any;
+    
+    if (entityType === "classes") {
+      response = await get<any>(
+        `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedUri}/children?${new URLSearchParams({
+          size: "1",
+          lang,
+          includeObsoleteEntities: showObsoleteEnabled,
+        })}`,
+        undefined,
+        apiUrl
+      );
+    } else if (entityType === "individuals") {
+      response = await get<any>(
+        `api/v2/ontologies/${ontologyId}/classes/${doubleEncodedUri}/individuals?${new URLSearchParams({
+          size: "1",
+          lang,
+          includeObsoleteEntities: showObsoleteEnabled,
+        })}`,
+        undefined,
+        apiUrl
+      );
+    } else {
+      response = await get<any>(
+        `api/v2/ontologies/${ontologyId}/${entityType}/${doubleEncodedUri}/children?${new URLSearchParams({
+          size: "1",
+          lang,
+          includeObsoleteEntities: showObsoleteEnabled,
+        })}`,
+        undefined,
+        apiUrl
+      );
+    }
+    
+    return {
+      entityIri,
+      totalElements: response.totalElements || 0,
+    };
+  }
+);
+
 export const getNodeChildren = createAsyncThunk(
   "ontologies_node_children",
   async ({
@@ -587,6 +777,59 @@ const ontologiesSlice = createSlice({
         state.errorMessage = error.payload;
       }
     );
+    builder.addCase(
+      getRelatedFrom.fulfilled,
+      (state: OntologiesState, action: PayloadAction<Entity[]>) => {
+        state.relatedFrom = action.payload;
+        state.loadingRelatedFrom = false;
+      }
+    );
+    builder.addCase(getRelatedFrom.pending, (state: OntologiesState) => {
+      state.loadingRelatedFrom = true;
+      state.errorMessage = initialState.errorMessage;
+    });
+    builder.addCase(
+      getRelatedFrom.rejected,
+      (state: OntologiesState, error: any) => {
+        state.loadingRelatedFrom = false;
+        state.relatedFrom = initialState.relatedFrom;
+        state.errorMessage = error.payload;
+      }
+    );
+    builder.addCase(
+      getDirectChildrenCount.fulfilled,
+      (state: OntologiesState, action: PayloadAction<{ entityIri: string; totalElements: number }>) => {
+        state.directChildrenCounts = {
+          ...state.directChildrenCounts,
+          [action.payload.entityIri]: action.payload.totalElements,
+        };
+      }
+    );
+    builder.addCase(
+      getDirectChildrenCount.rejected,
+      (state: OntologiesState, error: any) => {
+        console.warn('Failed to fetch direct children count:', error.payload);
+      }
+    );
+    builder.addCase(
+      getDirectChildrenEntities.fulfilled,
+      (state: OntologiesState, action: PayloadAction<Page<Entity>>) => {
+        state.directChildrenEntities = action.payload.elements;
+        state.totalDirectChildrenEntities = action.payload.totalElements;
+        state.loadingDirectChildrenEntities = false;
+      }
+    );
+    builder.addCase(getDirectChildrenEntities.pending, (state: OntologiesState) => {
+      state.loadingDirectChildrenEntities = true;
+      state.errorMessage = initialState.errorMessage;
+    });
+    builder.addCase(
+      getDirectChildrenEntities.rejected,
+      (state: OntologiesState, error: any) => {
+        state.loadingDirectChildrenEntities = false;
+        state.errorMessage = error.payload;
+      }
+    );
     builder.addCase(getAncestors.pending, (state: OntologiesState) => {
       ++state.numPendingTreeRequests;
     });
@@ -737,6 +980,9 @@ const ontologiesSlice = createSlice({
       state.nodeChildren = {};
       state.rootNodes = [];
       state.automaticallyExpandedNodes = [];
+      state.directChildrenCounts = {};
+      state.directChildrenEntities = [];
+      state.totalDirectChildrenEntities = 0;
     });
     builder.addCase(
       resetTreeSettings,

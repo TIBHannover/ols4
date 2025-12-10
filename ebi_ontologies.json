@@ -1,12 +1,35 @@
 {
   "ontologies": [
     {
-      "id": "evora",
-      "ontology_purl": "https://raw.githubusercontent.com/EVORA-project/evora-ontology/refs/heads/main/models/owl/evora_ontology.owl.ttl"
+      "id": "fma",
+      "ontology_purl": "http://purl.org/sig/ont/fma.owl"
+    },
+    {
+      "id": "gold",
+      "ontology_purl": "https://raw.githubusercontent.com/cmungall/gold-ontology/refs/heads/main/gold.owl"
+    },
+    {
+      "id": "doid",
+      "ontology_purl": "https://purl.obolibrary.org/obo/doid/translations/doid-international.owl"
+    },
+    {
+      "id": "mondo",
+      "ontology_purl": "https://purl.obolibrary.org/obo/mondo/mondo-international.owl"
+    },
+    {
+      "id": "evorao",
+      "definition_property": [
+        "http://www.w3.org/2004/02/skos/core#definition"
+      ],
+      "ontology_purl": "https://raw.githubusercontent.com/EVORA-project/evora-ontology/refs/heads/main/models/owl/evora_ontology.owl.ttl",
+      "base_uri": ["https://w3id.org/evorao/"]
     },
     {
       "id": "ictv",
-      "ontology_purl": "https://raw.githubusercontent.com/EVORA-project/ictv-ontology/refs/heads/main/out/ictv_2023.owl.ttl"
+      "ontology_purl": "https://github.com/EVORA-project/ictv-ontology/releases/latest/download/ictv_all_versions.owl.ttl.gz",
+      "preferred_root_term": [
+        "http://purl.obolibrary.org/obo/NCBITaxon_10239"
+      ]
     },
     {
       "id": "uniprotrdfs",
@@ -86,9 +109,9 @@
       "is_foundary": false,
       "preferredPrefix": "EMI",
       "title": "The Earth Metabolome Initiative (EMI) ontology",
-      "uri": "https://purl.org/emi",
+      "uri": "https://w3id.org/emi",
       "description": "The Earth Metabolome Initiative (EMI) ontology is designed to capture and structure the metabolic content of all currently known species on our planet.",
-      "homepage": "https://purl.org/emi/documentation",
+      "homepage": "https://w3id.org/emi",
       "mailing_list": "kru@sib.swiss",
       "label_property": [
         "rdfs:label",
@@ -107,10 +130,10 @@
         "rdfs:subPropertyOf"
       ],
       "hidden_property": "List of properties to that are ignored when rendering the ontology.",
-      "base_uri": "https://purl.org/emi#",
+      "base_uri": "https://w3id.org/emi#",
       "reasoner": "Hermit",
       "oboSlims": false,
-      "ontology_purl": "https://raw.githubusercontent.com/digital-botanical-gardens-initiative/earth_metabolome_ontology/refs/heads/main/emi-ols.ttl"
+      "ontology_purl": "https://w3id.org/emi/ols.ttl"
     },
     {
       "id": "hra",
@@ -236,7 +259,7 @@
       "id": "slm",
       "title": "SwissLipids",
       "description": "SwissLipids is a curated resource that provides information about known lipids, including lipid structure, metabolism, interactions, and subcellular and tissue localization. Information is curated from peer-reviewed literature and referenced using established ontologies, and provided with full provenance and evidence codes for curated assertions.",
-      "ontology_purl": "file:///nfs/production/parkinso/spot/ols4/prod/local_ontologies/swisslipids.ttl",
+      "ontology_purl": "file:///mnt/nfs/local_ontologies/swisslipids.ttl",
       "preferredPrefix": "SLM",
       "base_uri": [
         "https://swisslipids.org/rdf/SLM_"
@@ -343,7 +366,7 @@
       "base_uri": [
         "http://purl.obolibrary.org/obo/PHI_"
       ],
-      "ontology_purl": "file:///nfs/production/parkinso/spot/ols4/prod/local_ontologies/phi.owl"
+      "ontology_purl": "file:///mnt/nfs/local_ontologies/phi.owl"
     },
     {
       "id": "msio",
@@ -498,7 +521,7 @@
         "http://identifiers.org/teddy/TEDDY_"
       ],
       "oboSlims": false,
-      "ontology_purl": "file:///nfs/production/parkinso/spot/ols4/prod/local_ontologies/teddy-inferred-fixed.owl"
+      "ontology_purl": "file:///mnt/nfs/local_ontologies/teddy-inferred-fixed.owl"
     },
     {
       "id": "edam",
@@ -732,7 +755,7 @@
         "http://www.probonto.org/core"
       ],
       "oboSlims": false,
-      "ontology_purl": "file:///nfs/production/parkinso/spot/ols4/prod/local_ontologies/probonto.ttl"
+      "ontology_purl": "file:///mnt/nfs/local_ontologies/probonto.ttl"
     },
     {
       "id": "pride",
@@ -751,9 +774,6 @@
       "base_uri": [
         "http://purl.obolibrary.org/obo/PRIDE_"
       ],
-      "hierarchical_property": [
-        "http://purl.obolibrary.org/obo/pride_cv.obo#part_of"
-      ],
       "oboSlims": false,
       "ontology_purl": "https://raw.githubusercontent.com/PRIDE-Utilities/pride-ontology/master/pride_cv.owl"
     },
@@ -764,7 +784,7 @@
       "uri": "http://www.bioassayontology.org/bao/bao_complete.owl",
       "description": "The BioAssay Ontology (BAO) describes biological screening assays and their results including high-throughput screening (HTS) data for the purpose of categorizing assays and data analysis. BAO is an extensible, knowledge-based, highly expressive (currently SHOIQ(D)) description of biological assays making use of descriptive logic based features of the Web Ontology Language (OWL). BAO currently has over 700 classes and also makes use of several other ontologies. It describes several concepts related to biological screening, including Perturbagen, Format, Meta Target, Design, Detection Technology, and Endpoint. Perturbagens are perturbing agents that are screened in an assay; they are mostly small molecules. Assay Meta Target describes what is known about the biological system and / or its components interrogated in the assay (and influenced by the Perturbagen). Meta target can be directly described as a molecular entity (e.g. a purified protein or a protein complex), or indirectly by a biological process or event (e.g. phosphorylation). Format describes the biological or chemical features common to each test condition in the assay and includes biochemical, cell-based, organism-based, and variations thereof. The assay Design describes the assay methodology and implementation of how the perturbation of the biological system is translated into a detectable signal. Detection Technology relates to the physical method and technical details to detect and record a signal. Endpoints are the final HTS results as they are usually published (such as IC50, percent inhibition, etc). BAO has been designed to accommodate multiplexed assays. All main BAO components include multiple levels of sub-categories and specification classes, which are linked via object property relationships forming an expressive knowledge-based representation.",
       "homepage": "http://bioassayontology.org",
-      "mailing_list": "http://bioassayontology.org/wp/contact-us/",
+      "mailing_list": "bao@miamiedu.onmicrosoft.com",
       "definition_property": [
         "http://purl.obolibrary.org/obo/IAO_0000115",
         "http://www.ebi.ac.uk/efo/definition"
@@ -1236,7 +1256,7 @@
       ],
       "reasoner": "EL",
       "oboSlims": false,
-      "ontology_purl": "file:///nfs/production/parkinso/spot/ols4/prod/local_ontologies/snomed-inferred.owl",
+      "ontology_purl": "file:///mnt/nfs/local_ontologies/snomed-inferred.owl",
       "allowDownload": false
     },
     {
@@ -1453,6 +1473,290 @@
         "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym"
       ],
       "ontology_purl": "https://raw.githubusercontent.com/EsmaeilNourani/Lifestyle-factors-ontology/main/LSFO/owl/LSFO.owl"
+    },
+    {
+      "id": "credit",
+      "creator": [
+        "Liz Allen"
+      ],
+      "is_foundary": false,
+      "preferredPrefix": "credit",
+      "title": "Contributor Roles Taxonomy",
+      "uri": "https://w3id.org/biopragmatics/resources/credit/credit.owl",
+      "description": "CRediT (Contributor Roles Taxonomy) is high-level taxonomy, including 14 roles, that can be used to represent the roles typically played by contributors to scientific scholarly output. The roles describe each contributor’s specific contribution to the scholarly output.",
+      "homepage": "https://credit.niso.org/",
+      "mailing_list": null,
+      "label_property": "https://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.org/dc/terms/description"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasCloseSynonym"
+      ],
+      "hierarchical_property": [
+        "https://www.w3.org/2000/01/rdf-schema#subclassOf"
+      ],
+      "hidden_property": [],
+      "base_uri": [
+        "https://credit.niso.org/contributor-roles/"
+      ],
+      "reasoner": "none",
+      "oboSlims": false,
+      "ontology_purl": "https://w3id.org/biopragmatics/resources/credit/credit.owl"
+    },
+    {
+      "id": "mesh",
+      "creator": [
+        "National Library of Medicine"
+      ],
+      "is_foundary": false,
+      "preferredPrefix": "mesh",
+      "title": "Medical Subject Headings",
+      "uri": "https://w3id.org/biopragmatics/resources/mesh/mesh.owl.gz",
+      "description": "MeSH (Medical Subject Headings) is the National Library of Medicine's controlled vocabulary thesaurus. It consists of sets of terms naming descriptors in a hierarchical structure that permits searching at various levels of specificity. This thesaurus is used by NLM for indexing articles from biomedical journals, cataloguing of books, documents, etc.",
+      "homepage": "https://www.nlm.nih.gov/",
+      "mailing_list": "custserv@nlm.nih.gov",
+      "label_property": "https://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.org/dc/terms/description"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasCloseSynonym"
+      ],
+      "hierarchical_property": [
+        "https://www.w3.org/2000/01/rdf-schema#subclassOf"
+      ],
+      "hidden_property": [],
+      "base_uri": [
+        "http://id.nlm.nih.gov/mesh/"
+      ],
+      "reasoner": "none",
+      "oboSlims": false,
+      "ontology_purl": "https://w3id.org/biopragmatics/resources/mesh/mesh.owl.gz"
+    },
+    {
+      "id": "hgnc",
+      "creator": [
+        "Elspeth Bruford"
+      ],
+      "is_foundary": false,
+      "preferredPrefix": "hgnc",
+      "title": "HUGO Gene Nomenclature Committee",
+      "uri": "https://w3id.org/biopragmatics/resources/hgnc/hgnc.owl.gz",
+      "description": "The HGNC (HUGO Gene Nomenclature Committee) provides an approved gene name and symbol (short-form abbreviation) for each known human gene.  All approved symbols are stored in the HGNC database, and each symbol is unique. HGNC identifiers refer to records in the HGNC symbol database.",
+      "homepage": "http://www.genenames.org",
+      "mailing_list": "hgnc@genenames.org",
+      "label_property": "https://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.org/dc/terms/description"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasCloseSynonym"
+      ],
+      "hierarchical_property": [
+        "https://www.w3.org/2000/01/rdf-schema#subclassOf"
+      ],
+      "hidden_property": [],
+      "base_uri": [
+        "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/"
+      ],
+      "reasoner": "none",
+      "oboSlims": false,
+      "ontology_purl": "https://w3id.org/biopragmatics/resources/hgnc/hgnc.owl.gz"
+    },
+    {
+      "id": "wikipathways",
+      "creator": [
+        "Egon Willighagen"
+      ],
+      "is_foundary": false,
+      "preferredPrefix": "wikipathways",
+      "title": "WikiPathways",
+      "uri": "https://w3id.org/biopragmatics/resources/wikipathways/wikipathways.owl",
+      "description": "WikiPathways is a database of biological pathways maintained by and for the scientific community.",
+      "homepage": "http://www.wikipathways.org/",
+      "mailing_list": "egon.willighagen@gmail.com",
+      "label_property": "https://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.org/dc/terms/description"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasCloseSynonym"
+      ],
+      "hierarchical_property": [
+        "https://www.w3.org/2000/01/rdf-schema#subclassOf"
+      ],
+      "hidden_property": [],
+      "base_uri": [
+        "http://identifiers.org/wikipathways/"
+      ],
+      "reasoner": "none",
+      "oboSlims": false,
+      "ontology_purl": "https://w3id.org/biopragmatics/resources/wikipathways/wikipathways.owl"
+    },
+    {
+      "id": "ror",
+      "creator": [
+        "Maria Gould"
+      ],
+      "is_foundary": false,
+      "preferredPrefix": "ror",
+      "title": "Research Organization Registry",
+      "uri": "https://w3id.org/biopragmatics/resources/ror/ror.owl.gz",
+      "description": "ROR (Research Organization Registry) is a global, community-led registry\nof open persistent identifiers for research organizations. ROR is jointly\noperated by California Digital Library, Crossref, and Datacite.",
+      "homepage": "https://ror.org",
+      "mailing_list": "info@ror.org",
+      "label_property": "https://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.org/dc/terms/description"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasCloseSynonym"
+      ],
+      "hierarchical_property": [
+        "https://www.w3.org/2000/01/rdf-schema#subclassOf"
+      ],
+      "hidden_property": [],
+      "base_uri": [
+        "https://ror.org/"
+      ],
+      "reasoner": "none",
+      "oboSlims": false,
+      "ontology_purl": "https://w3id.org/biopragmatics/resources/ror/ror.owl.gz"
+    },
+    {
+      "activity_status": "active",
+      "contact": {
+        "email": "mcarthua@mcmaster.ca",
+        "github": "agmcarthur",
+        "label": "Andrew G. McArthur",
+        "orcid": "0000-0002-1142-3063"
+      },
+      "description": "Antibiotic resistance genes and mutations",
+      "domain": "microbiology",
+      "homepage": "https://github.com/arpcard/aro",
+      "id": "aro",
+      "layout": "ontology_detail",
+      "license": {
+        "label": "CC BY 4.0",
+        "logo": "http://mirrors.creativecommons.org/presskit/buttons/80x15/png/by.png",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "mailing_list": "https://mailman.mcmaster.ca/mailman/listinfo/card-l",
+      "ontology_purl": "file:///mnt/nfs/local_ontologies/aro.owl",
+      "preferredPrefix": "ARO",
+      "publications": [
+        {
+          "id": "https://www.ncbi.nlm.nih.gov/pubmed/31665441",
+          "title": "CARD 2020: antibiotic resistome surveillance with the comprehensive antibiotic resistance database."
+        }
+      ],
+      "repository": "https://github.com/arpcard/aro",
+      "title": "Antibiotic Resistance Ontology",
+      "tracker": "https://github.com/arpcard/aro/issues"
+    },
+    {
+      "id": "gscmixs",
+      "creator": [
+        "The Genomic Standards Consortium."
+      ],
+      "is_foundary": false,
+      "preferredPrefix": "gscmixs",
+      "title": "Minimum Information about any (x) Sequence (MIxS) standard",
+      "uri": "https://w3id.org/mixs",
+      "description": "An OWL representation of the Minimum Information for any (x) Standard (MIxS), managed by the Genomic Standards Consortium. This file is released by the Genomic Standards Consortium (GSC; https://www.gensc.org/) for use by anyone handling data or information about biological sequences.",
+      "homepage": "https://w3id.org/mixs",
+      "mailing_list": "gensc-cig@googlegroups.com",
+      "label_property": [
+        "owl:DatatypeProperty",
+        "rdfs:label",
+        "dcterms:title",
+        "schema1:keywords"
+      ],
+      "definition_property": [
+        "skos:definition"
+      ],
+      "base_uri": [
+        "MIXS:"
+      ],
+      "reasoner": "OWL2",
+      "oboSlims": false,
+      "ontology_purl": "https://w3id.org/mixs/mixs.owl.ttl"
+    },
+    {
+      "id": "ec",
+      "reasoner": "none",
+      "oboSlims": false,
+      "is_foundary": false,
+      "ontology_purl": "https://w3id.org/biopragmatics/resources/ec/ec.owl",
+      "creator": ["Kristian Axelsen"],
+      "preferredPrefix": "EC",
+      "title": "Enzyme Nomenclature",
+      "description": "The Enzyme Nomenclature (also known as the Enzyme Commission Code) is a species-agnostic controlled vocabulary for specific enzymes and an associated hierarchical classification into 7 main categories.\n\nThe Enzyme Nomenclature is maintained by the [Nomenclature Committee](https://iubmb.org/about/committees/nomenclature-committee/) of the International Union of Biochemistry and Molecular Biology (IUBMB). A detailed history of the nomenclature since the 1950s can be found [here](https://iubmb.qmul.ac.uk/enzyme/history.html).\n\nThere are few notable resources providing access to the Enzyme Nomenclature:\n\n<table class=\"table table-striped\"><thead><tr><th>Website</th><th>Homepage</td><th>Notes</td></tr></thead><tbody><tr><td>ExplorEnz</td><td><a href=\"https://www.enzyme-database.org\">https://www.enzyme-database.org</a></td><td>This is the resource officially recommended by IUBMB</td></tr><tr><td>IUBMB (via by Queen Mary)</td><td><a href=\"https://iubmb.qmul.ac.uk/enzyme\">https://iubmb.qmul.ac.uk/enzyme</a></td><td>This is a web-based version of the <a href=\"https://archive.org/details/enzymenomenclatu0000inte_d6c2\">1992 publication</a>.</td></tr><tr><td>IntEnz</td><td><a href=\"https://www.ebi.ac.uk/intenz\">https://www.ebi.ac.uk/intenz</a></td><td>Shutdown in 2024</td></tr><tr><td>ExPaSy</td><td><a href=\"https://enzyme.expasy.org\">https://enzyme.expasy.org</a></td></tr><tr><td>EnzymePortal</td><td><a href=\"https://www.ebi.ac.uk/enzymeportal\">https://www.ebi.ac.uk/enzymeportal</a></td><td></td></tr></tbody></table> Licensed under CC-BY-4.0.",
+      "uri": "https://www.enzyme-database.org/",
+      "homepage": "https://www.enzyme-database.org/",
+      "mailing_list": "kristian.axelsen@sib.swiss",
+      "label_property": "https://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": ["http://purl.org/dc/terms/description"],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasCloseSynonym"
+      ],
+      "hierarchical_property": [
+        "https://www.w3.org/2000/01/rdf-schema#subClassOf"
+      ],
+      "hidden_property": [],
+      "base_uri": ["https://www.enzyme-database.org/query.php?ec="]
+    },
+    {
+      "id": "hgnc.genegroup",
+      "reasoner": "none",
+      "oboSlims": false,
+      "is_foundary": false,
+      "ontology_purl": "https://w3id.org/biopragmatics/resources/hgnc.genegroup/hgnc.genegroup.owl",
+      "creator": [
+        "Elspeth Bruford"
+      ],
+      "preferredPrefix": "hgnc.genegroup",
+      "title": "HGNC Gene Group",
+      "description": "The HGNC (HUGO Gene Nomenclature Committee) provides an approved gene name and symbol (short-form abbreviation) for each known human gene. All approved symbols are stored in the HGNC database, and each symbol is unique. In addition, HGNC also provides a unique numerical ID to identify gene families, providing a display of curated hierarchical relationships between families. Licensed under CC0-1.0.",
+      "uri": "https://www.genenames.org",
+      "homepage": "https://www.genenames.org",
+      "mailing_list": "elspeth@genenames.org",
+      "label_property": "https://www.w3.org/2000/01/rdf-schema#label",
+      "definition_property": [
+        "http://purl.org/dc/terms/description"
+      ],
+      "synonym_property": [
+        "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym",
+        "http://www.geneontology.org/formats/oboInOwl#hasCloseSynonym"
+      ],
+      "hierarchical_property": [
+        "https://www.w3.org/2000/01/rdf-schema#subClassOf"
+      ],
+      "hidden_property": [],
+      "base_uri": [
+        "https://www.genenames.org/data/genegroup/#!/group/"
+      ]
     }
   ]
 }

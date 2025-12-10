@@ -1,0 +1,27 @@
+package uk.ac.ebi.spot.ols.repository.helpers;
+
+import uk.ac.ebi.spot.ols.repository.solr.SearchType;
+import uk.ac.ebi.spot.ols.repository.solr.OlsSolrQuery;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+
+public class DynamicFilterParser {
+
+    public static void addDynamicFiltersToQuery(OlsSolrQuery query, Map<String, Collection<String>> properties) {
+        if(properties == null) {
+            return;
+        }
+        for (String k : properties.keySet()) {
+            if(k.equals("searchFields") || k.equals("boostFields") || k.equals("facetFields") || k.equals("lang")
+                    || k.equals("schema") || k.equals("classification") || k.equals("ontology") || k.equals("option") || k.equals("exclusive")){
+                continue;
+            }
+            for(String v : properties.get(k)) {
+                String solrKey = k.replace(":", "__");
+                query.addFilter(solrKey, Arrays.asList( v.split(",") ), SearchType.CASE_INSENSITIVE_TOKENS);
+            }
+        }
+    }
+}

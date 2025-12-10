@@ -48,7 +48,8 @@
     {
       "database": "ICD10CM",
       "id": "Q00-Q99",
-      "description": "https://orcid.org/0000-0002-4142-7153"
+      "description": "https://orcid.org/0000-0002-4142-7153",
+      "url": "https://www.icd10data.com/search?s=Q00-Q99"
     }
   ],
   "is_preferred_root": false,

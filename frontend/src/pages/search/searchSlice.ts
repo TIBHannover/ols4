@@ -1,10 +1,10 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { getPaginated, Page } from "../../app/api";
 import { thingFromJsonProperties } from "../../app/util";
-import Entity from "../../model/Entity";
+import Thing from "../../model/Thing";
 
 export interface SearchState {
-  searchResults: Entity[];
+  searchResults: Thing[];
   loadingSearchResults: boolean;
   totalSearchResults: number;
   facets: Object;
@@ -68,7 +68,7 @@ const searchSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(
       getSearchResults.fulfilled,
-      (state: SearchState, action: PayloadAction<Page<Entity>>) => {
+      (state: SearchState, action: PayloadAction<Page<Thing>>) => {
         state.searchResults = action.payload.elements;
         state.totalSearchResults = action.payload.totalElements;
         state.facets = action.payload.facetFieldsToCounts;

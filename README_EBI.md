@@ -1,20 +1,17 @@
 <a href="https://github.com/EBISPOT/ols4/actions/workflows/test.yml"><img src="https://github.com/EBISPOT/ols4/actions/workflows/test.yml/badge.svg"/></a>
 
-OLS4 is available at <b>[https://www.ebi.ac.uk/ols4/](https://www.ebi.ac.uk/ols4/)</b>. Please report any issues to the
-tracker in this repository.
+The Ontology Lookup Service (OLS) is a repository for biomedical ontologies that aims to provide a single point of access to the latest ontology versions. It provides a [website](https://www.ebi.ac.uk/ols4/), [REST API](https://www.ebi.ac.uk/ols4/api-docs), and [MCP server](https://www.ebi.ac.uk/ols4/mcp).
+
+See also:
+
+* The public OLS instance at EMBL-EBI: <b>[https://www.ebi.ac.uk/ols4/](https://www.ebi.ac.uk/ols4/)</a></b>
+* [<i>OLS4: a new Ontology Lookup Service for a growing interdisciplinary knowledge ecosystem</i>](https://academic.oup.com/bioinformatics/article/41/5/btaf279/8125017)
+* [REST API docs](https://www.ebi.ac.uk/ols4/api-docs)
+* MCP endpoint: `https://wwwdev.ebi.ac.uk/ols4/api/mcp/sse`
+
+If you use OLS in your work, please cite [our recent publication in <i>Bioinformatics</i>](https://academic.oup.com/bioinformatics/article/41/5/btaf279/8125017).
 
 ---
-
-Version 4 of the EMBL-EBI Ontology Lookup Service (OLS), featuring:
-
-* Much faster dataload (loads the OBO foundry in hours instead of days)
-* Modular dataload pipeline with decoupled, individually testable stages
-* Automated CI testing of the dataload with minimal testcase ontologies
-* A lossless data representation: everything in the ontology is preserved in the databases
-* Coverage of the whole OWL2 spec, and also loads vocabularies defined purely in RDFS
-* Uses updated versions of Solr and Neo4j (no embedded databases, no MongoDB)
-* React frontend using Redux and Tailwind
-* Backwards compatibility with the OLS3 API
 
 This repository contains three projects:
 
@@ -241,12 +238,11 @@ First, make sure the configuration files (that determine which ontologies to loa
 
 Run Neo4j `import` command:
 
-    ./neo4j-admin import \
+    ./neo4j-admin database import full \
     --ignore-empty-strings=true \
     --legacy-style-quoting=false \
     --array-delimiter="|" \
     --multiline-fields=true \
-    --database=neo4j \
     --read-buffer-size=134217728 \
     $(<LOCAL_DIR>/make_csv_import_cmd.sh)
 
@@ -365,8 +361,8 @@ The frontend is a React application in `frontend`. See [frontend docs](frontend/
 for details on how to run the frontend.
 
 ## Development: Updating `testcases_expected_output` and `testcases_expected_output_api`
-If you make changes to the data load or API of OLS, you need to run testcases and compare it against the expected outputs 
-to ensure backward compatibility. This testing consists of 
+If you make changes to the data load or API of OLS, you need to run testcases and compare it against the expected outputs
+to ensure backward compatibility. This testing consists of
 
 1. testing the dataload outputs by comparing test outputs to expected outputs,
 2. API testing which compares API responses to expected responses, and
@@ -377,14 +373,14 @@ These tests are run locally as described in [Test testcases from dataload to UI]
 Ensure that the environment variables `NEO4J_HOME`, `SOLR_HOME` and `OLS4_HOME` are set up accordingly.
 
 1. Before running your testcases, ensure that your work is already commited. Create a new branch based on the branch you worked on
-but with a `-testcases` suffix. I.e., if your branch is called "fix-xyz", the new branch for the testcases will be 
-`fix-xyz-testcases`. We commit testcases to a separate branch due to the large number of files updated when testcases are run.
+   but with a `-testcases` suffix. I.e., if your branch is called "fix-xyz", the new branch for the testcases will be
+   `fix-xyz-testcases`. We commit testcases to a separate branch due to the large number of files updated when testcases are run.
 
 2. First make sure all the OLS4 JARs are up to date by running :
- 
+
        mvn clean package
 
-3. Generate new output files and import into Neo4J and Solr: 
+3. Generate new output files and import into Neo4J and Solr:
 
        ./dev-testing/teststack.sh ./testcases ./testcases_output
 
@@ -393,12 +389,12 @@ but with a `-testcases` suffix. I.e., if your branch is called "fix-xyz", the ne
        ./compare_testcase_output.sh
 
 5. The output of step 3 is written to `testcases_compare_result.log`. If no differences are found, this file will be empty.
-   `testcases_compare_result.log` will only tell you which files are different. To see the actual differences in dicated in 
-   `testcases_compare_result.log`, compare files that are stated to be different in a visual editor like Meld. Ensure that 
-    all differences in this file can be explained and that they do make sense. 
+   `testcases_compare_result.log` will only tell you which files are different. To see the actual differences in dicated in
+   `testcases_compare_result.log`, compare files that are stated to be different in a visual editor like Meld. Ensure that
+   all differences in this file can be explained and that they do make sense.
 
 6. Once you are happy with the output in `testcases_output`, remove the old `testcases_expected_output` and replace with
-new expected output:
+   new expected output:
 
        rm -rf testcases_expected_output
        cp -r testcases_output/testcases testcases_expected_output
@@ -406,32 +402,32 @@ new expected output:
 7. Add updated expected output to git.
 
         git add -A testcases_expected_output
- 
+
 8. Commit the updates to testcases to a branch with suffix `-testcases` and message "TESTCASES updated".
 9. Now continue with API testing.
 
 ### Testing API
 Before doing API testing you must have completed the [dataload testing](#testing-dataload).
 
-10. Before running the API tests, create a new branch with suffix `api-tests`. I.e., if the branch you worked on was 
-`fix-xyz-api-tests`.
+10. Before running the API tests, create a new branch with suffix `api-tests`. I.e., if the branch you worked on was
+    `fix-xyz-api-tests`.
 
 11. Start the backend:
 
         ./dev-testing/start-backend.sh
 
-12. Run API tests against backend using: 
+12. Run API tests against backend using:
 
         ./test_api_fast.sh http://localhost:8080 ./testcases_output_api ./testcases_expected_output_api --deep
 
 13. The results of step 8 is written to `./apitester4.log`. Differences are written to the end of the file. When there are no
-differences, this file will end with these lines:
+    differences, this file will end with these lines:
 
         RecursiveJsonDiff.diff() reported success
         apitester reported success; exit code 0
 
-14. Ensure that all differences listed in `./apitester4.log` are accounted for. Once you are happy with the output, remove 
-the old `testcases_expected_output_api` and replace with new expected output: 
+14. Ensure that all differences listed in `./apitester4.log` are accounted for. Once you are happy with the output, remove
+    the old `testcases_expected_output_api` and replace with new expected output:
 
         rm -rf testcases_expected_output_api
         cp -r testcases_output_api testcases_expected_output_api
@@ -445,5 +441,3 @@ the old `testcases_expected_output_api` and replace with new expected output:
 17. You can stop the OLS4 backend with "Ctrl-C", and Solr and Neo4J with:
 
         ./dev-testing/stopNeo4JSolr.sh
-
-

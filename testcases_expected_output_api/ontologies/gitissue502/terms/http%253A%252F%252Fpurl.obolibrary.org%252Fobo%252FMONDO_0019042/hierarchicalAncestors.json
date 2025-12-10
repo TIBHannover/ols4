@@ -389,7 +389,7 @@
         "database": "Orphanet",
         "description": "MONDO:equivalentTo",
         "id": "377788",
-        "url": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?Lng=EN&Expert=377788"
+        "url": "http://www.orpha.net/ORDO/Orphanet_377788"
       },
       {
         "database": "SCTID",
@@ -543,7 +543,7 @@
           {
             "database": "Orphanet",
             "id": "93890",
-            "url": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?Lng=EN&Expert=93890"
+            "url": "http://www.orpha.net/ORDO/Orphanet_93890"
           }
         ]
       },
@@ -554,7 +554,7 @@
           {
             "database": "Orphanet",
             "id": "93890",
-            "url": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?Lng=EN&Expert=93890"
+            "url": "http://www.orpha.net/ORDO/Orphanet_93890"
           }
         ]
       }
@@ -579,7 +579,7 @@
         "database": "Orphanet",
         "description": "MONDO:equivalentTo",
         "id": "93890",
-        "url": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?Lng=EN&Expert=93890"
+        "url": "http://www.orpha.net/ORDO/Orphanet_93890"
       },
       {
         "database": "SCTID",
@@ -696,7 +696,8 @@
       {
         "database": "ICD10CM",
         "description": "https://orcid.org/0000-0002-4142-7153",
-        "id": "Q00-Q99"
+        "id": "Q00-Q99",
+        "url": "https://www.icd10data.com/search?s=Q00-Q99"
       }
     ],
     "ontology_iri": "http://purl.obolibrary.org/obo/mondo.owl",

@@ -83,7 +83,8 @@
       {
         "database": "ICD10CM",
         "description": "https://orcid.org/0000-0002-4142-7153",
-        "id": "Q00-Q99"
+        "id": "Q00-Q99",
+        "url": "https://www.icd10data.com/search?s=Q00-Q99"
       }
     ],
     "ontology_iri": "http://purl.obolibrary.org/obo/mondo.owl",

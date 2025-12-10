@@ -50,7 +50,9 @@
       "BFO:0000050",
       "OBO_REL:part_of"
     ],
-    "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym": "part of",
+    "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym": [
+      "part of"
+    ],
     "http://www.geneontology.org/formats/oboInOwl#hasOBONamespace": [
       "external",
       "human_stages_ontology",
@@ -331,6 +333,23 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/IAO_0000111",
+      "http://purl.obolibrary.org/obo/IAO_0000112",
+      "http://purl.obolibrary.org/obo/IAO_0000115",
+      "http://purl.obolibrary.org/obo/IAO_0000116",
+      "http://purl.obolibrary.org/obo/IAO_0000118",
+      "http://purl.obolibrary.org/obo/RO_0001900",
+      "http://purl.obolibrary.org/obo/RO_0040042",
+      "http://www.ebi.ac.uk/efo/EFO_URI",
+      "http://www.geneontology.org/formats/oboInOwl#hasDbXref",
+      "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+      "http://www.geneontology.org/formats/oboInOwl#hasOBONamespace",
+      "http://www.geneontology.org/formats/oboInOwl#id",
+      "http://www.geneontology.org/formats/oboInOwl#inSubset",
+      "http://www.geneontology.org/formats/oboInOwl#shorthand"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 0.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -449,6 +468,12 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://www.ebi.ac.uk/efo/EFO_URI",
+      "http://www.geneontology.org/formats/oboInOwl#hasDbXref",
+      "http://www.geneontology.org/formats/oboInOwl#shorthand"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 0.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -904,6 +929,14 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0002423",
+      "http://purl.obolibrary.org/obo/UBERON_0002530"
+    ],
     "numDescendants": 4.0,
     "numHierarchicalDescendants": 13.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -1058,6 +1091,14 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000483",
+      "http://purl.obolibrary.org/obo/UBERON_0000916",
+      "http://purl.obolibrary.org/obo/UBERON_0002100",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 19.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -1211,6 +1252,11 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000468"
+    ],
     "numDescendants": 2.0,
     "numHierarchicalDescendants": 2.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -1402,6 +1448,16 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0001281",
+      "http://purl.obolibrary.org/obo/UBERON_0002100",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0006841",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 6.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -1611,6 +1667,16 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0001007",
+      "http://purl.obolibrary.org/obo/UBERON_0001009",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0002368",
+      "http://purl.obolibrary.org/obo/UBERON_0002423"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 7.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -1760,6 +1826,14 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0001009",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0002423"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 7.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -1894,6 +1968,13 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0002423",
+      "http://purl.obolibrary.org/obo/UBERON_0004535"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 2.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -2201,6 +2282,24 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000916",
+      "http://purl.obolibrary.org/obo/UBERON_0000949",
+      "http://purl.obolibrary.org/obo/UBERON_0001007",
+      "http://purl.obolibrary.org/obo/UBERON_0001637",
+      "http://purl.obolibrary.org/obo/UBERON_0001981",
+      "http://purl.obolibrary.org/obo/UBERON_0002100",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0002368",
+      "http://purl.obolibrary.org/obo/UBERON_0002423",
+      "http://purl.obolibrary.org/obo/UBERON_0002530",
+      "http://purl.obolibrary.org/obo/UBERON_0004647",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 0.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -2661,6 +2760,29 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000483",
+      "http://purl.obolibrary.org/obo/UBERON_0000916",
+      "http://purl.obolibrary.org/obo/UBERON_0000949",
+      "http://purl.obolibrary.org/obo/UBERON_0001007",
+      "http://purl.obolibrary.org/obo/UBERON_0001009",
+      "http://purl.obolibrary.org/obo/UBERON_0001981",
+      "http://purl.obolibrary.org/obo/UBERON_0001982",
+      "http://purl.obolibrary.org/obo/UBERON_0001986",
+      "http://purl.obolibrary.org/obo/UBERON_0002049",
+      "http://purl.obolibrary.org/obo/UBERON_0002100",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0002368",
+      "http://purl.obolibrary.org/obo/UBERON_0002423",
+      "http://purl.obolibrary.org/obo/UBERON_0002530",
+      "http://purl.obolibrary.org/obo/UBERON_0004535",
+      "http://purl.obolibrary.org/obo/UBERON_0004647",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 0.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -2788,6 +2910,9 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/UBERON_0001981"
+    ],
     "numDescendants": 1.0,
     "numHierarchicalDescendants": 1.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -2847,6 +2972,9 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/UBERON_0001981"
+    ],
     "numDescendants": 2.0,
     "numHierarchicalDescendants": 2.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -3141,6 +3269,24 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000916",
+      "http://purl.obolibrary.org/obo/UBERON_0000949",
+      "http://purl.obolibrary.org/obo/UBERON_0001007",
+      "http://purl.obolibrary.org/obo/UBERON_0001638",
+      "http://purl.obolibrary.org/obo/UBERON_0001981",
+      "http://purl.obolibrary.org/obo/UBERON_0002100",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0002368",
+      "http://purl.obolibrary.org/obo/UBERON_0002423",
+      "http://purl.obolibrary.org/obo/UBERON_0002530",
+      "http://purl.obolibrary.org/obo/UBERON_0004647",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 0.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -3223,6 +3369,10 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/UBERON_0001281"
+    ],
     "numDescendants": 7.0,
     "numHierarchicalDescendants": 7.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -3355,6 +3505,12 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0001981",
+      "http://purl.obolibrary.org/obo/UBERON_0002049"
+    ],
     "numDescendants": 1.0,
     "numHierarchicalDescendants": 1.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -3440,6 +3596,10 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000483"
+    ],
     "numDescendants": 1.0,
     "numHierarchicalDescendants": 1.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -3498,6 +3658,10 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/UBERON_0001982"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 2.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -3688,6 +3852,16 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000916",
+      "http://purl.obolibrary.org/obo/UBERON_0001281",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0006841",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 7.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -4132,6 +4306,25 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000916",
+      "http://purl.obolibrary.org/obo/UBERON_0000949",
+      "http://purl.obolibrary.org/obo/UBERON_0001007",
+      "http://purl.obolibrary.org/obo/UBERON_0001193",
+      "http://purl.obolibrary.org/obo/UBERON_0001281",
+      "http://purl.obolibrary.org/obo/UBERON_0001639",
+      "http://purl.obolibrary.org/obo/UBERON_0002100",
+      "http://purl.obolibrary.org/obo/UBERON_0002368",
+      "http://purl.obolibrary.org/obo/UBERON_0002423",
+      "http://purl.obolibrary.org/obo/UBERON_0002530",
+      "http://purl.obolibrary.org/obo/UBERON_0004647",
+      "http://purl.obolibrary.org/obo/UBERON_0006841",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 5.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -4414,6 +4607,14 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000949",
+      "http://purl.obolibrary.org/obo/UBERON_0002530"
+    ],
     "numDescendants": 1.0,
     "numHierarchicalDescendants": 6.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -4581,6 +4782,14 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0001007",
+      "http://purl.obolibrary.org/obo/UBERON_0002107"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 6.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -4727,6 +4936,12 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468"
+    ],
     "numDescendants": 2.0,
     "numHierarchicalDescendants": 7.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -4884,6 +5099,14 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0001009",
+      "http://purl.obolibrary.org/obo/UBERON_0001281"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 1.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -5184,6 +5407,25 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000916",
+      "http://purl.obolibrary.org/obo/UBERON_0000949",
+      "http://purl.obolibrary.org/obo/UBERON_0001007",
+      "http://purl.obolibrary.org/obo/UBERON_0001193",
+      "http://purl.obolibrary.org/obo/UBERON_0001281",
+      "http://purl.obolibrary.org/obo/UBERON_0001639",
+      "http://purl.obolibrary.org/obo/UBERON_0002100",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0002368",
+      "http://purl.obolibrary.org/obo/UBERON_0002423",
+      "http://purl.obolibrary.org/obo/UBERON_0002530",
+      "http://purl.obolibrary.org/obo/UBERON_0006841",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 4.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -5573,6 +5815,24 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000467",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0000916",
+      "http://purl.obolibrary.org/obo/UBERON_0000949",
+      "http://purl.obolibrary.org/obo/UBERON_0001007",
+      "http://purl.obolibrary.org/obo/UBERON_0001638",
+      "http://purl.obolibrary.org/obo/UBERON_0001981",
+      "http://purl.obolibrary.org/obo/UBERON_0002100",
+      "http://purl.obolibrary.org/obo/UBERON_0002107",
+      "http://purl.obolibrary.org/obo/UBERON_0002368",
+      "http://purl.obolibrary.org/obo/UBERON_0002423",
+      "http://purl.obolibrary.org/obo/UBERON_0002530",
+      "http://purl.obolibrary.org/obo/UBERON_0004647",
+      "http://purl.obolibrary.org/obo/UBERON_0013702"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 0.0,
     "ontologyId": "efo-hierarchical-properties",
@@ -5727,6 +5987,12 @@
         ]
       }
     },
+    "linksTo": [
+      "http://purl.obolibrary.org/obo/BFO_0000050",
+      "http://purl.obolibrary.org/obo/BFO_0000051",
+      "http://purl.obolibrary.org/obo/UBERON_0000468",
+      "http://purl.obolibrary.org/obo/UBERON_0002100"
+    ],
     "numDescendants": 0.0,
     "numHierarchicalDescendants": 8.0,
     "ontologyId": "efo-hierarchical-properties",

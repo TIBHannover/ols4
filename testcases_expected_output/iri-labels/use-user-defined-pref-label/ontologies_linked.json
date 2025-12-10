@@ -116,14 +116,16 @@
             "value": "parent class pref label",
             "lang": "en"
           },
-          "http://exmpl.org/xmpl/Synonym": {
-            "type": [
-              "literal"
-            ],
-            "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
-            "value": "label of the parent class",
-            "lang": "en"
-          },
+          "http://exmpl.org/xmpl/Synonym": [
+            {
+              "type": [
+                "literal"
+              ],
+              "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
+              "value": "label of the parent class",
+              "lang": "en"
+            }
+          ],
           "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "http://www.w3.org/2002/07/owl#Class",
           "http://www.w3.org/2000/01/rdf-schema#label": {
             "type": [
@@ -143,14 +145,6 @@
               ],
               "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
               "value": "parent class pref label",
-              "lang": "en"
-            },
-            {
-              "type": [
-                "literal"
-              ],
-              "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
-              "value": "XMPL000001",
               "lang": "en"
             }
           ],
@@ -275,7 +269,11 @@
                 "entity"
               ]
             }
-          }
+          },
+          "linksTo": [
+            "http://exmpl.org/xmpl/Preferred_name",
+            "http://exmpl.org/xmpl/Synonym"
+          ]
         },
         {
           "iri": "http://exmpl.org/xmpl/XMPL000002",
@@ -319,14 +317,16 @@
             "value": "1st children class pref label",
             "lang": "en"
           },
-          "http://exmpl.org/xmpl/Synonym": {
-            "type": [
-              "literal"
-            ],
-            "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
-            "value": "label of the first children class",
-            "lang": "en"
-          },
+          "http://exmpl.org/xmpl/Synonym": [
+            {
+              "type": [
+                "literal"
+              ],
+              "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
+              "value": "label of the first children class",
+              "lang": "en"
+            }
+          ],
           "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "http://www.w3.org/2002/07/owl#Class",
           "http://www.w3.org/2000/01/rdf-schema#label": {
             "type": [
@@ -347,14 +347,6 @@
               ],
               "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
               "value": "1st children class pref label",
-              "lang": "en"
-            },
-            {
-              "type": [
-                "literal"
-              ],
-              "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
-              "value": "XMPL000002",
               "lang": "en"
             }
           ],
@@ -467,14 +459,6 @@
                   "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
                   "value": "parent class pref label",
                   "lang": "en"
-                },
-                {
-                  "type": [
-                    "literal"
-                  ],
-                  "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
-                  "value": "XMPL000001",
-                  "lang": "en"
                 }
               ],
               "curie": {
@@ -514,7 +498,12 @@
                 "entity"
               ]
             }
-          }
+          },
+          "linksTo": [
+            "http://exmpl.org/xmpl/Preferred_name",
+            "http://exmpl.org/xmpl/XMPL000001",
+            "http://exmpl.org/xmpl/Synonym"
+          ]
         },
         {
           "iri": "http://exmpl.org/xmpl/XMPL000003",
@@ -558,14 +547,16 @@
             "value": "2nd children class pref label",
             "lang": "en"
           },
-          "http://exmpl.org/xmpl/Synonym": {
-            "type": [
-              "literal"
-            ],
-            "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
-            "value": "label of the second children class",
-            "lang": "en"
-          },
+          "http://exmpl.org/xmpl/Synonym": [
+            {
+              "type": [
+                "literal"
+              ],
+              "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
+              "value": "label of the second children class",
+              "lang": "en"
+            }
+          ],
           "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "http://www.w3.org/2002/07/owl#Class",
           "http://www.w3.org/2000/01/rdf-schema#label": {
             "type": [
@@ -586,14 +577,6 @@
               ],
               "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
               "value": "2nd children class pref label",
-              "lang": "en"
-            },
-            {
-              "type": [
-                "literal"
-              ],
-              "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
-              "value": "XMPL000003",
               "lang": "en"
             }
           ],
@@ -680,14 +663,6 @@
                   "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
                   "value": "parent class pref label",
                   "lang": "en"
-                },
-                {
-                  "type": [
-                    "literal"
-                  ],
-                  "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
-                  "value": "XMPL000001",
-                  "lang": "en"
                 }
               ],
               "curie": {
@@ -727,7 +702,11 @@
                 "entity"
               ]
             }
-          }
+          },
+          "linksTo": [
+            "http://exmpl.org/xmpl/XMPL000001",
+            "http://exmpl.org/xmpl/Synonym"
+          ]
         }
       ],
       "properties": [
@@ -796,7 +775,8 @@
           "appearsIn": [
             "xmpl"
           ],
-          "linkedEntities": {}
+          "linkedEntities": {},
+          "linksTo": []
         },
         {
           "iri": "http://exmpl.org/xmpl/Synonym",
@@ -863,7 +843,8 @@
           "appearsIn": [
             "xmpl"
           ],
-          "linkedEntities": {}
+          "linkedEntities": {},
+          "linksTo": []
         }
       ],
       "individuals": [],
@@ -920,7 +901,11 @@
             "entity"
           ]
         }
-      }
+      },
+      "linksTo": [
+        "http://exmpl.org/xmpl/Preferred_name",
+        "http://exmpl.org/xmpl/Synonym"
+      ]
     }
   ]
 }

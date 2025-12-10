@@ -3,6 +3,10 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.cli.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 
 public class Linker {
 
@@ -19,6 +23,10 @@ public class Linker {
         Option output = new Option(null, "output", true, "linked ontologies JSON output filename");
         output.setRequired(true);
         options.addOption(output);
+
+        Option embeddingsTsv = new Option(null, "embeddingsDb", true, "optional path of embeddings sqlite database");
+        embeddingsTsv.setRequired(false);
+        options.addOption(embeddingsTsv);
 
         Option leveldbPath = new Option(null, "leveldbPath", true, "optional path of leveldb containing extra mappings (for ORCID etc.)");
         leveldbPath.setRequired(false);
@@ -52,12 +60,19 @@ public class Linker {
 
         String inputPath = cmd.getOptionValue("input");
         String outputFilePath = cmd.getOptionValue("output");
+        String embeddingsDb = cmd.getOptionValue("embeddingsDb");
         String leveldb_path = cmd.getOptionValue("leveldbPath");
         boolean serviceMode = cmd.hasOption("service");
         boolean JSON = cmd.hasOption("json");
         int pSize = cmd.hasOption("pageSize") ? Integer.parseInt(cmd.getOptionValue("pageSize")) : 20;
 
         LevelDB leveldb = leveldb_path != null ? new LevelDB(leveldb_path) : null;
+
+        Embeddings embeddings = new Embeddings();
+        if (embeddingsDb != null) {
+            System.out.println("Loading embeddings from " + embeddingsDb);
+            embeddings.loadEmbeddingsFromFile(embeddingsDb);
+        }
 
         try {
             LinkerPass1.LinkerPass1Result pass1Result;
@@ -74,13 +89,12 @@ public class Linker {
                 ServiceBase.httpclient.close();
             } else {
                 pass1Result = LinkerPass1.run(inputPath);
-                LinkerPass2.run(inputPath, outputFilePath, leveldb, pass1Result);
+                LinkerPass2.run(inputPath, outputFilePath, leveldb, embeddings, pass1Result);
             }
 
 
     //        gson.toJson(pass1Result, new FileWriter(outputFilePath));
     //        Files.write(Path.of(outputFilePath), gson.toJson(pass1Result).getBytes(StandardCharsets.UTF_8));
-
 
 
         } finally {

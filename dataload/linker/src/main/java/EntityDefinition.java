@@ -11,6 +11,7 @@ public class EntityDefinition {
     boolean isDefiningOntology;
     JsonElement label;
     JsonElement curie;
+    boolean isObsolete;
 
     private static String canonicalJson(JsonElement elem) {
         //if (elem == null) return "null";

@@ -9,6 +9,12 @@ import uk.ac.ebi.rdf2json.helpers.RdfListEvaluator;
 import uk.ac.ebi.rdf2json.properties.*;
 
 import org.apache.jena.riot.Lang;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.RDFParser;
@@ -17,15 +23,19 @@ import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.sparql.core.Quad;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+
 import static uk.ac.ebi.rdf2json.OntologyNode.NodeType.*;
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
@@ -64,35 +74,70 @@ public class OntologyGraph implements StreamRDF {
         }
     }
 
+    private void parseRDF(String url, InputStream is, String contentType) throws IOException  {
+        if(url.endsWith(".gz")) {
+            System.out.println("parseRDF: Decompressing gzipped ontology " + url);
+            is = new GZIPInputStream(is);
+            url = url.substring(0, url.length() - 3);
+        }
+
+        Lang lang = null;
+        if(contentType != null) {
+
+            // handle "content-type: text/turtle; charset ..."
+            contentType = contentType.split(";")[0];
+
+            // lots of the OBO ontologies are text/plain but are actually rdfxml
+            // RDFLanguages interprets text/plain as turtle which would break them
+            if(!contentType.equals("text/plain")) {
+                lang = RDFLanguages.contentTypeToLang(contentType);
+            }
+        }
+        if(lang == null) {
+            lang = RDFLanguages.filenameToLang(url, Lang.RDFXML);
+        }
+        if(lang == null) {
+            lang = Lang.RDFXML;
+        }
+
+        createParser(lang).source(is).parse(this);
+    }
+
     private void parseRDF(String url, boolean convertToRDF, String id)  {
 
         try {
             if (loadLocalFiles && !url.contains("://")) {
-                logger.debug("Using local file for {}", url);
+                logger.debug("parseRDF: Using local file for {}", url);
                 sourceFileTimestamp = new File(url).lastModified();
-                createParser(RDFLanguages.filenameToLang(url, Lang.RDFXML))
-                        .source(new FileInputStream(url)).parse(this);
+                parseRDF(url, new FileInputStream(url), null);
             } else {
                 if (downloadedPath != null) {
-                    String existingDownload = downloadedPath + "/" + urlToFilename(url);
                     try {
-                        FileInputStream is = new FileInputStream(existingDownload);
-                        logger.debug("Using predownloaded file for {}", url);
+                        String existingDownload = downloadedPath + "/" + urlToFilename(url);
+                        InputStream is = new FileInputStream(existingDownload);
+                        logger.debug("parseRDF: Using predownloaded file for {}", url);
                         sourceFileTimestamp = new File(existingDownload).lastModified();
-                        Lang lang = null;
-                        try {
-                            String existingDownloadMimeType = Files.readString(Paths.get(existingDownload + ".mimetype"));
-                            lang = RDFLanguages.contentTypeToLang(existingDownloadMimeType);
-                        } catch(IOException ignored) {
-                        }
-                        if(lang == null) {
-                            lang = Lang.RDFXML;
-                        }
-                        createParser(lang).source(is).parse(this);
+                        String existingDownloadMimeType = Files.readString(Paths.get(existingDownload + ".mimetype"));
+                        parseRDF(url, is, existingDownloadMimeType);
                     } catch (Exception e) {
-                        logger.error("Downloading (not predownloaded) {}", url);
+                        logger.error("parseRDF: Downloading (not predownloaded) {}", url);
                         sourceFileTimestamp = System.currentTimeMillis();
-                        createParser(null).source(url).parse(this);
+
+                        URL asURL;
+                        if(url.contains("://")) {
+                            asURL = new URL(url);
+                        } else {
+                            asURL = new File(url).toURI().toURL();
+                        }
+
+                        if(asURL.getProtocol().equals("file")) {
+                            parseRDF(url, new FileInputStream(asURL.getPath()), null);
+                        } else {
+                            HttpEntity res = getURL(url);
+                            InputStream is = res.getContent();
+                            String contentType = res.getContentType().getValue();
+                            parseRDF(url, is, contentType);
+                        }
                     }
                 } else {
                     logger.debug("Downloading (no predownload path provided) {}", url);
@@ -130,6 +175,22 @@ public class OntologyGraph implements StreamRDF {
         }
     }
 
+    private static HttpEntity getURL(String url) throws IOException {
+
+        RequestConfig config = RequestConfig.custom()
+                .setConnectTimeout(5000)
+                .setConnectionRequestTimeout(5000)
+                .setSocketTimeout(5000).build();
+
+        CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+
+        HttpGet request = new HttpGet(url);
+        request.addHeader("Accept", "application/rdf+xml, text/turtle, text/n3");
+
+        HttpResponse response = client.execute(request);
+        return response.getEntity();
+    }
+
     private String urlToFilename(String url) {
         return url.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
     }
@@ -151,7 +212,7 @@ public class OntologyGraph implements StreamRDF {
     String downloadedPath;
 
 
-    OntologyGraph(Map<String, Object> config, boolean loadLocalFiles, boolean noDates, String downloadedPath, boolean convertToRDF) {
+    OntologyGraph(Map<String, Object> config, boolean loadLocalFiles, boolean noDates, String downloadedPath, boolean convertToRDF) throws IOException {
 
         this.loadLocalFiles = loadLocalFiles;
         this.downloadedPath = downloadedPath;

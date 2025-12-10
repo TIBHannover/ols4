@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonWriter;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.rdf2json.reporting.OntologyReportingService;
 
 import java.io.*;
 import java.net.URL;
@@ -55,6 +56,13 @@ public class RDF2JSON {
         Option rdfConvert = new Option(null, "convertToRDF", false, "Whether or not to convert the ontology to RDF/Xml format before parsing.");
         rdfConvert.setRequired(false);
         options.addOption(rdfConvert);
+        Option reportFile = new Option(null, "reportFile", true, "Output file for the ontology load report");
+        reportFile.setRequired(false);
+        options.addOption(reportFile);
+
+        Option sendNotifications = new Option(null, "sendNotifications", false, "Send email/GitHub notifications to ontology owners and OLS developers");
+        sendNotifications.setRequired(false);
+        options.addOption(sendNotifications);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -78,30 +86,50 @@ public class RDF2JSON {
         boolean bNoDates = cmd.hasOption("noDates");
         String mergeOutputWith = cmd.getOptionValue("mergeOutputWith");
         boolean convertToRDF = cmd.hasOption("convertToRDF");
+        String reportFilePath = cmd.getOptionValue("reportFile");
+        boolean bSendNotifications = cmd.hasOption("sendNotifications");
 
 
         logger.debug("Configs: {}", configFilePaths);
         logger.debug("Output: {}", outputFilePath);
 
+        // Initialize reporting service with the first config file (or merged config logic can be added)
+        OntologyReportingService reportingService = new OntologyReportingService(configFilePaths.get(0));
+
         Gson gson = new Gson();
 
         List<InputJson> configs = configFilePaths.stream().map(configPath -> {
 
-            InputStream inputStream;
+            // If an OWL file was given instead of a config JSON, we make a simple config JSON for it.
+            // This enables OLS to be easily run for an ontology without having to make a config.
+            // For the ID we use the filename of the OWL file without the extension.
+            //
+            if(configPath.endsWith(".json")) { 
 
-            try {
-                if (configPath.contains("://")) {
-                    inputStream = new URL(configPath).openStream();
-                } else {
-                    inputStream = new FileInputStream(configPath);
+                InputStream inputStream;
+
+                try {
+                    if (configPath.contains("://")) {
+                        inputStream = new URL(configPath).openStream();
+                    } else {
+                        inputStream = new FileInputStream(configPath);
+                    }
+                } catch(IOException e) {
+                    throw new RuntimeException("Error loading config file: " + configPath);
                 }
-            } catch(IOException e) {
-                throw new RuntimeException("Error loading config file: " + configPath);
+
+                JsonReader reader = new JsonReader(new InputStreamReader(inputStream));
+
+                return (InputJson) gson.fromJson(reader, InputJson.class);
+
+            } else {
+
+                // for example both .owl and .owl.gz is removed from the end of the path
+                String ontologyId = configPath.substring(configPath.lastIndexOf("/") + 1, configPath.indexOf('.', configPath.lastIndexOf("/")));
+                InputJson autoConfig = new InputJson();
+                autoConfig.ontologies = List.of(Map.of("id", ontologyId, "ontology_purl", configPath));
+                return autoConfig;
             }
-
-            JsonReader reader = new JsonReader(new InputStreamReader(inputStream));
-
-            return (InputJson) gson.fromJson(reader, InputJson.class);
 
         }).collect(Collectors.toList());
 
@@ -153,6 +181,10 @@ public class RDF2JSON {
 
                 if(graph.ontologyNode == null) {
                     logger.error("No Ontology node found; nothing will be written");
+                    // Record as failed (will check for fallback later)
+                    if (mergeOutputWith == null) {
+                        reportingService.recordFailedNoFallback(ontologyId, "No Ontology node found in RDF");
+                    }
                     continue;
                 }
 
@@ -164,8 +196,25 @@ public class RDF2JSON {
 
                 loadedOntologyIds.add(ontologyId);
 
+                // Extract version from the ontology node for reporting
+                String version = null;
+                if (graph.ontologyNode.properties.getPropertyValue("version") != null) {
+                    version = graph.ontologyNode.properties.getPropertyValue("version").toString();
+                }
+                reportingService.recordSuccess(ontologyId, version);
+
             } catch(Throwable t) {
-                 t.printStackTrace();
+                logger.error("Error processing ontology {}: {}", ontologyId, t.getMessage());
+                t.printStackTrace();
+                // Mark as failed for now - we'll update to fallback in merge section if a previous version exists
+                reportingService.recordFailedNoFallback(ontologyId, t.getMessage());
+
+                if (mergeOutputWith == null) {
+                    logger.info("No previous build available for fallback for: {}", ontologyId);
+                } else {
+                    logger.info("Will attempt to use previous build as fallback for: {}", ontologyId);
+                    // Note: We'll update this to recordFallback in the merge section if we find a previous version
+                }
             }
         }
 
@@ -173,8 +222,7 @@ public class RDF2JSON {
 
             // Need to look for any ontologies that we didn't load but were loaded last time, and
             // keep the old versions of them from the previous JSON file.
-
-            logger.info("Adding previously loaded ontologies from {} (--mergeOutputWith)", mergeOutputWith);
+            logger.info("Adding previously loaded ontologies and fallbacks from {} (--mergeOutputWith)", mergeOutputWith);
             long startTime = System.nanoTime();
 
             JsonReader scanReader = new JsonReader(new InputStreamReader(new FileInputStream(mergeOutputWith)));
@@ -205,12 +253,40 @@ public class RDF2JSON {
 
                         String ontologyId = scanReader.nextString().toLowerCase();
 
+                        // There are two cases where we want to use the previous ontology data:
+                        // 1. We didn't process this ontology at all in the current run
+                        // 2. We tried to process this ontology but it failed (not in loadedOntologyIds)
                         if(!loadedOntologyIds.contains(ontologyId)) {
-
-                            logger.info("Keeping output for ontology {} from previous run (--mergeOutputWith)",
-                                    ontologyId);
+                            // Check if this was actually a failed ontology in the current run
+                            boolean wasInConfig = mergedConfigs.containsKey(ontologyId);
 
                             Map<String,Object> ontology = gson.fromJson(actualReader, Map.class);
+
+                            // Extract version for reporting
+                            String fallbackVersion = null;
+                            Object versionObj = ontology.get("version");
+                            if (versionObj != null) {
+                                if (versionObj instanceof String) {
+                                    fallbackVersion = (String) versionObj;
+                                } else if (versionObj instanceof Map) {
+                                    fallbackVersion = (String) ((Map<?,?>) versionObj).get("value");
+                                }
+                            }
+
+                            if (wasInConfig) {
+                                logger.info("Using previous build as fallback for failed ontology: {}", ontologyId);
+                                reportingService.recordFallback(ontologyId, fallbackVersion,
+                                    "Latest ontology version is failing to load, using the last successful version instead");
+                            } else {
+                                logger.info("Keeping output for ontology {} from previous run (--mergeOutputWith)", ontologyId);
+                                // This is an ontology that wasn't in the config, so we just keep it
+                                // No need to report this as an issue
+                            }
+
+                            // If this is a fallback for a failed ontology, add a note about it
+                            ontology.put("is_fallback", true); // this is to use in frontend to show a warning about outdated ontology
+                            ontology.put("fallback_reason", "Latest ontology version is failing to load, using the last successful version instead");
+
                             writeGenericValue(writer, ontology);
 
                         } else {
@@ -239,6 +315,9 @@ public class RDF2JSON {
         writer.endObject();
 
         writer.close();
+
+        // Generate report and send notifications
+        reportingService.generateReportAndNotify(reportFilePath, bSendNotifications);
     }
 
 
@@ -251,11 +330,23 @@ public class RDF2JSON {
             }
             writer.endArray();
         } else if(val instanceof Map) {
-            Map<String,Object> map = new TreeMap<String,Object> ( (Map<String,Object>) val );
+            Map<String,Object> originalMap = (Map<String,Object>) val;
+            Map<String,Object> orderedMap = new LinkedHashMap<>();
+            
+            // First write ontologyId if it exists
+            if (originalMap.containsKey("ontologyId")) {
+                orderedMap.put("ontologyId", originalMap.get("ontologyId"));
+            }
+            
+            // Then write remaining keys in alphabetical order
+            Map<String,Object> sortedRemainder = new TreeMap<>(originalMap);
+            sortedRemainder.remove("ontologyId"); // Remove it to avoid duplication
+            orderedMap.putAll(sortedRemainder);
+            
             writer.beginObject();
-            for(String k : map.keySet()) {
+            for(String k : orderedMap.keySet()) {
                 writer.name(k);
-                writeGenericValue(writer, map.get(k));
+                writeGenericValue(writer, orderedMap.get(k));
             }
             writer.endObject();
         } else if(val instanceof String) {

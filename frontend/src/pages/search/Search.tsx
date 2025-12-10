@@ -8,6 +8,8 @@ import LoadingOverlay from "../../components/LoadingOverlay";
 import { Pagination } from "../../components/Pagination";
 import SearchBox from "../../components/SearchBox";
 import Entity from "../../model/Entity";
+import Thing from "../../model/Thing";
+import Ontology from "../../model/Ontology";
 import { getSearchResults } from "./searchSlice";
 
 export default function Search() {
@@ -309,14 +311,54 @@ export default function Search() {
                   dataCount={totalResults}
                   rowsPerPage={rowsPerPage}
                 />
-                {results.map((entity: Entity) => {
+                {results.map((thing: Thing) => {
+                  // Check if this is an ontology or an entity
+                  const isOntology = thing instanceof Ontology;
+                  const entity = isOntology ? null : (thing as Entity);
+
+                  if (isOntology) {
+                    // Render ontology result
+                    const ontology = thing as Ontology;
+                    return (
+                      <div key={randomString()} className="my-4">
+                        <div className="mb-2 leading-loose truncate flex flex-row items-center">
+                          <Link
+                            to={"/ontologies/" + ontology.getOntologyId()}
+                            className="link-default text-xl mr-2 font-bold"
+                          >
+                            {ontology.getName()}
+                          </Link>
+                        </div>
+                        <div className="mb-1 leading-relaxed text-sm text-neutral-default">
+                          {ontology.getIri()}
+                        </div>
+                        <div className="mb-1 leading-relaxed">
+                          {ontology.getDescription()}
+                        </div>
+                        <div className="leading-loose">
+                          <span className="font-bold mr-1">Ontology ID:</span>
+                          &nbsp;
+                          <Link to={"/ontologies/" + ontology.getOntologyId()}>
+                            <span
+                              className="link-ontology px-2 py-1 rounded-md text-sm text-white uppercase w-fit font-bold break-all"
+                              title={ontology.getOntologyId().toUpperCase()}
+                            >
+                              {ontology.getOntologyId()}
+                            </span>
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Render entity result (class, property, individual)
                   const MAX_DISPLAY_APPEARS_IN = 10;
-                  const appearsInList = entity.getAppearsIn().filter(
+                  const appearsInList = entity!.getAppearsIn().filter(
                     (ontId) =>
-                      ontId !== entity.getOntologyId() &&
-                      entity
+                      ontId !== entity!.getOntologyId() &&
+                      entity!
                         .getDefinedBy()
-                        .filter((ontId) => ontId !== entity.getOntologyId())
+                        .filter((ontId) => ontId !== entity!.getOntologyId())
                         .indexOf(ontId) === -1
                   );
                   let appearsInCopy: string[] = [];
@@ -334,24 +376,24 @@ export default function Search() {
                         <Link
                           to={
                             "/ontologies/" +
-                            entity.getOntologyId() +
+                            entity!.getOntologyId() +
                             "/" +
-                            entity.getTypePlural() +
+                            entity!.getTypePlural() +
                             "/" +
                             encodeURIComponent(
-                              encodeURIComponent(entity.getIri())
+                              encodeURIComponent(entity!.getIri())
                             )
                           }
                           className={`link-default text-xl mr-2 ${
-                            entity.isCanonical() ? "font-bold" : ""
-                          } ${entity.isDeprecated() ? "line-through" : ""}`}
+                            entity!.isCanonical() ? "font-bold" : ""
+                          } ${entity!.isDeprecated() ? "line-through" : ""}`}
                         >
-                          {entity.getName()}
+                          {entity!.getName()}
                         </Link>
-                        {entity.getShortForm() ? (
+                        {entity!.getShortForm() ? (
                           <span className="mr-1">
                             <span className="bg-orange-default text-white text-sm rounded-md px-2 py-1 w-fit font-bold break-all">
-                              {entity.getShortForm()}
+                              {entity!.getShortForm()}
                             </span>
                             &nbsp;&nbsp;
                             <i
@@ -363,33 +405,33 @@ export default function Search() {
                               }`}
                               onClick={() => {
                                 copyShortForm(
-                                  entity.getShortForm() || entity.getName()
+                                  entity!.getShortForm() || entity!.getName()
                                 );
                               }}
                             />
                           </span>
                         ) : null}
-                        {!entity.isCanonical() && (
+                        {!entity!.isCanonical() && (
                           <span className="text-white text-xs bg-neutral-default px-2 py-1 mr-1 rounded-md uppercase">
                             Imported
                           </span>
                         )}
                       </div>
                       <div className="mb-1 leading-relaxed text-sm text-neutral-default">
-                        {entity.getIri()}
+                        {entity!.getIri()}
                       </div>
                       <div className="mb-1 leading-relaxed">
-                        {entity.getDescription()}
+                        {entity!.getDescription()}
                       </div>
                       <div className="leading-loose">
                         <span className="font-bold mr-1">Ontology:</span>
                         &nbsp;
-                        <Link to={"/ontologies/" + entity.getOntologyId()}>
+                        <Link to={"/ontologies/" + entity!.getOntologyId()}>
                           <span
                             className="link-ontology px-2 py-1 rounded-md text-sm text-white uppercase w-fit font-bold break-all"
-                            title={entity.getOntologyId().toUpperCase()}
+                            title={entity!.getOntologyId().toUpperCase()}
                           >
-                            {entity.getOntologyId()}
+                            {entity!.getOntologyId()}
                           </span>
                         </Link>
                       </div>
@@ -412,9 +454,9 @@ export default function Search() {
                                     to={
                                       "/ontologies/" +
                                       appearsIn +
-                                      `/${entity.getTypePlural()}/` +
+                                      `/${entity!.getTypePlural()}/` +
                                       encodeURIComponent(
-                                        encodeURIComponent(entity.getIri())
+                                        encodeURIComponent(entity!.getIri())
                                       )
                                     }
                                   >
@@ -432,12 +474,12 @@ export default function Search() {
                                 <Link
                                   to={
                                     "/ontologies/" +
-                                    entity.getOntologyId() +
+                                    entity!.getOntologyId() +
                                     "/" +
-                                    entity.getTypePlural() +
+                                    entity!.getTypePlural() +
                                     "/" +
                                     encodeURIComponent(
-                                      encodeURIComponent(entity.getIri())
+                                      encodeURIComponent(entity!.getIri())
                                     )
                                   }
                                   className="link-default"

@@ -32,7 +32,7 @@ import uk.ac.ebi.spot.ols.model.v1.V1Term;
 import uk.ac.ebi.spot.ols.repository.v1.TreeNode;
 import uk.ac.ebi.spot.ols.repository.v1.V1TermRepository;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**

@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import { asArray, randomString, sortByKeys } from "../../../../app/util";
 import ClassExpression from "../../../../components/ClassExpression";
 import EntityLink from "../../../../components/EntityLink";
+import PropertyValuesList from "../../../../components/PropertyValuesList";
 import Entity from "../../../../model/Entity";
 import LinkedEntities from "../../../../model/LinkedEntities";
 
@@ -199,19 +200,15 @@ export default function IndividualPropertyAssertionsSection({
   }
 
   return (
-    <div>
-      <div className="font-bold">Property assertions</div>
-      {propertyAssertions.length === 1 ? (
-        <p>{propertyAssertions[0]}</p>
-      ) : (
-        <ul className="list-disc list-inside">
-          {propertyAssertions
-            .map((pa) => {
-              return <li key={randomString()}>{pa}</li>;
-            })
-            .sort((a, b) => sortByKeys(a, b))}
-        </ul>
-      )}
-    </div>
+    <PropertyValuesList
+      values={propertyAssertions}
+      title="Property assertions"
+      renderValue={(propertyAssertion: JSX.Element) => propertyAssertion}
+      searchFilter={(propertyAssertion: JSX.Element, searchQuery: string) => {
+        // Convert JSX to string for search - this is a simplified approach
+        const text = JSON.stringify(propertyAssertion.props).toLowerCase();
+        return text.includes(searchQuery);
+      }}
+    />
   );
 }

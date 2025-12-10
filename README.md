@@ -7,4 +7,3 @@ The Kubernetes based installation pipeline of EBI is not used and maintained by 
 The instructions for these different installation are listed in the links below:
 * If you want to perform automated installation using ansible and vagrant, check out https://github.com/TIBHannover/ols4-box
 * If you want to install by docker or locally, the base documentation of EBI can be accessed from here: [README_EBI.md](./README_EBI.md)
-

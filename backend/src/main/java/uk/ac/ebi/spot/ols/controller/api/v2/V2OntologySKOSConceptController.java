@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -28,9 +29,8 @@ import uk.ac.ebi.spot.ols.model.Node;
 import uk.ac.ebi.spot.ols.model.SKOSRelation;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
 import uk.ac.ebi.spot.ols.repository.v1.TreeNode;
-import uk.ac.ebi.spot.ols.repository.v2.V2SKOSRepository;
+import uk.ac.ebi.spot.ols.repository.V2SKOSRepository;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.*;
 
@@ -337,5 +337,4 @@ public class V2OntologySKOSConceptController {
     @ExceptionHandler(ResourceNotFoundException.class)
     public void handleError(HttpServletRequest req, Exception exception) {
     }
-
 }

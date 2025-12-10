@@ -32,7 +32,7 @@ import uk.ac.ebi.spot.ols.repository.v1.V1OntologyRepository;
 import java.lang.reflect.*;
 import java.util.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Simon Jupp

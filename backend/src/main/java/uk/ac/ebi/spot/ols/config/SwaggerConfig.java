@@ -5,12 +5,12 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 
-import org.springdoc.core.GroupedOpenApi;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 @Configuration
 public class SwaggerConfig {
@@ -38,17 +38,17 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi v1Api() {
         return GroupedOpenApi.builder()
-        		   .group("version1")
-        		   .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v1")
-        		   .build();
+                .group("version1")
+                .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v1")
+                .build();
     }
 
     @Bean
     public GroupedOpenApi v2Api() {
         return GroupedOpenApi.builder()
-        		   .group("version2")
-        		   .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v2")
-        		   .build();
+                .group("version2")
+                .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v2")
+                .build();
     }
 
     @Bean
@@ -59,6 +59,4 @@ public class SwaggerConfig {
                 .build();
     }
 
-
 }
-

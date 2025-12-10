@@ -86,7 +86,8 @@
     {
       "database": "ICD10CM",
       "id": "G00-G99",
-      "description": "https://orcid.org/0000-0002-4142-7153"
+      "description": "https://orcid.org/0000-0002-4142-7153",
+      "url": "https://www.icd10data.com/search?s=G00-G99"
     },
     {
       "database": "ICD9",

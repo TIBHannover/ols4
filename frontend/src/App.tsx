@@ -12,7 +12,8 @@ import Footer from "./components/Footer";
 import About from "./pages/About";
 import Downloads from "./pages/Downloads";
 import Error from "./pages/Error";
-import Help from "./pages/Help";
+import API from "./pages/API";
+import MCP from "./pages/MCP";
 import DefinedResponseFields from "./pages/DefinedResponseFields";
 import OLS3Help from "./pages/OLS3Help";
 import Home from "./pages/home/Home";
@@ -85,7 +86,8 @@ class App extends React.Component {
             element={<EntityPage entityType="individuals" />}
           />
 
-          <Route path={`/help`} element={<Help />} />
+          <Route path={`/api-docs`} element={<API />} />
+          <Route path={`/mcp`} element={<MCP />} />
           <Route path={`/defined-response-fields`} element={<DefinedResponseFields />} />
           <Route path={`/ols3help`} element={<OLS3Help />} />
           <Route path={`/about`} element={<About />} />

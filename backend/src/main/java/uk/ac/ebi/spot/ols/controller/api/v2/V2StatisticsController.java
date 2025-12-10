@@ -9,7 +9,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import uk.ac.ebi.spot.ols.controller.api.exception.ResourceNotFoundException;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import uk.ac.ebi.spot.ols.model.v2.V2Statistics;
 import uk.ac.ebi.spot.ols.repository.solr.OlsSolrClient;
-import uk.ac.ebi.spot.ols.repository.v2.V2OntologyRepository;
+import uk.ac.ebi.spot.ols.repository.OntologyRepository;
 import java.io.IOException;
 import java.util.*;
 
@@ -35,7 +35,7 @@ public class V2StatisticsController {
     OlsSolrClient solrClient;
 
     @Autowired
-    private V2OntologyRepository ontologyRepository;
+    private OntologyRepository ontologyRepository;
 
     @Operation(description = "Get Whole System Statistics. Components in all ontologies are taken into consideration")
     @RequestMapping(path = "/stats", produces = {MediaType.APPLICATION_JSON_VALUE, MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)

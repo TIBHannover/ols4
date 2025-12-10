@@ -225,7 +225,8 @@
       {
         "database": "ICD10CM",
         "description": "https://orcid.org/0000-0002-4142-7153",
-        "id": "G00-G99"
+        "id": "G00-G99",
+        "url": "https://www.icd10data.com/search?s=G00-G99"
       },
       {
         "database": "ICD9",

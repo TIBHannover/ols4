@@ -1,10 +1,19 @@
 package uk.ac.ebi.spot.ols.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
+import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.*;
 import uk.ac.ebi.spot.ols.reststatistics.service.RestCallHandlerService;
+
+import java.util.List;
 
 /**
  * @author Simon Jupp
@@ -12,7 +21,7 @@ import uk.ac.ebi.spot.ols.reststatistics.service.RestCallHandlerService;
  * Samples, Phenotypes and Ontologies Team, EMBL-EBI
  */
 @Configuration
-public class WebConfig extends WebMvcConfigurerAdapter {
+public class WebConfig implements WebMvcConfigurer {
 
 
     /**
@@ -24,6 +33,8 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 
     @Autowired
     RestCallHandlerService restCallHandlerService;
+    @Value("${ols.solr.max-rows:1000}")
+    private int maxPageSize;
 
     @Override
     public void configurePathMatch(PathMatchConfigurer configurer) {
@@ -49,6 +60,14 @@ public class WebConfig extends WebMvcConfigurerAdapter {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**").allowedOrigins("*").allowedHeaders("*").allowedMethods("GET");
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+        PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
+        resolver.setFallbackPageable(PageRequest.of(0, maxPageSize));
+        resolver.setMaxPageSize(maxPageSize);
+        argumentResolvers.add(resolver);
     }
 
 

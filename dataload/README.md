@@ -30,19 +30,18 @@ You can now convert this huge JSON file to a CSV file ready for Neo4j, using jso
 
 ## Step 4: CSV to Neo4j
 
-Now (after 5-10 mins) you should have a directory full of CSV files. These files are formatted especially for Neo4j. You can load them using `neo4j-admin import` command or the `csv2neo` module. 
+Now (after 5-10 mins) you should have a directory full of CSV files. These files are formatted especially for Neo4j. You can load them using `neo4j-admin database import full` command or the `csv2neo` module. 
 
 ### Alternative 1: Neo4j Import Command
 
 The Neo4J import command can only be used when initializing a database in the community edition of Neo4J. On the contrary, the enterprise version of Neo4j enables multiple imports which can yield in a more flexible ontology ingestion. 
-IWhen you are using `neo4j-admin import` command, you'll need to provide the filename of every single CSV file on the command line, which is boring, so included in this repo is a script called `make_csv_import_cmd.sh` that generates the command line for you.
+IWhen you are using `neo4j-admin database import full` command, you'll need to provide the filename of every single CSV file on the command line, which is boring, so included in this repo is a script called `make_csv_import_cmd.sh` that generates the command line for you.
 
-    neo4j-admin import \
+    neo4j-admin database import full \
 	    --ignore-empty-strings=true \
 	    --legacy-style-quoting=false \
 	    --multiline-fields=true \
 	    --array-delimiter="|" \
-	    --database=neo4j \
 	    $(./make_csv_import_cmd.sh)
 
 Now you should have a Neo4j database ready to start!

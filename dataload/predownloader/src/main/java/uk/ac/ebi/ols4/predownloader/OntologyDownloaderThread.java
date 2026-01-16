@@ -86,9 +86,9 @@ public class OntologyDownloaderThread implements Runnable {
                 public void finish() {}
                 public void triple(Triple triple) {
 
-                    if (triple.getPredicate().getURI().equals("http://www.w3.org/2002/07/owl#imports")) {
+                    /*if (triple.getPredicate().getURI().equals("http://www.w3.org/2002/07/owl#imports")) {
                         importUrls.add(triple.getObject().getURI());
-                    }
+                    }*/
                 }
             });
 

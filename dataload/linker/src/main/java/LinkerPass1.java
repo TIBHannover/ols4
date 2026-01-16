@@ -36,6 +36,7 @@ public class LinkerPass1 {
 
 	// ontology id -> IDs of ontologies it imports at least 1 term from
 	Multimap<String, String> ontologyIdToImportedOntologyIds = LinkedHashMultimap.create();
+
     }
 
     public static LinkerPass1Result run(String inputJsonFilename) throws IOException {
@@ -248,6 +249,7 @@ public class LinkerPass1 {
 				curie = jsonParser.parse(jsonReader);
 			} else if(key.equals("type")) {
                 types = gson.fromJson(jsonReader, Set.class);
+
 			} else if(key.equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy")) {
 				JsonElement jsonDefinedBy = jsonParser.parse(jsonReader);
 				if(jsonDefinedBy.isJsonArray()) {
@@ -277,6 +279,7 @@ public class LinkerPass1 {
 			} else {
                 jsonReader.skipValue();
             }
+
         }
 
         if(iri == null) {
@@ -312,6 +315,4 @@ public class LinkerPass1 {
 
         jsonReader.endObject();
     }
-
-
 }

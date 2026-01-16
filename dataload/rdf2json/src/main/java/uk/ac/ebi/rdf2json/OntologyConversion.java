@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * @author Erhun Giray TUNCAY
@@ -96,6 +96,8 @@ public class OntologyConversion {
         OWLOntology ont;
         InputStream is = null;
         URLConnection con = null;
+        String originalUrl = url;
+
         try {
             try {
                 URL tempURL = new URL(url);
@@ -122,12 +124,83 @@ public class OntologyConversion {
                 }
             }
         } catch (OWLOntologyCreationException e) {
-            throw new RuntimeException(e);
+            ont = importsPrefixesAndNonUnicodeCharactersCorrectingLoader(originalUrl);
         } finally {
             if (is != null)
                 is.close();
         }
         return ont;
+    }
+
+    public static OWLOntology importsPrefixesAndNonUnicodeCharactersCorrectingLoader(String url) throws IOException {
+        url = urlConverter(url).toExternalForm();
+        OWLOntologyManager ontManager = OWLManager.createOWLOntologyManager();
+        OWLOntologyLoaderConfiguration config = new OWLOntologyLoaderConfiguration();
+        config = config.setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+        ontManager.setOntologyLoaderConfiguration(config);
+        OWLOntology ontology;
+        try {
+            try {
+                IRI documentIRI = IRI.create(url);
+                ontology = ontManager.loadOntology(documentIRI);
+            } catch (Exception e) {
+                try (InputStream inputStream = urlConverter(url).openStream()) {
+                    String content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    content = content.replaceAll("[^\\u0009\\u000A\\u000D\\u0020-\\uFFFF]", "");
+                    Path cleanedPath = Files.writeString(Paths.get("ontology_cleaned.owl"), content, StandardCharsets.UTF_8);
+                    try (InputStream is = Files.newInputStream(cleanedPath)){
+                        ontology = ontManager.loadOntologyFromOntologyDocument(is);
+                    }
+                }
+            }
+
+            OWLDataFactory df = ontManager.getOWLDataFactory();
+            logger.info("imports being updated: ");
+            for (OWLImportsDeclaration declaration : ontology.getImportsDeclarations()){
+                IRI modifiedIri = IRI.create(urlConverter(declaration.getIRI().toString()));
+                OWLImportsDeclaration modifiedDeclaration = df.getOWLImportsDeclaration(modifiedIri);
+                ontManager.applyChange(new RemoveImport(ontology, declaration));
+                ontManager.applyChange(new AddImport(ontology, modifiedDeclaration));
+            }
+
+            OWLDocumentFormat format = ontManager.getOntologyFormat(ontology);
+
+            if (format != null && format.isPrefixOWLOntologyFormat()) {
+                PrefixDocumentFormat pdf = format.asPrefixOWLOntologyFormat();
+                Map<String, String> map = pdf.getPrefixName2PrefixMap();
+                logger.info("prefixes being updated: ");
+                for (Map.Entry<String,String> entry : map.entrySet()){
+                    pdf.setPrefix(entry.getKey(), urlConverter(entry.getValue()).toExternalForm());
+                }
+            } else {
+                logger.info("Ontology format has no prefixes to be redirected.");
+            }
+
+            return ontology;
+        } catch (OWLOntologyCreationException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static URL urlConverter(String url) throws IOException {
+        if (url.startsWith("file:")) {
+            URL fbURL = new URL(url);
+            logger.info("file based url: {}", fbURL.toExternalForm());
+            return fbURL;
+        }
+        HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+        logger.info("original url: {}", con.getURL().toExternalForm());
+        con.setInstanceFollowRedirects(true);
+        con.setRequestMethod("HEAD");
+
+        while (con.getHeaderField("Location") != null) {
+            con = (HttpURLConnection) new URL(con.getHeaderField("Location")).openConnection();
+            con.setInstanceFollowRedirects(true);
+            con.setRequestMethod("HEAD");
+        }
+        logger.info("redirected url: {}", con.getURL().toExternalForm());
+        return con.getURL();
     }
 
     private FileOutputStream getFileOutPutStreamForExecutionPath(String outputFile) {

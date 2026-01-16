@@ -513,7 +513,7 @@ public class LinkerPass2 {
 
     private static String getProcessedCurieValue(LinkerPass1.LinkerPass1Result pass1Result, String entityIri) {
         var def = pass1Result.iriToDefinitions.get(entityIri);
-        if (def.definitions.iterator().hasNext()) {
+        if (def!= null && def.definitions.iterator().hasNext()) {
             JsonObject defCurieObject = def.definitions.iterator().next().curie.getAsJsonObject();
             if (defCurieObject.has("value")) {
                 return defCurieObject.get("value").getAsString();

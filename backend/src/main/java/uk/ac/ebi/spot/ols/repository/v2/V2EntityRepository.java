@@ -16,6 +16,7 @@ import uk.ac.ebi.spot.ols.repository.v2.helpers.V2DynamicFilterParser;
 import uk.ac.ebi.spot.ols.repository.v2.helpers.V2SearchFieldsParser;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,19 @@ public class V2EntityRepository extends V2OntologyRepository {
         OlsSolrQuery query = new OlsSolrQuery();
         query.setSearchText(search);
         query.setExactMatch(exactMatch);
-        query.addFilter("type", List.of("entity"), SearchType.WHOLE_FIELD);
+
+        /**
+         * Fix: https://github.com/TIBHannover/ols4/issues/137
+         * add "ontology" to queryFilter if "type" property has ontology
+         */
+        List<String> queryFilter = new ArrayList<>(List.of("entity")); 
+        if (properties != null) {
+			Collection<String> filterTypes = properties.get("type");
+			if (filterTypes != null && filterTypes.contains("ontology")) {
+				queryFilter.add("ontology");
+			}
+		}
+        query.addFilter("type", queryFilter, SearchType.WHOLE_FIELD);
         Collection<String> filteredOntologies = filterOntologyIDs(schemas,classifications, ontologies, exclusive, filterOption, lang);
         if(filteredOntologies != null){
             for (String ontologyId : filteredOntologies)

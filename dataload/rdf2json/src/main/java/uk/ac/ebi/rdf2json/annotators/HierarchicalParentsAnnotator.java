@@ -53,7 +53,8 @@ public class HierarchicalParentsAnnotator {
                 if(parents != null) {
                     for(PropertyValue parent : parents) {
 
-                        if (parent.getType() == PropertyValue.Type.URI && graph.nodes.containsKey(((PropertyValueURI) parent).getUri())) {
+                    	if (parent.getType() == PropertyValue.Type.URI && graph.nodes.containsKey(((PropertyValueURI) parent).getUri())
+                        		&& !c.uri.equalsIgnoreCase(((PropertyValueURI) parent).getUri())) {
 
                             // Direct parent; these are also considered hierarchical parents
                             hierarchicalParents.add((PropertyValueURI) parent);

@@ -3,6 +3,7 @@ package uk.ac.ebi.spot.ols.controller.api.advice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -31,15 +32,12 @@ public class DiffResponseBodyAdvice implements ResponseBodyAdvice<Object> {
         String cleanCurrentETag = currentETag.replace("\"", "").trim();
 
         if (cleanIfNoneMatch != null && cleanIfNoneMatch.equals(cleanCurrentETag)) {
-            //response.getHeaders().clear();
-            //response.setStatusCode(HttpStatus.NOT_MODIFIED);
+            response.setStatusCode(HttpStatus.NOT_MODIFIED);
             response.getHeaders().setETag(currentETag);
             response.getHeaders().add("X-Data-Status", "UNCHANGED");
-            return body;
-            //return ResponseEntity.noContent().build();
+            return null;
 
         } else if (cleanIfNoneMatch != null) {
-            //response.getHeaders().clear();
             response.getHeaders().setETag(currentETag);
             response.getHeaders().add("X-Data-Status", "CHANGED");
             return body;

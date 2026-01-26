@@ -3,7 +3,6 @@ package uk.ac.ebi.spot.ols.controller.api.v2;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import org.eclipse.jetty.client.ProxyProtocolClientConnectionFactory.V2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import uk.ac.ebi.spot.ols.controller.api.exception.ResourceNotFoundException;
@@ -22,7 +21,7 @@ import uk.ac.ebi.spot.ols.model.v2.V2Entity;
 import uk.ac.ebi.spot.ols.repository.EntityRepository;
 import uk.ac.ebi.spot.ols.repository.transforms.JsonTransformOptions;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;

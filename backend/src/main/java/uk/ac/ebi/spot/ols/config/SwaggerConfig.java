@@ -17,7 +17,7 @@ public class SwaggerConfig {
 
     private final String OLS4_SERVER_URL = "http://localhost:8080";
 
-    @Lazy
+    //@Lazy
     @Bean
     public OpenAPI customOpenApi(ServletContext context) {
         String serverUrl = context.getContextPath().equals("") ? OLS4_SERVER_URL : context.getContextPath();
@@ -40,6 +40,7 @@ public class SwaggerConfig {
         return GroupedOpenApi.builder()
                 .group("version1")
                 .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v1")
+                .pathsToMatch("/api/**")
                 .build();
     }
 
@@ -48,6 +49,7 @@ public class SwaggerConfig {
         return GroupedOpenApi.builder()
                 .group("version2")
                 .packagesToScan("uk.ac.ebi.spot.ols.controller.api.v2")
+                .pathsToMatch("/api/**")
                 .build();
     }
 
@@ -56,6 +58,7 @@ public class SwaggerConfig {
         return GroupedOpenApi.builder()
                 .group("call_statistics")
                 .packagesToScan("uk.ac.ebi.spot.ols.reststatistics.controller")
+                .pathsToMatch("/api/**")
                 .build();
     }
 

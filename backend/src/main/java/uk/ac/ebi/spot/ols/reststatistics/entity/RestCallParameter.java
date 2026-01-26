@@ -2,7 +2,7 @@ package uk.ac.ebi.spot.ols.reststatistics.entity;
 
 import java.util.Objects;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

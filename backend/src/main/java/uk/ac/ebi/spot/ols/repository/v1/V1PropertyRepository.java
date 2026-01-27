@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonElement;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -31,25 +32,25 @@ public class V1PropertyRepository {
 
     public Page<V1Property> getParents(String ontologyId, String iri, String lang, Pageable pageable) {
         return neo4jClient.traverseOutgoingEdges("OntologyProperty", ontologyId + "+property+" + iri,
-                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), pageable)
+                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), Map.of(), pageable)
                 .map(record -> V1PropertyMapper.mapProperty(record, lang));
     }
 
     public Page<V1Property> getChildren(String ontologyId, String iri, String lang, Pageable pageable) {
         return this.neo4jClient.traverseIncomingEdges("OntologyProperty", ontologyId + "+property+" + iri,
-                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), pageable)
+                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), Map.of(), pageable)
                 .map(record -> V1PropertyMapper.mapProperty(record, lang));
     }
 
     public Page<V1Property> getDescendants(String ontologyId, String iri, String lang, Pageable pageable)  {
         return this.neo4jClient.recursivelyTraverseIncomingEdges("OntologyProperty", ontologyId + "+property+" + iri,
-                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), pageable)
+                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), Map.of(), pageable)
                 .map(record -> V1PropertyMapper.mapProperty(record, lang));
     }
 
     public Page<V1Property> getAncestors(String ontologyId, String iri, String lang, Pageable pageable)  {
         return neo4jClient.recursivelyTraverseOutgoingEdges("OntologyProperty", ontologyId + "+property+" + iri,
-                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), pageable)
+                        Arrays.asList(DIRECT_PARENT.getText()), Map.of(), Map.of(), pageable)
                 .map(record -> V1PropertyMapper.mapProperty(record, lang));
     }
 
@@ -59,7 +60,11 @@ public class V1PropertyRepository {
         query.addFilter("ontologyId", List.of(ontologyId), SearchType.WHOLE_FIELD);
         query.addFilter("iri", List.of(iri), SearchType.WHOLE_FIELD);
 
-        return V1PropertyMapper.mapProperty(solrClient.getFirst(query), lang);
+        JsonElement result = solrClient.getFirst(query);
+        if (result == null) {
+            return null;
+        }
+        return V1PropertyMapper.mapProperty(result, lang);
     }
 
     public Page<V1Property> findAllByOntology(String ontologyId, String lang, Pageable pageable)  {
@@ -78,7 +83,11 @@ public class V1PropertyRepository {
         query.addFilter("ontologyId", List.of(ontologyId), SearchType.WHOLE_FIELD);
         query.addFilter("shortForm", List.of(shortForm), SearchType.WHOLE_FIELD);
 
-        return V1PropertyMapper.mapProperty(solrClient.getFirst(query), lang);
+        JsonElement result = solrClient.getFirst(query);
+        if (result == null) {
+            return null;
+        }
+        return V1PropertyMapper.mapProperty(result, lang);
 
     }
 
@@ -89,7 +98,11 @@ public class V1PropertyRepository {
         query.addFilter("ontologyId", List.of(ontologyId), SearchType.WHOLE_FIELD);
         query.addFilter("oboId", List.of(oboId), SearchType.WHOLE_FIELD);
 
-        return V1PropertyMapper.mapProperty(solrClient.getFirst(query), lang);
+        JsonElement result = solrClient.getFirst(query);
+        if (result == null) {
+            return null;
+        }
+        return V1PropertyMapper.mapProperty(result, lang);
 
     }
 

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import uk.ac.ebi.spot.ols.controller.api.exception.ResourceNotFoundException;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,8 @@ import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedResponse;
 import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
-import uk.ac.ebi.spot.ols.repository.v2.V2PropertyRepository;
+import uk.ac.ebi.spot.ols.repository.PropertyRepository;
+import uk.ac.ebi.spot.ols.repository.transforms.JsonTransformOptions;
 
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
@@ -36,7 +37,7 @@ import java.util.Map;
 public class V2PropertyController {
 
     @Autowired
-    V2PropertyRepository propertyRepository;
+    PropertyRepository propertyRepository;
 
     @RequestMapping(path = "/properties", produces = {MediaType.APPLICATION_JSON_VALUE }, method = RequestMethod.GET)
     public HttpEntity<V2PagedAndFacetedResponse<V2Entity>> getProperties(
@@ -44,7 +45,6 @@ public class V2PropertyController {
             @Parameter(name = "pageable",
                     description = "Specify the size of the result you want to get in the output",
                     example = "{\"page\": 0,\"size\": 20}") Pageable pageable,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @RequestParam(value = "search", required = false)
             @Parameter(name="search",
                     description = "This parameter specify the search query text.",
@@ -82,7 +82,9 @@ public class V2PropertyController {
             @Parameter(description = "Use License option to filter based on license.label, license.logo and license.url variables. " +
                     "Use Composite Option to filter based on the objects (i.e. collection, subject) within the classifications variable. " +
                     "Use Linear option to filter based on String and Collection<String> based variables.")
-            @RequestParam(value = "option", required = false, defaultValue = "LINEAR") FilterOption filterOption
+            @RequestParam(value = "option", required = false, defaultValue = "LINEAR") FilterOption filterOption,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException, IOException {
 
         Map<String,Collection<String>> properties = new HashMap<>();
@@ -91,8 +93,9 @@ public class V2PropertyController {
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(
-                new V2PagedAndFacetedResponse<>(
-                    propertyRepository.find(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption)
+                new V2PagedAndFacetedResponse<V2Entity>(
+                    propertyRepository.find(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption, outputOpts)
+                    .map(V2Entity::new)
                 ),
                  HttpStatus.OK);
     }
@@ -107,7 +110,6 @@ public class V2PropertyController {
             @Parameter(name = "onto",
                     description = "Ontology Id to search properties in.",
                     example = "efo") String ontologyId,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @RequestParam(value = "search", required = false)
             @Parameter(name="search",
                     description = "This parameter specify the search query text.",
@@ -134,7 +136,9 @@ public class V2PropertyController {
             @RequestParam
             @Parameter(name="searchProperties",
                     description = "Specify any other search field here which are not specified by searchFields or boostFields.",
-                    example = "{}") MultiValueMap<String,String> searchProperties
+                    example = "{}") MultiValueMap<String,String> searchProperties,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException, IOException {
 
         Map<String,Collection<String>> properties = new HashMap<>();
@@ -143,8 +147,9 @@ public class V2PropertyController {
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(
-                new V2PagedAndFacetedResponse<>(
-                    propertyRepository.findByOntologyId(ontologyId, pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties))
+                new V2PagedAndFacetedResponse<V2Entity>(
+                    propertyRepository.findByOntologyId(ontologyId, pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties), outputOpts)
+                    .map(V2Entity::new)
                 ),
                 HttpStatus.OK);
     }
@@ -159,13 +164,14 @@ public class V2PropertyController {
             @Parameter(name = "property",
                     description = "The IRI of the property, this value must be double URL encoded",
                     example = "http%3A%2F%2Fwww.ebi.ac.uk%2Fefo%2FEFO_0000742") String iri,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException {
 
         iri = UriUtils.decode(iri, "UTF-8");
 
-        V2Entity entity = propertyRepository.getByOntologyIdAndIri(ontologyId, iri, lang);
-        if (entity == null) throw new ResourceNotFoundException();
+        V2Entity entity = propertyRepository.getByOntologyIdAndIri(ontologyId, iri, lang, outputOpts);
+        if (entity == null) throw new ResourceNotFoundException("The requested resource was not found.");
         return new ResponseEntity<>( entity, HttpStatus.OK);
     }
 
@@ -183,14 +189,16 @@ public class V2PropertyController {
             @Parameter(name = "property",
                     description = "The IRI of the property, this value must be double URL encoded",
                     example = "http%3A%2F%2Fwww.ebi.ac.uk%2Fefo%2FEFO_0000824") String iri,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException {
 
         iri = UriUtils.decode(iri, "UTF-8");
 
         return new ResponseEntity<>(
-                new V2PagedResponse<>(
-                    propertyRepository.getChildrenByOntologyId(ontologyId, pageable, iri, lang)
+                new V2PagedResponse<V2Entity>(
+                    propertyRepository.getChildrenByOntologyId(ontologyId, pageable, iri, lang, outputOpts)
+                    .map(V2Entity::new)
                 ),
                  HttpStatus.OK);
     }
@@ -209,14 +217,16 @@ public class V2PropertyController {
             @Parameter(name = "property",
                     description = "The IRI of the property, this value must be double URL encoded",
                     example = "http%3A%2F%2Fwww.ebi.ac.uk%2Fefo%2FEFO_0000742") String iri,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException {
 
         iri = UriUtils.decode(iri, "UTF-8");
 
         return new ResponseEntity<>(
-                new V2PagedResponse<>(
-                propertyRepository.getAncestorsByOntologyId(ontologyId, pageable, iri, lang)
+                new V2PagedResponse<V2Entity>(
+                propertyRepository.getAncestorsByOntologyId(ontologyId, pageable, iri, lang, outputOpts)
+                    .map(V2Entity::new)
                 ), HttpStatus.OK);
     }
 

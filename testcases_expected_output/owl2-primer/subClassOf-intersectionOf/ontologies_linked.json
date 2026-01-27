@@ -237,7 +237,11 @@
                 "entity"
               ]
             }
-          }
+          },
+          "linksTo": [
+            "http://www.ebi.ac.uk/testcases/owl2primer/subClassOf-intersectionOf#Parent",
+            "http://www.ebi.ac.uk/testcases/owl2primer/subClassOf-intersectionOf#Man"
+          ]
         },
         {
           "iri": "http://www.ebi.ac.uk/testcases/owl2primer/subClassOf-intersectionOf#Man",
@@ -359,7 +363,11 @@
                 "entity"
               ]
             }
-          }
+          },
+          "linksTo": [
+            "http://www.ebi.ac.uk/testcases/owl2primer/subClassOf-intersectionOf#Parent",
+            "http://www.ebi.ac.uk/testcases/owl2primer/subClassOf-intersectionOf#Grandfather"
+          ]
         },
         {
           "iri": "http://www.ebi.ac.uk/testcases/owl2primer/subClassOf-intersectionOf#Parent",
@@ -481,12 +489,17 @@
                 "entity"
               ]
             }
-          }
+          },
+          "linksTo": [
+            "http://www.ebi.ac.uk/testcases/owl2primer/subClassOf-intersectionOf#Grandfather",
+            "http://www.ebi.ac.uk/testcases/owl2primer/subClassOf-intersectionOf#Man"
+          ]
         }
       ],
       "properties": [],
       "individuals": [],
-      "linkedEntities": {}
+      "linkedEntities": {},
+      "linksTo": []
     }
   ]
 }

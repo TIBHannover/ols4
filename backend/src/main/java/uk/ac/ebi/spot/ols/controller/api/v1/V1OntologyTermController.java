@@ -29,7 +29,7 @@ import uk.ac.ebi.spot.ols.repository.v1.V1JsTreeRepository;
 import uk.ac.ebi.spot.ols.repository.v1.V1TermRepository;
 import uk.ac.ebi.spot.ols.service.Neo4jClient;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -79,7 +79,7 @@ public class V1OntologyTermController {
 
     @RequestMapping(path = "/{onto}/terms", produces = {MediaType.APPLICATION_JSON_VALUE,
         MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)
-    private HttpEntity<PagedModel<V1Term>> termsByOntology(
+    HttpEntity<PagedModel<V1Term>> termsByOntology(
             @PathVariable("onto")
             @Parameter(name = "onto",
                     description = "The ID of the ontology. For example for Data Use Ontology, the ID is duo.",

@@ -28,7 +28,7 @@ import uk.ac.ebi.spot.ols.repository.v1.V1IndividualRepository;
 import uk.ac.ebi.spot.ols.repository.v1.V1JsTreeRepository;
 import uk.ac.ebi.spot.ols.service.Neo4jClient;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
 /**
@@ -120,6 +120,7 @@ public class V1OntologyIndividualController {
 
         String decoded = UriUtils.decode(termId, "UTF-8");
         V1Individual term = individualRepository.findByOntologyAndIri(ontologyId, decoded, lang);
+        if (term == null) throw new ResourceNotFoundException("No individual with id " + decoded + " in " + ontologyId);
         return new ResponseEntity<>(individualAssembler.toModel(term), HttpStatus.OK);
     }
 

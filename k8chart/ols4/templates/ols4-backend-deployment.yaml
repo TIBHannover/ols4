@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ .Release.Name }}-backend
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: {{ .Release.Name }}-backend
@@ -14,16 +14,6 @@ spec:
       labels:
         app: {{ .Release.Name }}-backend
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: kubernetes.io/hostname
-                  operator: In
-                  values:
-                    - hh-rke-wp-webadmin-47-worker-3.caas.ebi.ac.uk
-                    - hx-rke-wp-webadmin-40-worker-3.caas.ebi.ac.uk
       containers:
         - name: web
           image: ghcr.io/ebispot/ols4-backend:{{.Values.imageTag}}
@@ -46,7 +36,7 @@ spec:
               memory: 10Gi
               cpu: 0.5
             limits:
-              memory: 20Gi
+              memory: 50Gi
               cpu: 2
           env:
             - name: OLS_SOLR_HOST
@@ -54,6 +44,8 @@ spec:
             - name: OLS_NEO4J_HOST
               value: bolt://{{ .Release.Name }}-neo4j:7687
             - name: SERVER_SERVLET_CONTEXT_PATH
+              value: /ols4
+            - name: SPRING_AI_MCP_SERVER_BASE_URL
               value: /ols4
             - name: JDK_JAVA_OPTIONS
               value: "-XX:InitialRAMPercentage=60.0 -XX:MinRAMPercentage=60.0 -XX:MaxRAMPercentage=80.0"

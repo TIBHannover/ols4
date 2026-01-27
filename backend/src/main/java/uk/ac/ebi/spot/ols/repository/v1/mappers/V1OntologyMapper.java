@@ -5,11 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import uk.ac.ebi.spot.ols.model.License;
 import uk.ac.ebi.spot.ols.controller.api.v1.TopConceptEnum;
+import java.util.*;
+
+import uk.ac.ebi.spot.ols.JsonHelper;
 import uk.ac.ebi.spot.ols.model.v1.V1Ontology;
 import uk.ac.ebi.spot.ols.model.v1.V1OntologyConfig;
 import uk.ac.ebi.spot.ols.repository.transforms.LocalizationTransform;
-import uk.ac.ebi.spot.ols.repository.v1.JsonHelper;
-import java.util.*;
 import uk.ac.ebi.ols.shared.DefinedFields;
 import static uk.ac.ebi.ols.shared.DefinedFields.LANGUAGE;
 import static uk.ac.ebi.ols.shared.DefinedFields.*;

@@ -1,6 +1,5 @@
 package uk.ac.ebi.spot.ols.controller.api.v2;
 
-import com.google.gson.Gson;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -9,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import uk.ac.ebi.spot.ols.controller.api.exception.ResourceNotFoundException;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.MediaTypes;
@@ -22,7 +21,9 @@ import uk.ac.ebi.spot.ols.controller.api.v2.helpers.DynamicQueryHelper;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
-import uk.ac.ebi.spot.ols.repository.v2.V2OntologyRepository;
+import uk.ac.ebi.spot.ols.repository.OntologyRepository;
+import uk.ac.ebi.spot.ols.repository.transforms.JsonTransformOptions;
+
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 import java.io.IOException;
@@ -33,10 +34,8 @@ import java.util.*;
 @RequestMapping("/api/v2/ontologies")
 public class V2OntologyController {
 
-    private Gson gson = new Gson();
-
     @Autowired
-    V2OntologyRepository ontologyRepository;
+    OntologyRepository ontologyRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(V2OntologyController.class);
 
@@ -46,7 +45,6 @@ public class V2OntologyController {
             @Parameter(name = "pageable",
                     description = "Specify the size of the result you want to get in the output",
                     example = "{\"page\": 0,\"size\": 20}") Pageable pageable,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @RequestParam(value = "search", required = false)
             @Parameter(name="search",
                     description = "This parameter specify the search query text.",
@@ -84,7 +82,9 @@ public class V2OntologyController {
             @Parameter(description = "Use License option to filter based on license.label, license.logo and license.url variables. " +
                     "Use Composite Option to filter based on the objects (i.e. collection, subject) within the classifications variable. " +
                     "Use Linear option to filter based on String and Collection<String> based variables.")
-            @RequestParam(value = "option", required = false, defaultValue = "LINEAR") FilterOption filterOption
+            @RequestParam(value = "option", required = false, defaultValue = "LINEAR") FilterOption filterOption,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException, IOException {
         Map<String,Collection<String>> properties = new HashMap<>();
         if(!includeObsoleteEntities)
@@ -92,8 +92,9 @@ public class V2OntologyController {
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(
-                new V2PagedAndFacetedResponse<>(
-                    ontologyRepository.findOntologies(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption)
+                new V2PagedAndFacetedResponse<V2Entity>(
+                    ontologyRepository.find(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption, outputOpts)
+                    .map(V2Entity::new)
                 ),
                 HttpStatus.OK);
     }
@@ -104,11 +105,12 @@ public class V2OntologyController {
             @Parameter(name = "onto",
                     description = "Ontology Id to get the information about.",
                     example = "efo") String ontologyId,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException {
         logger.trace("ontologyId = {}, lang = {}", ontologyId, lang);
-        V2Entity entity = ontologyRepository.getById(ontologyId, lang);
-        if (entity == null) throw new ResourceNotFoundException();
+        V2Entity entity = ontologyRepository.getById(ontologyId, lang, outputOpts);
+        if (entity == null) throw new ResourceNotFoundException("The requested resource was not found.");
         return new ResponseEntity<>( entity, HttpStatus.OK);
     }
 

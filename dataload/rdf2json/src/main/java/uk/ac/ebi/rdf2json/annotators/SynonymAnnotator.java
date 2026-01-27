@@ -49,6 +49,12 @@ public class SynonymAnnotator {
 			for(String prop : sourceProps) {
 				List<PropertyValue> values = c.properties.getPropertyValues(prop);
 				if(values != null) {
+					// Ensure individual synonym properties are always stored as PropertyValueList for consistency
+					if(values.size() == 1 && !(values.get(0) instanceof PropertyValueList)) {
+						c.properties.removeProperty(prop);
+						c.properties.addProperty(prop, new PropertyValueList(values));
+					}
+					
 					for(PropertyValue value : values) {
 						synonyms.add(value);
 					}

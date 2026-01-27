@@ -114,4 +114,7 @@ export default class Ontology extends Thing {
   getAllowDownload(): string {
     return this.properties["allowDownload"];
   }
+  isFallback(): boolean {
+    return this.properties["is_fallback"] === true;
+  }
 }

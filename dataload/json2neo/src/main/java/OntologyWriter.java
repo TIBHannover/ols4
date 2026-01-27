@@ -26,7 +26,9 @@ public class OntologyWriter {
             // large and doesn't get queried
             APPEARS_IN.getText(),
             // all property values together, this is for solr and not useful in neo4j
-            "searchableAnnotationValues"
+            "searchableAnnotationValues",
+            // this is written separately as a float array
+            "embeddings"
     );
 
     public static final Set<String> EDGE_BLACKLIST = Set.of(
@@ -142,6 +144,7 @@ public class OntologyWriter {
         csvHeader.add(":LABEL");
         csvHeader.add("_json");
         csvHeader.addAll(propertyHeaders(properties));
+        csvHeader.add("embeddings:float[]");
 
         CSVPrinter printer = CSVFormat.POSTGRESQL_CSV.withHeader(csvHeader.toArray(new String[0])).print(
                 new File(outName), Charset.defaultCharset());
@@ -157,11 +160,21 @@ public class OntologyWriter {
 
             row[n++] = ontologyId + "+" + type + "+" + (String) entity.get("iri");
             row[n++] = nodeLabels;
-	    row[n++] = gson.toJson(entity);
+            int _jsonIdx = n++;
 
             for (String column : properties) {
                 row[n++] = serializeValue(entity, column);
             }
+
+            if(entity.containsKey("embeddings")) {
+                List<Double> embeddings = (List<Double>) entity.get("embeddings");
+                row[n++] = String.join("|", embeddings.stream().map(Object::toString).toArray(String[]::new));
+                entity.remove("embeddings"); // don't want it in the _json field
+            } else {
+                row[n++] = "";
+            }
+
+            row[_jsonIdx] = gson.toJson(entity);
 
             printer.printRecord(row);
         }

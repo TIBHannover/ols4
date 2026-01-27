@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import uk.ac.ebi.spot.ols.controller.api.exception.ResourceNotFoundException;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpEntity;
@@ -19,7 +19,9 @@ import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedAndFacetedResponse;
 import uk.ac.ebi.spot.ols.controller.api.v2.responses.V2PagedResponse;
 import uk.ac.ebi.spot.ols.model.FilterOption;
 import uk.ac.ebi.spot.ols.model.v2.V2Entity;
-import uk.ac.ebi.spot.ols.repository.v2.V2IndividualRepository;
+import uk.ac.ebi.spot.ols.repository.IndividualRepository;
+import uk.ac.ebi.spot.ols.repository.transforms.JsonTransformOptions;
+
 import static uk.ac.ebi.ols.shared.DefinedFields.*;
 
 import javax.validation.constraints.NotNull;
@@ -35,7 +37,7 @@ import java.util.Map;
 public class V2IndividualController {
 
     @Autowired
-    V2IndividualRepository individualRepository;
+    IndividualRepository individualRepository;
 
     @RequestMapping(path = "/individuals", produces = {MediaType.APPLICATION_JSON_VALUE, MediaTypes.HAL_JSON_VALUE}, method = RequestMethod.GET)
     public HttpEntity<V2PagedAndFacetedResponse<V2Entity>> getIndividuals(
@@ -43,7 +45,6 @@ public class V2IndividualController {
             @Parameter(name = "pageable",
                     description = "Specify the size of the result you want to get in the output",
                     example = "{\"page\": 0,\"size\": 20}") Pageable pageable,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @RequestParam(value = "search", required = false)
             @Parameter(name="search",
                     description = "This parameter specify the search query text.",
@@ -81,7 +82,9 @@ public class V2IndividualController {
             @Parameter(description = "Use License option to filter based on license.label, license.logo and license.url variables. " +
                     "Use Composite Option to filter based on the objects (i.e. collection, subject) within the classifications variable. " +
                     "Use Linear option to filter based on String and Collection<String> based variables.")
-            @RequestParam(value = "option", required = false, defaultValue = "LINEAR") FilterOption filterOption
+            @RequestParam(value = "option", required = false, defaultValue = "LINEAR") FilterOption filterOption,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException, IOException {
 
         Map<String, Collection<String>> properties = new HashMap<>();
@@ -90,8 +93,8 @@ public class V2IndividualController {
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(
-                new V2PagedAndFacetedResponse<>(
-                    individualRepository.find(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption)
+                new V2PagedAndFacetedResponse<V2Entity>(
+                    individualRepository.find(pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties),schemas,classifications,ontologies,exclusive,filterOption, outputOpts).map(V2Entity::new)
                 ),
                 HttpStatus.OK);
     }
@@ -106,7 +109,6 @@ public class V2IndividualController {
             @Parameter(name = "onto",
                     description = "Ontology Id to search individuals in.",
                     example = "efo") String ontologyId,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
             @RequestParam(value = "search", required = false)
             @Parameter(name="search",
                     description = "This parameter specify the search query text.",
@@ -135,7 +137,9 @@ public class V2IndividualController {
             @RequestParam
             @Parameter(name="searchProperties",
                     description = "Specify any other search field here which are not specified by searchFields or boostFields.",
-            example = "{}") MultiValueMap<String,String> searchProperties
+            example = "{}") MultiValueMap<String,String> searchProperties,
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException, IOException {
 
         Map<String, Collection<String>> properties = new HashMap<>();
@@ -144,8 +148,8 @@ public class V2IndividualController {
         properties.putAll(searchProperties);
 
         return new ResponseEntity<>(
-                new V2PagedAndFacetedResponse<>(
-                    individualRepository.findByOntologyId(ontologyId, pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties))
+                new V2PagedAndFacetedResponse<V2Entity>(
+                    individualRepository.findByOntologyId(ontologyId, pageable, lang, search, searchFields, boostFields, exactMatch, DynamicQueryHelper.filterProperties(properties), outputOpts).map(V2Entity::new)
                 ),
                 HttpStatus.OK);
     }
@@ -160,13 +164,14 @@ public class V2IndividualController {
             @Parameter(name = "individual",
                     description = "The IRI of the individual, this value must be double URL encoded",
                     example = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FIAO_0000002") String iri,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException {
 
         iri = UriUtils.decode(iri, "UTF-8");
 
-        V2Entity entity = individualRepository.getByOntologyIdAndIri(ontologyId, iri, lang);
-        if (entity == null) throw new ResourceNotFoundException();
+        V2Entity entity = individualRepository.getByOntologyIdAndIri(ontologyId, iri, lang, outputOpts);
+        if (entity == null) throw new ResourceNotFoundException("The requested resource was not found.");
         return new ResponseEntity<>( entity, HttpStatus.OK);
     }
 
@@ -183,14 +188,15 @@ public class V2IndividualController {
             @PathVariable("class")
             @Parameter(name = "class",
                     description = "The IRI of the class, this value must be double URL encoded") String classIri,
-            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang
+            @RequestParam(value = "lang", required = false, defaultValue = "en") String lang,
+            JsonTransformOptions outputOpts
     ) throws ResourceNotFoundException, IOException {
 
         classIri = UriUtils.decode(classIri, "UTF-8");
 
         return new ResponseEntity<>(
-                new V2PagedResponse<>(
-                        individualRepository.getIndividualsOfClass(ontologyId, classIri, pageable, lang)
+                new V2PagedResponse<V2Entity>(
+                        individualRepository.getIndividualsOfClass(ontologyId, classIri, pageable, lang, outputOpts).map(V2Entity::new)
                 ),
                 HttpStatus.OK);
 

@@ -961,7 +961,8 @@
       {
         "database": "ICD10CM",
         "description": "https://orcid.org/0000-0002-4142-7153",
-        "id": "G00-G99"
+        "id": "G00-G99",
+        "url": "https://www.icd10data.com/search?s=G00-G99"
       },
       {
         "database": "ICD9",
@@ -1741,7 +1742,8 @@
       {
         "database": "ICD10CM",
         "description": "https://orcid.org/0000-0002-4142-7153",
-        "id": "Q90-Q99"
+        "id": "Q90-Q99",
+        "url": "https://www.icd10data.com/search?s=Q90-Q99"
       },
       {
         "database": "ICD9",
@@ -1764,7 +1766,7 @@
         "database": "Orphanet",
         "description": "MONDO:equivalentTo",
         "id": "68335",
-        "url": "http://www.orpha.net/consor/cgi-bin/OC_Exp.php?Lng=EN&Expert=68335"
+        "url": "http://www.orpha.net/ORDO/Orphanet_68335"
       },
       {
         "database": "SCTID",
@@ -1879,7 +1881,8 @@
       {
         "database": "ICD10CM",
         "description": "https://orcid.org/0000-0002-4142-7153",
-        "id": "Q00-Q99"
+        "id": "Q00-Q99",
+        "url": "https://www.icd10data.com/search?s=Q00-Q99"
       }
     ],
     "ontology_iri": "http://purl.obolibrary.org/obo/mondo.owl",

@@ -17,6 +17,7 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { randomString, sortByKeys } from "../../app/util";
 import ApiLinks from "../../components/ApiLinks";
 import EntityLink from "../../components/EntityLink";
+import FallbackWarning from "../../components/FallbackWarning";
 import Header from "../../components/Header";
 import LanguagePicker from "../../components/LanguagePicker";
 import LoadingOverlay from "../../components/LoadingOverlay";
@@ -105,6 +106,7 @@ export default function OntologyPage() {
           {pageDesc && <meta name="description" content={ontology?.getDescription()}/>}
         </Helmet>
       <main className="container mx-auto px-4">
+        <FallbackWarning ontology={ontology} />
         {ontology ? (
           <div className="my-8">
             <div className="flex flex-wrap justify-between items-center gap-y-2 px-1 mb-4">
@@ -350,12 +352,11 @@ export default function OntologyPage() {
                     {ontology.getSourceFileTimestamp() && (
                       <div>
                         <span className="font-bold">Last loaded: </span>
-                        <a
+                        <p
                           id="lastLoaded"
-                          href={ontology.getSourceFileTimestamp()}
                         >
                           {ontology.getSourceFileTimestamp()}
-                        </a>
+                        </p>
                       </div>
                     )}
                     <OntologyAnnotationsSection ontology={ontology} />

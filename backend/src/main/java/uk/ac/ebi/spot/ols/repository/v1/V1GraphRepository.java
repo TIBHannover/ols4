@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.spot.ols.model.v1.V1Individual;
 import uk.ac.ebi.spot.ols.model.v1.V1Term;
+
+import uk.ac.ebi.spot.ols.JsonHelper;
 import uk.ac.ebi.spot.ols.repository.transforms.LocalizationTransform;
 import uk.ac.ebi.spot.ols.repository.transforms.RemoveLiteralDatatypesTransform;
 import uk.ac.ebi.spot.ols.repository.v1.mappers.V1IndividualMapper;
@@ -160,7 +162,7 @@ public class V1GraphRepository {
                         + "edges: collect(distinct { source: startNode(r1).iri, target: endNode(r1).iri, relationship: r1 })\n"
                         + "} AS result";
 
-        List<Map<String,Object>> results = neo4jClient.rawQuery(query);
+        List<Map<String,Object>> results = neo4jClient.rawQuery(query, Map.of());
         return (Map<String,Object>) results.get(0).get("result");
     }
 
@@ -173,7 +175,7 @@ public class V1GraphRepository {
                         + "edges: collect({ source: startNode(r).iri, target: endNode(r).iri, relationship: r })\n"
                         + "} AS result";
 
-        List<Map<String,Object>> results = neo4jClient.rawQuery(query);
+        List<Map<String,Object>> results = neo4jClient.rawQuery(query, Map.of());
         return (Map<String,Object>) results.get(0).get("result");
     }
 
@@ -225,7 +227,7 @@ public class V1GraphRepository {
             query = "MATCH (a:"+entityType.getPropertyName()+") WHERE a.id = '"+entityId+"'  and a.ontologyId = ['"+ontologyId+"'] RETURN a._json AS result";
         else
             query = "MATCH (a:"+entityType.getPropertyName()+") WHERE a.id = '"+entityId+"'  RETURN a._json AS result";
-        List<Map<String,Object>> results = neo4jClient.rawQuery(query);
+        List<Map<String,Object>> results = neo4jClient.rawQuery(query,Map.of());
         return results.get(0).get("result").toString();
     }
 

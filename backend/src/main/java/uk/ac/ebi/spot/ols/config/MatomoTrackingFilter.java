@@ -57,6 +57,14 @@ public class MatomoTrackingFilter extends OncePerRequestFilter {
                     .collect(Collectors.joining("; "));
         }
 
+        String clientIp = request.getHeader("X-Forwarded-For");
+
+        if (clientIp != null && !clientIp.isEmpty()) {
+            clientIp = clientIp.split(",")[0].trim();
+        } else {
+            clientIp = request.getRemoteAddr();
+        }
+
         try {
             filterChain.doFilter(request, response);
         } finally {
@@ -76,7 +84,7 @@ public class MatomoTrackingFilter extends OncePerRequestFilter {
             MatomoRequest matomoRequest = MatomoRequest.builder()
                     .actionUrl(request.getRequestURL().toString())
                     .actionName(request.getMethod() + " " + request.getRequestURI())
-                    .visitorIp(request.getRemoteAddr())
+                    .visitorIp(clientIp)
                     .headerUserAgent(request.getHeader("User-Agent"))
                     .additionalParameters(params)
 

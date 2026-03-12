@@ -29,16 +29,23 @@ public class MatomoTrackingFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // 1. Extract the "caller" header before the request is processed (or after)
+        long startTime = System.currentTimeMillis();
+
         String caller = request.getHeader("caller");
         if (caller == null) {
             caller = "unknown";
         }
 
 
-        String classificationParam = request.getParameter("classification");
-        if (classificationParam == null){
-            classificationParam = "none";
+        String[] classificationArray = request.getParameterValues("classification");
+        String classificationValue;
+
+        if (classificationArray == null || classificationArray.length == 0) {
+            classificationValue = "none";
+        } else if (classificationArray.length == 1) {
+            classificationValue = classificationArray[0];
+        } else {
+            classificationValue = String.join(", ", classificationArray);
         }
 
         Map<String, String[]> parameterMap = request.getParameterMap();
@@ -50,10 +57,11 @@ public class MatomoTrackingFilter extends OncePerRequestFilter {
                     .collect(Collectors.joining("; "));
         }
 
-            // 1. Let the REST Controller do its work first
         try {
             filterChain.doFilter(request, response);
         } finally {
+            long duration = System.currentTimeMillis() - startTime;
+
             String statusCode = String.valueOf(response.getStatus());
 
             Map<String, Collection<Object>> params = new HashMap<>();
@@ -61,8 +69,9 @@ public class MatomoTrackingFilter extends OncePerRequestFilter {
             params.put("rec", Collections.singletonList("1"));
             params.put("dimension1", Collections.singletonList(statusCode));
             params.put("dimension2", Collections.singletonList(caller));
-            params.put("dimension3", Collections.singletonList(classificationParam));
+            params.put("dimension3", Collections.singletonList(classificationValue));
             params.put("dimension4", Collections.singletonList(allParams));
+            params.put("dimension5", Collections.singletonList(String.valueOf(duration)));
 
             MatomoRequest matomoRequest = MatomoRequest.builder()
                     .actionUrl(request.getRequestURL().toString())
@@ -72,11 +81,8 @@ public class MatomoTrackingFilter extends OncePerRequestFilter {
                     .additionalParameters(params)
 
                     .build();
-            System.out.println("MATOMO PAYLOAD: " + matomoRequest.getAdditionalParameters());
-
-            System.out.println("DEBUG - Action URL: " + matomoRequest.getActionUrl());
-
-            // 3. Fire and forget
+            //System.out.println("MATOMO PAYLOAD: " + matomoRequest.getAdditionalParameters());
+            //System.out.println("DEBUG - Action URL: " + matomoRequest.getActionUrl());
             tracker.sendRequestAsync(matomoRequest);
         }
     }

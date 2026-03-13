@@ -51,6 +51,8 @@ public class MatomoTrackingFilter extends OncePerRequestFilter {
         Map<String, String[]> parameterMap = request.getParameterMap();
         String allParams = "none";
 
+        String requestURI = request.getRequestURI();
+
         if (!parameterMap.isEmpty()) {
             allParams = parameterMap.entrySet().stream()
                     .map(e -> e.getKey() + "=" + String.join(",", e.getValue()))
@@ -78,12 +80,12 @@ public class MatomoTrackingFilter extends OncePerRequestFilter {
             params.put("dimension1", Collections.singletonList(statusCode));
             params.put("dimension2", Collections.singletonList(caller));
             params.put("dimension3", Collections.singletonList(classificationValue));
-            params.put("dimension4", Collections.singletonList(allParams));
+            params.put("dimension4", Collections.singletonList("[" + requestURI + "] " +allParams));
             params.put("dimension5", Collections.singletonList(String.valueOf(duration)));
 
             MatomoRequest matomoRequest = MatomoRequest.builder()
                     .actionUrl(request.getRequestURL().toString())
-                    .actionName(request.getMethod() + " " + request.getRequestURI())
+                    .actionName(request.getMethod() + " " + requestURI)
                     .visitorIp(clientIp)
                     .headerUserAgent(request.getHeader("User-Agent"))
                     .additionalParameters(params)

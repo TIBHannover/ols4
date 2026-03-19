@@ -14,7 +14,7 @@ public class MatomoConfig {
         TrackerConfiguration config = TrackerConfiguration.builder()
                 .apiEndpoint(URI.create("https://support.tib.eu/piwik/matomo.php"))
                 .defaultSiteId(35)
-                .defaultAuthToken("your-token-here") // Set your default Site ID here
+                .defaultAuthToken("your-token-here-your-token-here-") // Set your default Site ID here
                 .build();
 
 

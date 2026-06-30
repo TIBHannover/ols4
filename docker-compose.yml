@@ -6,12 +6,14 @@ services:
         - BATCH_SIZE=${BATCH_SIZE}
         - POOL_SIZE=${POOL_SIZE}
         - NOOF_ATTEMPTS=${NOOF_ATTEMPTS}
+        - DOWNLOAD_PATH=/opt/ols4/preDownload
       build:
         context: .
         dockerfile: ./dataload/Dockerfile
       volumes:
         - ols4-solr-data:/opt/solr/server/solr:rw
         - ols4-neo4j-data:/opt/neo4j/data:rw
+        - ols4-ontologies-raw:/opt/ols4/preDownload:rw
         - ./${OLS4_CONFIG:?OLS4 dataload requires a config file}:/mnt/config.json:ro
         - ./testcases:/opt/ols/dataload/testcases:ro
           #- ./docker_out:/tmp/out:rw
@@ -54,6 +56,8 @@ services:
         dockerfile: ./backend/Dockerfile
       ports:
         - 8080:8080
+      volumes:
+        - ols4-ontologies-raw:/pre-downloaded
       environment:
         - OLS_SOLR_HOST=http://ols4-solr:8983
         - OLS_NEO4J_HOST=bolt://ols4-neo4j:7687
@@ -91,5 +95,5 @@ volumes:
     ols4-neo4j-data:
     ols4-solr-data:
     ols-mongo-data:
-
+    ols4-ontologies-raw:
 

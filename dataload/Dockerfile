@@ -10,7 +10,7 @@ RUN addgroup --system --gid 1000 ols && adduser --system --uid 1000 --ingroup ol
 # Copy all the code for dataload into /opt/dataload and build the JARs
 #
 
-RUN mkdir /opt/ols && mkdir /opt/ols/dataload && mkdir /opt/ols/ols-shared
+RUN mkdir /opt/ols && mkdir /opt/ols/dataload && mkdir /opt/ols/ols-shared && mkdir -p /opt/ols4/preDownload
 
 COPY ./dataload /opt/ols/dataload
 COPY ./ols-shared /opt/ols/ols-shared
@@ -47,6 +47,7 @@ RUN mkdir /tmp/out
 
 RUN chown -R ols:ols /opt/* /tmp/out
 RUN chmod -R 777 /opt/* /tmp/out
+RUN chown -R ols:ols /opt/ols4/preDownload
 
 USER ols
 WORKDIR /opt/ols/dataload

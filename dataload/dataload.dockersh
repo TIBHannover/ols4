@@ -2,6 +2,7 @@
 
 echo Loading data...
 ./create_datafiles.sh file:///mnt/config.json /tmp/out $@
+./pre_download.sh file:///mnt/config.json /ontologies
 ./load_into_neo4j.sh /opt/neo4j /tmp/out
 rm -rf /opt/solr/server/solr/*
 cp -r /opt/ols/dataload/solr_config/* /opt/solr/server/solr/

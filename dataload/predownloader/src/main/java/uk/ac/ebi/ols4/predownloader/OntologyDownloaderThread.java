@@ -58,8 +58,9 @@ public class OntologyDownloaderThread implements Runnable {
 
     @Override
     public void run() {
+    	String fileNameToDownload = downloader.fileNameForDownloadByPurl.get(ontologyUrl);
 
-        String path = downloader.downloadPath + "/" + urlToFilename(ontologyUrl);
+        String path = downloader.downloadPath + "/" + (fileNameToDownload != null ? urlToFilename(fileNameToDownload) : urlToFilename(ontologyUrl));
 
         System.out.println(Thread.currentThread().getName() + " Starting download for " + ontologyUrl + " to " + path);
 
@@ -85,9 +86,9 @@ public class OntologyDownloaderThread implements Runnable {
                 public void finish() {}
                 public void triple(Triple triple) {
 
-                    if (triple.getPredicate().getURI().equals("http://www.w3.org/2002/07/owl#imports")) {
+                    /*if (triple.getPredicate().getURI().equals("http://www.w3.org/2002/07/owl#imports")) {
                         importUrls.add(triple.getObject().getURI());
-                    }
+                    }*/
                 }
             });
 

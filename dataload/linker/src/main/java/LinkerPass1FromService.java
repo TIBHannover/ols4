@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * TIB-Leibniz Information Center for Science and Technology
  */
 
-public class LinkerPass1FromService extends ServiceBase{
+public class LinkerPass1FromService extends ServiceBase {
 
     public static class LinkerPass1Result {
 

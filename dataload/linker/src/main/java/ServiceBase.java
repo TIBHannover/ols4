@@ -38,6 +38,7 @@ public class ServiceBase {
 
 	public static JsonArray getEntitiesAsJsonArray(String uri, String property, String arrayName) throws IOException {
 		HttpGet httpget = new HttpGet(uri);
+        httpget.addHeader("caller", "TS_RELINK");
 		System.out.println("Executing request " + httpget.getRequestLine());
 		String responseBody = httpclient.execute(httpget, responseHandler);
 		System.out.println("----------------------------------------");
